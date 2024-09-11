@@ -1,0 +1,6 @@
+@HeroscapeBuilder.Server_HostAddress = http://localhost:5062
+
+GET {{HeroscapeBuilder.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
