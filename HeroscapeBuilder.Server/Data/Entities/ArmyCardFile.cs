@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace HeroscapeBuilder.Server.Data.Entities;
+﻿namespace HeroscapeBuilder.Server.Data.Entities;
 
 public partial class ArmyCardFile
 {
@@ -16,4 +13,8 @@ public partial class ArmyCardFile
     public DateTime CreatedAt { get; set; }
 
     public virtual ArmyCard ArmyCard { get; set; } = null!;
+
+    public long? ParentId { get; set; }
+    public ArmyCardFile Parent { get; set; } // Navigation property for the parent
+    public ICollection<ArmyCardFile> Children { get; set; } = new List<ArmyCardFile>();
 }

@@ -1,5 +1,8 @@
 .btn,
-.navbar .navbar-nav > a.btn{
+.navbar .navbar-nav > a.btn {
+    @include btn-styles($default-color, $default-states-color);
+    @include transition($fast-transition-time, linear);
+
     border-width: $border-thick;
     font-weight: $font-weight-semi;
     font-size: $font-size-small;
@@ -11,23 +14,22 @@
     padding: $padding-btn-vertical $padding-btn-horizontal;
     cursor: pointer;
 
-    @include btn-styles($default-color, $default-states-color);
-    @include transition($fast-transition-time, linear);
+
+    .badge {
+        margin: 0;
+    }
 
     &:hover,
-    &:focus{
+    &:focus {
         @include opacity(1);
         outline: 0 !important;
     }
+
     &:active,
     &.active,
     .open > &.dropdown-toggle {
-         @include box-shadow(none);
-         outline: 0 !important;
-    }
-
-    .badge{
-      margin: 0;
+        @include box-shadow(none);
+        outline: 0 !important;
     }
 
     &.btn-icon {
@@ -41,11 +43,11 @@
         position: relative;
         line-height: normal;
 
-        &.btn-simple{
+        &.btn-simple {
             padding: 0;
         }
 
-        &.btn-sm{
+        &.btn-sm {
             height: $btn-icon-size-small;
             min-width: $btn-icon-size-small;
             width: $btn-icon-size-small;
@@ -53,12 +55,12 @@
             .fa,
             .far,
             .fas,
-            .nc-icon{
+            .nc-icon {
                 font-size: $btn-icon-font-size-small;
             }
         }
 
-        &.btn-lg{
+        &.btn-lg {
             height: $btn-icon-size-lg;
             min-width: $btn-icon-size-lg;
             width: $btn-icon-size-lg;
@@ -66,7 +68,7 @@
             .fa,
             .far,
             .fas,
-            .nc-icon{
+            .nc-icon {
                 font-size: $btn-icon-font-size-lg;
             }
         }
@@ -74,7 +76,7 @@
         &:not(.btn-footer) .nc-icon,
         &:not(.btn-footer) .fa,
         &:not(.btn-footer) .far,
-        &:not(.btn-footer) .fas{
+        &:not(.btn-footer) .fas {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -84,11 +86,11 @@
         }
 
         &.btn-neutral {
-          font-size: 20px;
+            font-size: 20px;
         }
     }
 
-    &:not(.btn-icon) .nc-icon{
+    &:not(.btn-icon) .nc-icon {
         position: relative;
         top: 1px;
     }
@@ -109,7 +111,8 @@
 .btn-outline-info    { @include btn-outline-styles($info-color, $info-states-color); }
 .btn-outline-warning { @include btn-outline-styles($warning-color, $warning-states-color); }
 .btn-outline-danger  { @include btn-outline-styles($danger-color, $danger-states-color); }
-.btn-outline-neutral { @include btn-outline-styles($white-color, $default-states-color);
+.btn-outline-neutral { 
+    @include btn-outline-styles($white-color, $default-states-color);
     &:hover,
     &:focus{
         color: $default-states-color;

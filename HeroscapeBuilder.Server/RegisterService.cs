@@ -7,8 +7,13 @@ namespace HeroscapeBuilder.Server
     {
         public static IServiceCollection RegisterServices(this IServiceCollection services)
         {
+            //Services
             services.AddScoped<UnitService>();
+            services.AddScoped<FileService>();
+
+            //Repos
             services.AddScoped<ArmyCardRepository>();
+            services.AddScoped<FileRepository>();
 
             return services;
         }

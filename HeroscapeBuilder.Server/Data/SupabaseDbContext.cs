@@ -104,6 +104,15 @@ public partial class SupabaseDbContext : DbContext
             entity.HasOne(d => d.ArmyCard).WithMany(p => p.ArmyCardFiles)
                 .HasForeignKey(d => d.ArmyCardId)
                 .HasConstraintName("army_card_files_army_card_id_fkey");
+
+            entity.Property(e => e.ParentId)
+                .HasColumnName("parent");
+
+            entity.HasOne(e => e.Parent)
+                .WithMany(e => e.Children)
+                .HasForeignKey(e => e.ParentId) // Foreign key
+                .HasConstraintName("army_card_files_parent_fkey")
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Creator>(entity =>

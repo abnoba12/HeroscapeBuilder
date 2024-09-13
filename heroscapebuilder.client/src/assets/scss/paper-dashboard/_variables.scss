@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 //== Buttons
 //
 //## For each of Bootstrap's buttons, define text, background and border color.
@@ -347,8 +349,8 @@ $nc-font-path:        '../fonts' !default;
 $nc-font-size-base:   14px !default;
 $nc-css-prefix:       nc !default;
 $nc-background-color:     #eee !default;
-$nc-li-width:         (30em / 14) !default;
-$nc-padding-width:    (1em/3) !default;
+$nc-li-width: math.div(30em, 14) !default;
+$nc-padding-width: math.div(1em, 3) !default;
 
 // Social icons color
 $social-twitter:                   #55acee !default;

@@ -10,6 +10,8 @@
 
         public string FilePath { get; set; } = null!;
 
+        public string Thumb { get; set; } = null;
+
         public DateTime CreatedAt { get; set; }
     }
 }

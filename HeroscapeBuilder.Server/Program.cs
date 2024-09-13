@@ -27,7 +27,21 @@ if (!string.IsNullOrEmpty(connectionString))
 }
 builder.Services.AddDbContext<SupabaseDbContext>(options => options.UseNpgsql(connectionString));
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        builder =>
+        {
+            builder.WithOrigins("https://localhost:5173")
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowSpecificOrigins");
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

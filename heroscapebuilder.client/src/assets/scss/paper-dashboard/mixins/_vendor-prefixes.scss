@@ -11,13 +11,6 @@
     transition: all $time $type;
 }
 
-
-@mixin sidebar-color($color){
-  &:after{
-    background: $color;
-  }
-}
-
 @mixin bar-animation($type){
      -webkit-animation: $type 500ms linear 0s;
      -moz-animation: $type 500ms linear 0s;
@@ -25,22 +18,6 @@
      -webkit-animation-fill-mode: forwards;
      -moz-animation-fill-mode: forwards;
      animation-fill-mode: forwards;
-}
-
-@mixin sidebar-active-color($font-color){
-    .nav {
-        li {
-          &.active > a,
-          &.active > a i,
-          &.active > a[data-toggle="collapse"],
-          &.active > a[data-toggle="collapse"] i,
-          &.active > a[data-toggle="collapse"] ~ div > ul > li.active .sidebar-mini-icon,
-          &.active > a[data-toggle="collapse"] ~ div > ul > li.active > a {
-            color: $font-color;
-            opacity: 1;
-          }
-        }
-    }
 }
 
 @mixin transition-opacity($time, $type){
@@ -179,6 +156,11 @@
 
 }
 
+@mixin badge-color($color) {
+    border-color: $color;
+    background-color: $color;
+}
+
 @mixin sidebar-text-color($text-color){
     .nav {
       li {
@@ -222,7 +204,24 @@
     }
 }
 
-@mixin badge-color($color) {
-    border-color: $color;
-    background-color: $color;
+@mixin sidebar-color($color) {
+    &:after {
+        background: $color;
+    }
+}
+
+@mixin sidebar-active-color($font-color) {
+    .nav {
+        li {
+            &.active > a,
+            &.active > a i,
+            &.active > a[data-toggle="collapse"],
+            &.active > a[data-toggle="collapse"] i,
+            &.active > a[data-toggle="collapse"] ~ div > ul > li.active .sidebar-mini-icon,
+            &.active > a[data-toggle="collapse"] ~ div > ul > li.active > a {
+                color: $font-color;
+                opacity: 1;
+            }
+        }
+    }
 }

@@ -1,9 +1,12 @@
 ﻿* Controllers/
 	* Description: This folder contains all your API controllers. Each controller corresponds to a specific feature or entity (e.g., OrderController, CustomerController).
+		Handles HTTP requests, invokes the appropriate service methods, and returns responses. It doesn't contain business logic.
 * Services/
 	* Description: This folder contains your service classes that implement business logic. Services are invoked by controllers and can interact with repositories and other services.
+		orchestrates different domain models, and coordinates with repositories to retrieve or persist data.
 * Domain/
-	* Description: This contains your business entities, domain models, and any domain-specific logic or rules. You may also include interfaces here.
+	* Description: This contains your business entities, domain models, and any domain-specific logic or rules. You may also include interfaces here. This layer should know nothing about 
+	  any technology in the entire project. All this layer cares about is business logic.
 	* Subfolders:
 		* Entities or Models: For domain entities and business objects (e.g., Order, Customer).
 		* Interfaces: For domain-level interfaces.

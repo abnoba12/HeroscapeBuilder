@@ -1,0 +1,44 @@
+.pdf-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+
+    .thumbnail {
+        border: 2px solid #6b8e23; /* Green border */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        padding: 10px;
+        background-color: #fff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effects */
+        /*width: calc(25% - 20px);*/ /* Adjusts width based on gap */
+        box-sizing: border-box; /* Ensures padding is included in the width */
+
+        img {
+            border-radius: 4px;
+            min-width: 75%;
+            height: auto;
+            width: 100%;
+
+            &:hover {
+                cursor: pointer;
+            }
+        }
+
+        .checkbox-wrapper {
+            margin-top: 10px;
+            text-align: left; /* Aligns checkbox and label to the left */
+
+            .label-make-pdf {
+                padding-left: 8px;
+                font-size: 1.5em;
+                font-weight: normal;
+            }
+        }
+
+        &:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+        }
+    }
+}
