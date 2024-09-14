@@ -1,7 +1,7 @@
 using HeroscapeBuilder.Server;
 using HeroscapeBuilder.Server.Data;
+using HeroscapeBuilder.Server.Integrations.SupabaseIntegration;
 using Microsoft.EntityFrameworkCore;
-using System.Collections;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +26,9 @@ if (!string.IsNullOrEmpty(connectionString))
         .Replace("%SUPABASE_PASSWORD%", Environment.GetEnvironmentVariable("SUPABASE_PASSWORD"));
 }
 builder.Services.AddDbContext<SupabaseDbContext>(options => options.UseNpgsql(connectionString));
+
+builder.Services.Configure<SupabaseConfig>(builder.Configuration.GetSection("Supabase"));
+builder.Services.AddHttpClient<SupabaseStorage>();
 
 // Add CORS policy
 builder.Services.AddCors(options =>

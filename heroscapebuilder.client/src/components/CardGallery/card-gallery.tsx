@@ -2,7 +2,7 @@ import "./card-gallery.scss";
 import React, { useEffect, useState } from 'react';
 import { getFilesByPurpose } from '../../services/file-service';
 import { UnitFile } from '../../models/unit-file';
-import ImageCache from '../../services/image-cache';
+//import ImageCache from '../../services/image-cache';
 import { blobCache } from '../../services/cache-manager';
 import { PDFDocument } from 'pdf-lib';
 import axios from 'axios';
@@ -301,7 +301,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                             />
                             <label className="label-make-pdf">Add to PDF</label>
                         </div>
-                        <a href={card.filePath}>
+                        <a href={card.filePath} target="_blank">
                             {/*<ImageCache*/}
                             {/*    className="img-fluid"*/}
                             {/*    src={card.thumb}*/}

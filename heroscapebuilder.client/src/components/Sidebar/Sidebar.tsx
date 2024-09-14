@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/img/logo.png";
 
@@ -24,6 +24,17 @@ const Sidebar: React.FC = () => {
         return "black";
     };
 
+    // Automatically expand the parent menu if on a child route
+    useEffect(() => {
+        if (location.pathname.startsWith("/army-cards")) {
+            setActiveMenu("army-cards");
+        } else if (location.pathname.startsWith("/units")) {
+            setActiveMenu("units");
+        } else if (location.pathname.startsWith("/game-play")) {
+            setActiveMenu("game-play");
+        }
+    }, [location.pathname]);
+
     const toggleSubmenu = (menuName: string): void => {
         if (activeMenu === menuName) {
             setActiveMenu(null); // Close the active menu
@@ -31,7 +42,6 @@ const Sidebar: React.FC = () => {
             setActiveMenu(menuName); // Open the clicked menu
         }
     };
-
     return (
         <div className={`sidebar ${isOpen ? "open" : ""}`} data-color={getColor()} data-active-color="info">
             <div className="logo">
@@ -58,7 +68,6 @@ const Sidebar: React.FC = () => {
                         {activeMenu === 'units' && (
                             <ul className="submenu">
                                 <li><Link to="/units/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
-                                {/*<li><Link to="/about/team" onClick={toggleSidebar}>Team</Link></li>*/}
                             </ul>
                         )}
                     </li>
@@ -76,7 +85,6 @@ const Sidebar: React.FC = () => {
                         {activeMenu === 'game-play' && (
                             <ul className="submenu">
                                 <li><Link to="/game-play/game-play-calc" onClick={toggleSidebar}>Game Play Calculator</Link></li>
-                                {/*<li><Link to="/services/mobile" onClick={toggleSidebar}>Mobile Development</Link></li>*/}
                             </ul>
                         )}
                     </li>

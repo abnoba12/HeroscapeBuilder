@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Domain.Entities;
+using HeroscapeBuilder.Server.Integrations.SupabaseIntegration.DTO;
 
 namespace HeroscapeBuilder.Server.Common.Mapping
 {
@@ -15,6 +16,8 @@ namespace HeroscapeBuilder.Server.Common.Mapping
 
             CreateMap<ArmyCardFile, UnitFileEntity>()
                 .ForMember(dest => dest.Thumb, opt => opt.MapFrom(src => src.Children.FirstOrDefault(x => x.FilePurpose.Contains("Thumb")).FilePath));
+
+            CreateMap<Supabase.Storage.FileObject, SupabaseFileDTO>();
         }
     }
 }

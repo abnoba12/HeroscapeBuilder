@@ -5,7 +5,7 @@ import { GetWithCache } from './cache-manager';
 
 export const getFilesByPurpose = async (purpose:string) => {
     try {
-        return await GetWithCache<UnitFile[]>(`/File?purpose=${purpose}`, `/File?purpose=${purpose}`, 3600);
+        return await GetWithCache<UnitFile[]>(`/File/GetFilesByPurpose?purpose=${purpose}`, `/File?purpose=${purpose}`, 3600);
     } catch (error) {
         console.error('Error fetching files:', error);
         throw error;
