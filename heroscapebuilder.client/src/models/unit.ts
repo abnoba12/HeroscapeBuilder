@@ -5,7 +5,7 @@ import { UnitFile } from './unit-file';
 export interface Unit {
     creator: string;
     general?: string;
-    name?: string;
+    name: string;
     race?: string;
     role?: string;
     personality?: string;

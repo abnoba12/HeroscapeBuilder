@@ -13,9 +13,9 @@ const StandardArmyCards: React.FC = () => {
                     </a>
                 </div>
                 <div className="col-md-6 card-option text-center">
-                    <a href="/army-cards/standard" className="text-decoration-none text-dark">
+                    <a href="/army-cards/standard/create" className="text-decoration-none text-dark">
                         <h1 className="text-center mt-2">Create a New Army Card</h1>
-                        <img src={cardMaker} alt="3x5 Heroscape Index Card" className="img-fluid" />
+                        <img src={cardMaker} alt="Create standard Heroscape Card" className="img-fluid" />
                     </a>
                 </div>
             </div>

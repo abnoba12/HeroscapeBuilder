@@ -18,6 +18,8 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 .ForMember(dest => dest.Thumb, opt => opt.MapFrom(src => src.Children.FirstOrDefault(x => x.FilePurpose.Contains("Thumb")).FilePath));
 
             CreateMap<Supabase.Storage.FileObject, SupabaseFileDTO>();
+
+            CreateMap<Set, SetEntity>();
         }
     }
 }

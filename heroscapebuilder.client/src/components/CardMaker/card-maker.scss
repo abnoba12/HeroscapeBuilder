@@ -1,0 +1,22 @@
+@import '../../assets/scss/paper-dashboard/_variables.scss';
+
+.tooltip.show {
+    opacity: 1;
+    .tooltip-inner{
+        img{
+            padding: 15px;
+        }
+    }
+}
+
+label {
+    .q {
+        margin-left: 15px;
+        color: $primary-color;
+        font-size: 0.7em;
+    }
+}
+
+.main-panel input{
+    text-align: left !important;
+}

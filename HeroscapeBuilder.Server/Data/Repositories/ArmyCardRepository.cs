@@ -14,7 +14,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 
         public async Task<IEnumerable<ArmyCard>> GetAllArmyCards()
         {
-            return await _context.ArmyCards.ToListAsync();
+            return await _context.ArmyCards.Include(x => x.SetNavigation).ToListAsync();
         }
     }
 }

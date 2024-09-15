@@ -58,14 +58,16 @@ public partial class SupabaseDbContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
 
-            entity.HasOne(d => d.CreatorNavigation).WithMany(p => p.ArmyCards)
-                .HasPrincipalKey(p => p.Creator1)
+            entity.HasOne(d => d.CreatorNavigation)
+                .WithMany(p => p.ArmyCards)
+                .HasPrincipalKey(p => p.CreatorName)
                 .HasForeignKey(d => d.Creator)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("army_card_Creator_fkey");
 
-            entity.HasOne(d => d.SetNavigation).WithMany(p => p.ArmyCards)
-                .HasForeignKey(d => d.Set)
+            entity.HasOne(d => d.SetNavigation)
+                .WithMany(p => p.ArmyCards)
+                .HasForeignKey(d => d.Set)  // Use the correct column name here
                 .HasConstraintName("army_card_Set_fkey");
         });
 
@@ -117,16 +119,16 @@ public partial class SupabaseDbContext : DbContext
 
         modelBuilder.Entity<Creator>(entity =>
         {
-            entity.HasKey(e => new { e.Id, e.Creator1 }).HasName("Creator_pkey");
+            entity.HasKey(e => new { e.Id, e.CreatorName }).HasName("Creator_pkey");
 
             entity.ToTable("creator");
 
-            entity.HasIndex(e => e.Creator1, "Creator_Creator_key").IsUnique();
+            entity.HasIndex(e => e.CreatorName, "Creator_Creator_key").IsUnique();
 
             entity.Property(e => e.Id)
                 .ValueGeneratedOnAdd()
                 .HasColumnName("id");
-            entity.Property(e => e.Creator1).HasColumnName("Creator");
+            entity.Property(e => e.CreatorName).HasColumnName("Creator");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
@@ -152,7 +154,7 @@ public partial class SupabaseDbContext : DbContext
             entity.Property(e => e.Wave).HasColumnName("wave");
 
             entity.HasOne(d => d.CreatorNavigation).WithMany(p => p.Sets)
-                .HasPrincipalKey(p => p.Creator1)
+                .HasPrincipalKey(p => p.CreatorName)
                 .HasForeignKey(d => d.Creator)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("set_creator_fkey");

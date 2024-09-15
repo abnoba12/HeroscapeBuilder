@@ -9,7 +9,7 @@ public partial class Creator
 
     public DateTime CreatedAt { get; set; }
 
-    public string Creator1 { get; set; } = null!;
+    public string CreatorName { get; set; } = null!;
 
     public virtual ICollection<ArmyCard> ArmyCards { get; set; } = new List<ArmyCard>();
 
