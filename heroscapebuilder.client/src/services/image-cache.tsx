@@ -37,7 +37,7 @@ const fetchImageWithCache = async (url: string, cacheKey: string, cacheDuration 
     try {
         localStorage.setItem(cacheKey, base64Image);
         localStorage.setItem(`${cacheKey}_time`, now.toString());
-    } catch (error) {
+    } catch (error: any) {
         // Catch QuotaExceededError and fallback to just returning the image
         if (error.name === 'QuotaExceededError') {
             console.warn('LocalStorage quota exceeded, skipping caching.');
