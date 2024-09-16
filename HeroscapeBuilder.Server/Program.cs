@@ -2,6 +2,7 @@ using HeroscapeBuilder.Server;
 using HeroscapeBuilder.Server.Data;
 using HeroscapeBuilder.Server.Integrations.SupabaseIntegration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,9 +13,10 @@ builder.Services.AddControllers();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c => {
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "HeroscapeBuilder", Version = "v1" });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("SupabaseDb");
 if (!string.IsNullOrEmpty(connectionString))
