@@ -14,6 +14,8 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 .ForMember(dest => dest.Abilities, opt => opt.MapFrom(src => src.ArmyCardAbilities.ToList()))
                 .ForMember(dest => dest.Files, opt => opt.MapFrom(src => src.ArmyCardFiles.ToList()));
 
+            CreateMap<ArmyCardAbility, AbilityEntity>();
+
             CreateMap<ArmyCardFile, UnitFileEntity>()
                 .ForMember(dest => dest.Thumb, opt => opt.MapFrom(src => src.Children.FirstOrDefault(x => x.FilePurpose.Contains("Thumb")).FilePath));
 

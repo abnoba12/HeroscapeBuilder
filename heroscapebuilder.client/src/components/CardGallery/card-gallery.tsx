@@ -193,7 +193,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                     return response.data;
                 });
                 const pdfArrayBuffer1 = await blobToArrayBuffer(blob1);
-                const blob2 = await blobCache(`pdf-cache_${urls[i]}`, async () => {
+                const blob2 = await blobCache(`pdf-cache_${urls[i+1]}`, async () => {
                     const response = await axios.get(urls[i + 1], { responseType: 'blob' });
                     return response.data;
                 });

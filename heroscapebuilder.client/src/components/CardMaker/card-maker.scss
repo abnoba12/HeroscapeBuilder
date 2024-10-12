@@ -20,3 +20,19 @@ label {
 .main-panel input{
     text-align: left !important;
 }
+
+#abilitiesContainer {
+    input {
+        height: 100%;
+    }
+
+    textarea {
+        padding: 10px;
+        line-height: normal;
+        min-height: 125px;
+    }
+}
+
+.invalid-feedback{
+    display: block;
+}

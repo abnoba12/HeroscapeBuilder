@@ -1,23 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { blobToBase64 } from './image-service';
 
 // Create an instance of axios
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
-});
-
-// Utility function to convert Blob to Base64 string
-const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-};
+const api = axios.create();
 
 // Function to cache and retrieve images
-const fetchImageWithCache = async (url: string, cacheKey: string, cacheDuration = 86400): Promise<string> => {
+export const fetchImageWithCache = async (url: string, cacheKey: string, cacheDuration = 86400): Promise<string> => {
     const now = new Date().getTime();
     const cachedImage = localStorage.getItem(cacheKey);
     const cachedTime = localStorage.getItem(`${cacheKey}_time`);
@@ -50,7 +39,7 @@ const fetchImageWithCache = async (url: string, cacheKey: string, cacheDuration 
 };
 
 // Example component to display cached images
-const ImageCache: React.FC<{ src: string; alt: string; cacheKey: string; className: string }> = ({ src, alt, cacheKey, className }) => {
+export const ImageCache: React.FC<{ src: string; alt: string; cacheKey: string; className: string }> = ({ src, alt, cacheKey, className }) => {
     const [imageSrc, setImageSrc] = useState<string | null>(null);
 
     useEffect(() => {

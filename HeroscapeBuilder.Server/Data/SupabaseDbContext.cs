@@ -81,7 +81,7 @@ public partial class SupabaseDbContext : DbContext
                 .HasDefaultValueSql("nextval('army_card_abilites_id_seq'::regclass)")
                 .HasColumnName("id");
             entity.Property(e => e.Ability).HasColumnName("ability");
-            entity.Property(e => e.Abilityname).HasColumnName("abilityname");
+            entity.Property(e => e.AbilityName).HasColumnName("ability_name");
             entity.Property(e => e.ArmyCardId).HasColumnName("army_card_id");
 
             entity.HasOne(d => d.ArmyCard).WithMany(p => p.ArmyCardAbilities)

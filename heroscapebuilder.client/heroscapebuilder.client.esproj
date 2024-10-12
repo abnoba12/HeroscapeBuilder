@@ -10,8 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\components\Footer\" />
-    <Folder Include="src\components\CardMaker\" />
-    <Folder Include="src\models\" />
     <Folder Include="src\pages\army-cards\fourbysix\" />
     <Folder Include="src\pages\army-cards\printing\" />
     <Folder Include="src\pages\army-cards\threebyfive\" />

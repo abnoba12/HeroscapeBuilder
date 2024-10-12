@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { getUnits } from '../../services/unit-service';
-import { Unit } from '../../models/unit';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './card-maker.scss'
+import jsPDF from 'jspdf';
+import React, { useEffect, useRef, useState } from 'react';
+import { Ability } from '../../models/ability';
+import { Unit } from '../../models/unit';
+import { UnitFormData } from '../../models/unit-form-data';
+import { generateIndexCard, initializePDF, savePDF } from '../../services/card-maker-service';
+import { getUnits } from '../../services/unit-service';
+import './card-maker.scss';
+import { base64ToBlob } from '../../services/image-service';
+import { fetchImageWithCache } from '../../services/image-cache-service';
 
 interface CardMakerProps {
     cardSize: string;
@@ -12,6 +18,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [unitData, setUnitData] = useState<Unit[]>([]);
     const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     // State for form fields
     const [creator, setCreator] = useState<string>('');
@@ -24,20 +31,22 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     const [unitType, setUnitType] = useState<string>('');
     const [unitRarity, setUnitRarity] = useState<string>('');
     const [unitSizeCategory, setUnitSizeCategory] = useState<string>('');
-    const [unitSize, setUnitSize] = useState<number | ''>('');
-    const [life, setLife] = useState<number | ''>('');
-    const [advancedMove, setAdvancedMove] = useState<number | ''>('');
-    const [advancedRange, setAdvancedRange] = useState<number | ''>('');
-    const [advancedAttack, setAdvancedAttack] = useState<number | ''>('');
-    const [advancedDefense, setAdvancedDefense] = useState<number | ''>('');
-    const [points, setPoints] = useState<number | ''>('');
-    const [basicMove, setBasicMove] = useState<number | ''>('');
-    const [basicRange, setBasicRange] = useState<number | ''>('');
-    const [basicAttack, setBasicAttack] = useState<number | ''>('');
-    const [basicDefense, setBasicDefense] = useState<number | ''>('');
+    const [unitSize, setUnitSize] = useState<number | undefined>(undefined);
+    const [life, setLife] = useState<number | undefined>(0);
+    const [abilities, setAbilities] = useState<Ability[]>([]);
+    const [advancedMove, setAdvancedMove] = useState<number | undefined>(undefined);
+    const [advancedRange, setAdvancedRange] = useState<number | undefined>(undefined);
+    const [advancedAttack, setAdvancedAttack] = useState<number | undefined>(undefined);
+    const [advancedDefense, setAdvancedDefense] = useState<number | undefined>(undefined);
+    const [points, setPoints] = useState<number | undefined>(undefined);
+    const [basicMove, setBasicMove] = useState<number | undefined>(undefined);
+    const [basicRange, setBasicRange] = useState<number | undefined>(undefined);
+    const [basicAttack, setBasicAttack] = useState<number | undefined>(undefined);
+    const [basicDefense, setBasicDefense] = useState<number | undefined>(undefined);
     const [setName, setSetName] = useState<string>('');
     const [unitNumbers, setUnitNumbers] = useState<string>('');
-    const [numberOfUnitsInSet, setNumberOfUnitsInSet] = useState<number | ''>('');
+    const [numberOfUnitsInSet, setNumberOfUnitsInSet] = useState<number | undefined>(undefined);
+    const [condenseAbilitiesChecked, setCondenseAbilitiesChecked] = useState<boolean>(true); // default to true
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -69,14 +78,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         };
     }, [loading, unitData]);
 
+    //REGION: Load existing unit data
     useEffect(() => {
         if (selectedUnit) {
             populateUnitData(selectedUnit);
         }
     }, [selectedUnit]);
-
-    if (loading) return <p>Loading...</p>;
-
     async function populateUnitData(id: string) {
         const data = unitData.find(x => x.id.toString() == id);
         if (data) {
@@ -90,26 +97,228 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             setUnitType(data.type ?? '');
             setUnitRarity(data.rarity ?? '');
             setUnitSizeCategory(data.sizeCategory ?? '');
-            setUnitSize(data.size ?? '');
-            setLife(data.life?? '');
-            setAdvancedMove(data.advMove?? '');
-            setAdvancedRange(data.advRange?? '');
-            setAdvancedAttack(data.advAttack?? '');
-            setAdvancedDefense(data.advDefense?? '');
-            setPoints(data.points?? '');
-            setBasicMove(data.basicMove?? '');
-            setBasicRange(data.basicRange?? '');
-            setBasicAttack(data.basicAttack?? '');
-            setBasicDefense(data.basicDefense?? '');
+            setUnitSize(data.size);
+            setLife(data.life);
+            setAbilities(data.abilities);
+            setAdvancedMove(data.advMove);
+            setAdvancedRange(data.advRange);
+            setAdvancedAttack(data.advAttack);
+            setAdvancedDefense(data.advDefense);
+            setPoints(data.points);
+            setBasicMove(data.basicMove);
+            setBasicRange(data.basicRange);
+            setBasicAttack(data.basicAttack);
+            setBasicDefense(data.basicDefense);
             setSetName(data.set?.name ?? '');
-            setUnitNumbers(data.unitNumbers?? '');
-            setNumberOfUnitsInSet(data.set?.unitsInSet ?? '');
+            setUnitNumbers(data.unitNumbers ?? '');
+            setNumberOfUnitsInSet(data.set?.unitsInSet);
+
+            if (data.files && data.files.length) {
+                var hb = data.files.filter(x => x.filePurpose == "Card_Hitbox_Image");
+                var b = data.files.filter(x => x.filePurpose == "Card_Basic_Image");
+                var adv;
+                if (cardSize == "3x5") {
+                    adv = data.files.filter(x => x.filePurpose == "Card_3x5_Advanced_Image");
+                    b = [];
+                } else if (cardSize == "4x6") {
+                    adv = data.files.filter(x => x.filePurpose == "Card_4x6_Advanced_Image");
+                } else if (cardSize == "Standard") {
+                    adv = data.files.filter(x => x.filePurpose == "Card_Advanced_Image_Standard");
+                }
+
+                if (adv && adv.length) {
+                    // Load and set the advanced unit image
+                    handleLoadImage(adv[0].filePath, AdvancedImageRef);
+                } else {
+                    if (AdvancedImageRef?.current) {
+                        AdvancedImageRef.current.value = '';
+                    }
+                }
+
+                if (hb && hb.length) {
+                    // Load and set the hitbox image
+                    handleLoadImage(hb[0].filePath, hitboxImageRef);
+                } else {
+                    if (hitboxImageRef?.current) {
+                        hitboxImageRef.current.value = '';
+                    }
+                }
+
+                if (b && b.length) {
+                    // Load and set the basic unit image
+                    handleLoadImage(b[0].filePath, BasicImageRef);
+                } else {
+                    if (BasicImageRef?.current) {
+                        BasicImageRef.current.value = '';
+                    }
+                }
+            }
         }
     }
 
+    //REGION: Abilities
+    const handleAddAbility = () => {
+        setAbilities([...abilities, { id: 0, armyCardId: 0, abilityName: '', ability: '' }]);
+    };
+    const handleRemoveAbility = (id: number) => {
+        setAbilities(abilities.filter((ability) => ability.id !== id));
+    };
+    const handleAbilityChange = (id: number, key: keyof Ability, value: string) => {
+        setAbilities(abilities.map((ability) => ability.id === id ? { ...ability, [key]: value } : ability));
+    };
+
+    //REGION: Images
+    const hitboxImageRef = useRef<HTMLInputElement>(null);
+    const AdvancedImageRef = useRef<HTMLInputElement>(null);
+    const BasicImageRef = useRef<HTMLInputElement>(null);
+    const loadImage = (imageUrl: string, inputElement: HTMLInputElement | null) => {
+        if (!inputElement) return;
+
+        fetch(imageUrl)
+            .then(async response => {
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let fileName = 'default.png'; // Default file name
+
+                if (contentDisposition && contentDisposition.includes('filename=')) {
+                    fileName = contentDisposition.split('filename=')[1].split(';')[0].replace(/"/g, '');
+                } else {
+                    const urlParts = imageUrl.split('/');
+                    fileName = urlParts[urlParts.length - 1];
+                }
+
+                const mimeType = response.headers.get('Content-Type') || 'image/png';
+
+                return { blob: base64ToBlob(await fetchImageWithCache(imageUrl, fileName)), fileName, mimeType };
+            })
+            .then(({ blob, fileName, mimeType }) => {
+                const file = new File([blob], fileName, { type: mimeType });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+
+                // Assign the file to the input element
+                if (inputElement && dataTransfer.files) {
+                    inputElement.files = dataTransfer.files;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading image:', error);
+            });
+    };
+    const handleLoadImage = (imageUrl: string, element: React.RefObject<HTMLInputElement>) => {
+        loadImage(imageUrl, element.current);
+    };
+
+    //REGION: Form submission
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const newErrors: Record<string, string> = {};
+
+        if (!creator.trim()) newErrors.creator = 'Creator is required';
+        if (!general.trim()) newErrors.general = 'General is required';
+        if (!unitName.trim()) newErrors.unitName = 'Unit name is required';
+        if (!unitRace.trim()) newErrors.unitRace = 'Unit race is required';
+        if (!unitRole.trim()) newErrors.unitRole = 'Unit role is required';
+        if (!unitPersonality.trim()) newErrors.unitPersonality = 'Unit personality is required';
+        if (!unitPlanet.trim()) newErrors.unitPlanet = 'Unit planet is required';
+        if (!unitRarity.trim()) newErrors.unitRarity = 'Unit rarity is required';
+        if (!unitType.trim()) newErrors.unitType = 'Unit Type is required';
+        if (!unitSizeCategory.trim()) newErrors.unitSizeCategory = 'Unit Size Category is required';
+        if (!unitSize || unitSize <= 0) newErrors.unitSize = 'Unit Size is required and must be greater than 0';
+        if (life === undefined || life <= 0) newErrors.life = 'Life is required and must be greater than 0';
+        if (advancedMove === undefined || advancedMove <= 0) newErrors.advancedMove = 'Advanced Move is required and must be greater than 0';
+        if (advancedRange === undefined || advancedRange <= 0) newErrors.advancedRange = 'Advanced Range is required and must be greater than 0';
+        if (advancedAttack === undefined || advancedAttack <= 0) newErrors.advancedAttack = 'Advanced Attack is required and must be greater than 0';
+        if (advancedDefense === undefined || advancedDefense <= 0) newErrors.advancedDefense = 'Advanced Defense is required and must be greater than 0';
+        if (points === undefined || points <= 0) newErrors.points = 'Points are required and must be greater than 0';
+        if (basicMove === undefined || basicMove <= 0) newErrors.basicMove = 'Basic Move is required and must be greater than 0';
+        if (basicRange === undefined || basicRange <= 0) newErrors.basicRange = 'Basic Range is required and must be greater than 0';
+        if (basicAttack === undefined || basicAttack <= 0) newErrors.basicAttack = 'Basic Attack is required and must be greater than 0';
+        if (basicDefense === undefined || basicDefense <= 0) newErrors.basicDefense = 'Basic Defense is required and must be greater than 0';
+        if (hitboxImageRef.current && hitboxImageRef.current.files?.length === 0) newErrors.hitboxImage = "Hitbox image is required";
+        if (AdvancedImageRef.current && AdvancedImageRef.current.files?.length === 0) newErrors.unitImageAdvanced = "Advanced image is required";
+        if (BasicImageRef.current && BasicImageRef.current.files?.length === 0 && cardSize != '3x5') newErrors.unitImageBasic = "Basic image is required";        
+
+        setErrors(newErrors);
+
+        // If no errors, submit the form
+        if (Object.keys(newErrors).length === 0) {
+            const formData: UnitFormData = {
+                creator, // Maps directly to creator
+                general, // Optional, so mapped directly to general
+                name: unitName, // unitName maps to name
+                race: unitRace, // unitRace maps to race
+                role: unitRole, // unitRole maps to role
+                personality: unitPersonality, // unitPersonality maps to personality
+                planet: unitPlanet, // unitPlanet maps to planet
+                rarity: unitRarity, // unitRarity maps to rarity
+                type: unitType, // unitType maps to type
+                sizeCategory: unitSizeCategory, // unitSizeCategory maps to sizeCategory
+                size: unitSize, // unitSize maps to size
+                life, // Maps directly to life
+                advMove: advancedMove, // advancedMove maps to advMove
+                advRange: advancedRange, // advancedRange maps to advRange
+                advAttack: advancedAttack, // advancedAttack maps to advAttack
+                advDefense: advancedDefense, // advancedDefense maps to advDefense
+                points, // Maps directly to points
+                basicMove, // Maps directly to basicMove
+                basicRange, // Maps directly to basicRange
+                basicAttack, // Maps directly to basicAttack
+                basicDefense, // Maps directly to basicDefense
+                unitNumbers, // Maps directly to unitNumbers
+                abilities, // Maps directly to abilities (Ability[])
+                set: { // setName and numberOfUnitsInSet map to the Set model
+                    id: 0, // Set ID can be fetched or assigned later
+                    creator: creator, // Maps to the creator of the set
+                    name: setName, // Maps to the setName
+                    unitsInSet: numberOfUnitsInSet, // Maps to numberOfUnitsInSet
+                    createdAt: new Date()
+                },
+                files: [],
+                uploadedFiles: [
+                    {
+                        fileName: hitboxImageRef.current?.files?.[0]?.name || '',
+                        filePurpose: "Card_Hitbox_Image",
+                        data: hitboxImageRef.current?.files?.[0],
+                    },
+                    {
+                        fileName: AdvancedImageRef.current?.files?.[0]?.name || '',
+                        filePurpose: "Card_Advanced_Image",
+                        data:AdvancedImageRef.current?.files?.[0],
+                    },
+                    {
+                        fileName: BasicImageRef.current?.files?.[0]?.name || '',
+                        filePurpose: "Card_Basic_Image",
+                        data: BasicImageRef.current?.files?.[0],
+                    }
+                ],
+                condenseAbilities: condenseAbilitiesChecked, // Custom field for condensing abilities
+                id: 0, // ID will be fetched or assigned later
+                note: "", // Add any note if necessary
+            };
+
+
+            let doc: jsPDF = initializePDF(cardSize);
+            doc = await generateIndexCard(doc, formData, cardSize);
+
+            var fileName = `Index_${cardSize}_${formData.name.replace(/\s+/g, "_")}.pdf`;
+            if (cardSize == "Standard") {
+                fileName = `${formData.name.replace(/\s+/g, "_")}.pdf`;
+
+                if (formData.creator == "Renegade") {
+                    fileName = `${formData.name.replace(/\s+/g, "_")}-OG.pdf`;
+                }
+            }
+
+            await savePDF(doc, fileName);
+        }
+    };
+
+    if (loading) return <p>Loading...</p>;
+
     return (
-        <div id="cardMaker" className="container">
-            <form id="heroscapeForm" className="row g-3">
+        <div id="cardMaker" className="container-fluid">
+            <form id="heroscapeForm" className="row g-3" onSubmit={handleSubmit}>
                 <div className="col-md-6">
                     <label htmlFor="creator" className="form-label">
                         Load Unit Data
@@ -122,7 +331,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unit" className="form-select" onChange={(e) => setSelectedUnit(e.target.value)}>
-                        <option value="">&nbsp;</option>
+                        <option value="">Select Unit (Optional)</option>
                         {unitData.sort((a, b) => a.name.localeCompare(b.name)).map(x => {
                             let t = x.name;
                             t = x.creator !== 'Heroscape' ? `(${x.creator}) ${t}` : t;
@@ -132,12 +341,11 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             )
                         })}
                     </select>
-
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="creator" className="form-label">
-                        Card Creator
+                        Card Creator <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -155,11 +363,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <option value="NGC">NGC - New Generation Customs</option>
                         <option value="C3G">C3G - Comic Custom Creators Guild</option>
                     </select>
+                    {errors.creator && <div className="invalid-feedback">{errors.creator}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitGeneral" className="form-label">
-                        General
+                        General <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -178,11 +387,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <option value="Valkrill">Valkrill</option>
                         <option value="Vydar">Vydar</option>
                     </select>
+                    {errors.general && <div className="invalid-feedback">{errors.general}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitName" className="form-label">
-                        Unit Name
+                        Unit Name <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -192,11 +402,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="text" id="unitName" value={unitName} className="form-control" maxLength={35} />
+                    {errors.unitName && <div className="invalid-feedback">{errors.unitName}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitRace" className="form-label">
-                        Unit Race
+                        Unit Race <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -206,11 +417,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="text" id="unitRace" value={unitRace} className="form-control" maxLength={12} />
+                    {errors.unitRace && <div className="invalid-feedback">{errors.unitRace}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitRole" className="form-label">
-                        Unit Role
+                        Unit Role <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -220,11 +432,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="text" id="unitRole" value={unitRole} className="form-control" maxLength={12} />
+                    {errors.unitRole && <div className="invalid-feedback">{errors.unitRole}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitPersonality" className="form-label">
-                        Unit Personality
+                        Unit Personality <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -234,11 +447,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="text" id="unitPersonality" value={unitPersonality} className="form-control" maxLength={12} />
+                    {errors.unitPersonality && <div className="invalid-feedback">{errors.unitPersonality}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitPlanet" className="form-label">
-                        Unit Planet
+                        Unit Planet <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -248,11 +462,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="text" id="unitPlanet" value={unitPlanet} className="form-control" maxLength={12} />
+                    {errors.unitPlanet && <div className="invalid-feedback">{errors.unitPlanet}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitRarity" className="form-label">
-                        Unit Rarity
+                        Unit Rarity <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -266,11 +481,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <option value="Uncommon">Uncommon</option>
                         <option value="Common">Common</option>
                     </select>
+                    {errors.unitRarity && <div className="invalid-feedback">{errors.unitRarity}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitType" className="form-label">
-                        Unit Type
+                        Unit Type <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -283,11 +499,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <option value="Hero">Hero</option>
                         <option value="Squad">Squad</option>
                     </select>
+                    {errors.unitType && <div className="invalid-feedback">{errors.unitType}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitSizeCategory" className="form-label">
-                        Unit Size Category
+                        Unit Size Category <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -302,11 +519,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <option value="Medium">Medium</option>
                         <option value="Small">Small</option>
                     </select>
+                    {errors.unitSizeCategory && <div className="invalid-feedback">{errors.unitSizeCategory}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitSize" className="form-label">
-                        Unit Size
+                        Unit Size <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -316,12 +534,18 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="unitSize" value={unitSize} className="form-control" />
+                    {errors.unitSize && <div className="invalid-feedback">{errors.unitSize}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <div className="row">
                         <div className="col-md-12">
-                            <input type="checkbox" id="condense" defaultChecked={true} />
+                            <input
+                                type="checkbox"
+                                id="condense"
+                                checked={condenseAbilitiesChecked}
+                                onChange={(e) => setCondenseAbilitiesChecked(e.target.checked)} // Update state when checkbox is changed
+                            />&nbsp;
                             <label className="form-label">
                                 Condense Abilities
                                 <span
@@ -341,20 +565,51 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                                 <span
                                     data-bs-toggle="tooltip"
                                     data-bs-html="true"
-                                    title="Enter the abilities of the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/ability.png' alt='ability image' />"
+                                    title="Enter the abilities of the unit."
                                 >
                                     <span className="q">[?]</span>
                                 </span>
                             </label>
-                            <button type="button" className="btn btn-outline-primary btn-sm" id="addAbilityBtn">Add Ability +</button>
-                            <div id="abilitiesContainer" className="mt-3 container"></div>
+                            <button type="button" className="btn btn-outline-primary btn-sm" onClick={handleAddAbility}>
+                                Add Ability +
+                            </button>
+                            <div id="abilitiesContainer" className="mt-3 container">
+                                {abilities.map((ability) => (
+                                    <div className="row ability-row mb-3" key={ability.id}>
+                                        <div className="col-md-3">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="Ability Name"
+                                                value={ability.abilityName}
+                                                onChange={(e) => handleAbilityChange(ability.id, 'abilityName', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="col-md-7">
+                                            <textarea
+                                                className="form-control"
+                                                placeholder="Ability Description"
+                                                rows={2}
+                                                value={ability.ability}
+                                                onChange={(e) => handleAbilityChange(ability.id, 'ability', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="col-md-2">
+                                            <button type="button" className="btn btn-danger" onClick={() => handleRemoveAbility(ability.id)}>
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {errors.abilities && <div className="invalid-feedback">{errors.abilities}</div>}
                         </div>
                     </div>
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="life" className="form-label">
-                        Life
+                        Life <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -364,11 +619,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="life" value={life} className="form-control" />
+                    {errors.life && <div className="invalid-feedback">{errors.life}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="advancedMove" className="form-label">
-                        Advanced Move
+                        Advanced Move <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -378,11 +634,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="advancedMove" value={advancedMove} className="form-control" />
+                    {errors.advancedMove && <div className="invalid-feedback">{errors.advancedMove}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="advancedRange" className="form-label">
-                        Advanced Range
+                        Advanced Range <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -392,11 +649,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="advancedRange" value={advancedRange} className="form-control" />
+                    {errors.advancedRange && <div className="invalid-feedback">{errors.advancedRange}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="advancedAttack" className="form-label">
-                        Advanced Attack
+                        Advanced Attack <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -406,11 +664,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="advancedAttack" value={advancedAttack} className="form-control" />
+                    {errors.advancedAttack && <div className="invalid-feedback">{errors.advancedAttack}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="advancedDefense" className="form-label">
-                        Advanced Defense
+                        Advanced Defense <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -420,11 +679,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="advancedDefense" value={advancedDefense} className="form-control" />
+                    {errors.advancedDefense && <div className="invalid-feedback">{errors.advancedDefense}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="points" className="form-label">
-                        Points
+                        Points <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -434,11 +694,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="points" value={points} className="form-control" />
+                    {errors.points && <div className="invalid-feedback">{errors.points}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="basicMove" className="form-label">
-                        Basic Move
+                        Basic Move <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -448,11 +709,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="basicMove" value={basicMove} className="form-control" />
+                    {errors.basicMove && <div className="invalid-feedback">{errors.basicMove}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="basicRange" className="form-label">
-                        Basic Range
+                        Basic Range <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -462,11 +724,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="basicRange" value={basicRange} className="form-control" />
+                    {errors.basicRange && <div className="invalid-feedback">{errors.basicRange}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="basicAttack" className="form-label">
-                        Basic Attack
+                        Basic Attack <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -476,11 +739,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="basicAttack" value={basicAttack} className="form-control" />
+                    {errors.basicAttack && <div className="invalid-feedback">{errors.basicAttack}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="basicDefense" className="form-label">
-                        Basic Defense
+                        Basic Defense <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -490,12 +754,13 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <input type="number" id="basicDefense" value={basicDefense} className="form-control" />
+                    {errors.basicDefense && <div className="invalid-feedback">{errors.basicDefense}</div>}
                 </div>
 
                 {/*Image Uploads*/}
                 <div className="col-md-6">
                     <label htmlFor="hitboxImage" className="form-label">
-                        Hitbox Image
+                        Hitbox Image <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -504,12 +769,13 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="file" id="hitboxImage" className="form-control" accept="image/*" />
+                    <input ref={hitboxImageRef} type="file" id="hitboxImage" className="form-control" accept="image/*" />
+                    {errors.hitboxImage && <div className="invalid-feedback">{errors.hitboxImage}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitImageAdvanced" className="form-label">
-                        Unit Image Advanced
+                        Unit Image Advanced <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -518,12 +784,13 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="file" id="unitImageAdvanced" className="form-control" accept="image/*" />
+                    <input ref={AdvancedImageRef} type="file" id="unitImageAdvanced" className="form-control" accept="image/*" />
+                    {errors.unitImageAdvanced && <div className="invalid-feedback">{errors.unitImageAdvanced}</div>}
                 </div>
 
                 <div className="col-md-6">
                     <label htmlFor="unitImageBasic" className="form-label">
-                        Unit Image Basic
+                        Unit Image Basic <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -532,7 +799,8 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="file" id="unitImageBasic" className="form-control" accept="image/*" />
+                    <input ref={BasicImageRef} type="file" id="unitImageBasic" className="form-control" accept="image/*" />
+                    {errors.unitImageBasic && <div className="invalid-feedback">{errors.unitImageBasic}</div>}
                 </div>
 
                 {/*Set and Numbers*/}

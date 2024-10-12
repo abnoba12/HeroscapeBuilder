@@ -1,9 +1,8 @@
 import axios, { AxiosResponse } from 'axios';
+import { base64ToBlob, blobToBase64 } from './image-service';
 
 // Create an instance of axios
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
-});
+const api = axios.create();
 
 // Generic type for the response data
 type ApiResponse<T> = AxiosResponse<T>;
@@ -93,26 +92,4 @@ const cleanUpExpiredCache = (cacheDuration: number) => {
             }
         }
     }
-};
-
-// Convert Blob to Base64
-const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-};
-
-// Convert Base64 to Blob
-const base64ToBlob = (base64: string): Blob => {
-    const byteString = atob(base64.split(',')[1]);
-    const mimeString = base64.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([ab], { type: mimeString });
 };

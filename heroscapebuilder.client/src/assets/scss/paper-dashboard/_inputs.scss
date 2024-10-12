@@ -214,41 +214,45 @@
     color: $default-color;
     border-top-right-radius: $border-radius-base;
     border-bottom-right-radius: $border-radius-base;
-
-    & i{
-      opacity: .5;
-    }
-
     @include transition-input-focus-color();
 
-    .has-danger &{
-      background-color: $danger-input-bg;
+    & i {
+        opacity: .5;
     }
-    .has-success &{
-      background-color: $success-input-bg;
+
+    .has-danger & {
+        background-color: $danger-input-bg;
     }
-    .has-danger.input-group-focus &{
-      background-color: $white-color;
-      color: $danger-color;
+
+    .has-success & {
+        background-color: $success-input-bg;
     }
-    .has-success.input-group-focus &{
-      background-color: $white-color;
-      color: $success-color;
+
+    .has-danger.input-group-focus & {
+        background-color: $white-color;
+        color: $danger-color;
     }
-    .has-danger .form-control:focus + &{
-      color: $danger-color;
+
+    .has-success.input-group-focus & {
+        background-color: $white-color;
+        color: $success-color;
     }
-    .has-success .form-control:focus + &{
-      color: $success-color;
+
+    .has-danger .form-control:focus + & {
+        color: $danger-color;
+    }
+
+    .has-success .form-control:focus + & {
+        color: $success-color;
     }
 
     & + .form-control,
-    & ~ .form-control{
+    & ~ .form-control {
         @include input-size($padding-base-vertical - 1, $padding-base-horizontal);
         padding-left: 18px;
     }
 
-    i{
+    i {
         width: 17px;
     }
 }

@@ -8,8 +8,8 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public int ArmyCardId { get; set; }
 
-        public string? Abilityname { get; set; }
+        public string AbilityName { get; set; }
 
-        public string? Ability { get; set; }
+        public string Ability { get; set; }
     }
 }
