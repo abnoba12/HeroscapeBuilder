@@ -4,7 +4,7 @@ import { Ability } from "../../../models/ability";
 
 const lineHeightOffset = 1.15;
 
-export function SizeAndCenterText(doc: jsPDF, text: string, fontSize: number, areaX: number, areaY: number, areaWidth: number, areaHeight: number, yOffset = 0, padding = 0, drawOutlines = false, align = "center") {
+export function SizeAndCenterText(doc: jsPDF, text: string, fontSize: number, areaX: number, areaY: number, areaWidth: number, areaHeight: number, yOffset = 0, padding = 0, drawOutlines = false, align: "center" | "left" | "right" | "justify" | undefined = "center") {
     try {
         SizeText(doc, text, fontSize, areaWidth, areaHeight, padding = 0);
         CenterTextInArea(doc, text, areaX, areaY, areaWidth, areaHeight, yOffset, padding, drawOutlines, align);
