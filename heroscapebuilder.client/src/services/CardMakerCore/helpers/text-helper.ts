@@ -1,4 +1,4 @@
-import jsPDF from "jspdf";
+import jsPDF, { TextOptionsLight } from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
 import { Ability } from "../../../models/ability";
 
@@ -48,7 +48,7 @@ export function SizeText(doc: jsPDF, text: string, fontSize: number, areaWidth: 
     }
 }
 
-export function CenterTextInArea(doc: jsPDF, text: string, areaX: number, areaY: number, areaWidth: number, areaHeight: number, yOffset = 0, padding = 0, drawOutlines = false, align: "center" | "left" | "right" | "justify" = "center") {
+export function CenterTextInArea(doc: jsPDF, text: string, areaX: number, areaY: number, areaWidth: number, areaHeight: number, yOffset = 0, padding = 0, drawOutlines = false, align: "center" | "left" | "right" | "justify" | undefined) {
     try {
         // console.log(`text: ${text}, areaX: ${areaX}, areaY: ${areaY}, areaWidth: ${areaWidth}, areaHeight: ${areaHeight}, padding: ${padding}`);
 
@@ -91,7 +91,10 @@ export function CenterTextInArea(doc: jsPDF, text: string, areaX: number, areaY:
         if (align == "right") {
             xPlacement = areaX + areaWidth;
         }
-        doc.text(wrappedText, xPlacement, textY, { align: align as "center" | "left" | "right" | "justify" });
+        if (!align) {
+            align = 'center';
+        }
+        doc.text(wrappedText, xPlacement, textY, { align: align as "center" | "left" | "right" | "justify" | undefined } as TextOptionsLight);
     } catch (e) {
         var message = `Error centering text: ${text}`;
         console.error(message, e);
