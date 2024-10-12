@@ -91,7 +91,7 @@ export function CenterTextInArea(doc: jsPDF, text: string, areaX: number, areaY:
         if (align == "right") {
             xPlacement = areaX + areaWidth;
         }
-        doc.text(wrappedText, xPlacement, textY, { align });
+        doc.text(wrappedText, xPlacement, textY, { align: align as "center" | "left" | "right" | "justify" });
     } catch (e) {
         var message = `Error centering text: ${text}`;
         console.error(message, e);
