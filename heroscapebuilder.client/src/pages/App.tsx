@@ -10,10 +10,12 @@ import ThreebyfiveArmyCards from "../pages/army-cards/threebyfive/threebyfive-ar
 import Home from "./Home/Home";
 import ArmyCards from "./army-cards/army-cards";
 import DownloadfourBySix from "./army-cards/fourbysix/download-fourbysix";
+import MakeCard4x6 from "./army-cards/fourbysix/make-card-4x6";
 import Printing from "./army-cards/printing/printing";
 import DownloadStandard from "./army-cards/standard/download-standard";
 import StandardArmyCards from "./army-cards/standard/standard-army-cards";
 import DownloadThreeByFive from "./army-cards/threebyfive/download-threebyfive";
+import MakeCard3x5 from "./army-cards/threebyfive/make-card-3x5";
 import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
 
 const App: React.FC = () => {
@@ -31,8 +33,10 @@ const App: React.FC = () => {
                             <Route path="/army-cards/standard/create" element={<MakeCardStandard />} />
                             <Route path="/army-cards/threebyfive" element={<ThreebyfiveArmyCards />} />
                             <Route path="/army-cards/threebyfive/download" element={<DownloadThreeByFive />} />
+                            <Route path="/army-cards/threebyfive/create" element={<MakeCard3x5 />} />
                             <Route path="/army-cards/fourbysix" element={<FourbysixArmyCards />} />
                             <Route path="/army-cards/fourbysix/download" element={<DownloadfourBySix />} />
+                            <Route path="/army-cards/fourbysix/create" element={<MakeCard4x6 />} />
                             <Route path="/army-cards/printing" element={<Printing />} />
                             <Route path="/units" element={<Home />} />
                             <Route path="/units/unit-data" element={<Home />} />

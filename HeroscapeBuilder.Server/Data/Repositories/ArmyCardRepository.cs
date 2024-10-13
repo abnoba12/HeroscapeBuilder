@@ -1,4 +1,5 @@
-﻿using HeroscapeBuilder.Server.Data.Entities;
+﻿using EFCoreSecondLevelCacheInterceptor;
+using HeroscapeBuilder.Server.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace HeroscapeBuilder.Server.Data.Repositories

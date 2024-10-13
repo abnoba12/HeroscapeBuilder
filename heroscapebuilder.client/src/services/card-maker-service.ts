@@ -1,22 +1,25 @@
 import { jsPDF } from "jspdf";
+import { PDFDocument } from "pdf-lib";
 import { callAddFontArialbd } from '../assets/fonts/arial-bold';
 import { callAddFontArial } from '../assets/fonts/arial-normal';
 import { callAddFontImpact } from '../assets/fonts/impact-normal';
 import { UnitFormData } from '../models/unit-form-data';
+import { addPageTwoStandard } from '../services/CardMakerCore/Standard/add-page-two-standard';
+import { addPageOne3x5 } from "./CardMakerCore/3x5/add-page-one-3x5";
+import { addPageTwo3x5 } from "./CardMakerCore/3x5/add-page-two-3x5";
+import { addPageOne4x6 } from "./CardMakerCore/4x6/add-page-one-4x6";
+import { addPageTwo4x6 } from "./CardMakerCore/4x6/add-page-two-4x6";
 import { addPageOneStandard } from './CardMakerCore/Standard/add-page-one-standard';
-import { addPageTwoStandard } from '../services/CardMakerCore/Standard/add-page-two-standard'
-import { PDFDocument } from "pdf-lib";
 
 export async function generateIndexCard(doc: jsPDF, formData: UnitFormData, size = "4x6") {
     try {
-        //if (size == "4x6") {
-        //    await addPageOne4x6(formData, doc);
-        //    await addPageTwo4x6(formData, doc);
-        //} else if (size == "3x5") {
-        //    await addPageOne3x5(formData, doc);
-        //    await addPageTwo3x5(formData, doc);
-    //} else
-        if (size == "Standard") {
+        if (size == "4x6") {
+            await addPageOne4x6(formData, doc);
+            await addPageTwo4x6(formData, doc);
+        } else if (size == "3x5") {
+            await addPageOne3x5(formData, doc);
+            await addPageTwo3x5(formData, doc);
+        } else if (size == "Standard") {
             switch (formData.general) {
                 case "Aquilla":
                     await addPageOneStandard(formData, doc, 1, 2, 0.05);

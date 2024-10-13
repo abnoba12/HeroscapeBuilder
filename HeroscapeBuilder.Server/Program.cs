@@ -1,3 +1,4 @@
+using EFCoreSecondLevelCacheInterceptor;
 using HeroscapeBuilder.Server;
 using HeroscapeBuilder.Server.Data;
 using HeroscapeBuilder.Server.Integrations.SupabaseIntegration;
@@ -5,6 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:5173")
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials();
+        });
+});
 
 // Call the extension method to register services for DI
 builder.Services.RegisterServices();
@@ -18,6 +32,8 @@ builder.Services.AddSwaggerGen(c => {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "HeroscapeBuilder", Version = "v1" });
 });
 
+builder.Services.AddDistributedMemoryCache();
+
 var connectionString = builder.Configuration.GetConnectionString("SupabaseDb");
 if (!string.IsNullOrEmpty(connectionString))
 {
@@ -27,22 +43,13 @@ if (!string.IsNullOrEmpty(connectionString))
         .Replace("%SUPABASE_USER%", Environment.GetEnvironmentVariable("SUPABASE_USER"))
         .Replace("%SUPABASE_PASSWORD%", Environment.GetEnvironmentVariable("SUPABASE_PASSWORD"));
 }
-builder.Services.AddDbContext<SupabaseDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<SupabaseDbContext>((serviceProvider, options) => {
+    options.UseNpgsql(connectionString);
+    options.AddInterceptors(serviceProvider.GetRequiredService<SecondLevelCacheInterceptor>());
+});
 
 builder.Services.Configure<SupabaseConfig>(builder.Configuration.GetSection("Supabase"));
 builder.Services.AddHttpClient<SupabaseStorage>();
-
-// Add CORS policy
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigins",
-        builder =>
-        {
-            builder.WithOrigins("https://localhost:5173")
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
-});
 
 var app = builder.Build();
 

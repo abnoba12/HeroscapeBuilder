@@ -13,7 +13,7 @@ const ThreebyfiveArmyCards: React.FC = () => {
                     </a>
                 </div>
                 <div className="col-md-6 card-option text-center">
-                    <a href="/army-cards/threebyfive" className="text-decoration-none text-dark">
+                    <a href="/army-cards/threebyfive/create" className="text-decoration-none text-dark">
                         <h1 className="text-center mt-2">Create a New Army Card</h1>
                         <img src={cardMaker} alt="3x5 Heroscape Index Card" className="img-fluid" />
                     </a>

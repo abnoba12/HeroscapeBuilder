@@ -60,6 +60,35 @@ export async function createHTMLImageElementFromBlob(blob: Blob): Promise<HTMLIm
     });
 }
 
+export async function createHTMLImageElementFromBase64(base64: string, mimeType: string = 'image/png'): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        // Ensure the base64 string includes the proper data URL scheme
+        if (!base64.startsWith('data:')) {
+            img.src = `data:${mimeType};base64,${base64}`;
+        } else {
+            img.src = base64; // If the string already has the data URL scheme
+        }
+
+        img.onload = () => {
+            if (img.width && img.height) {
+                resolve(img);
+            } else {
+                console.error('Image loaded, but dimensions are invalid.', img);
+                reject('Image did not load correctly (invalid dimensions).');
+            }
+        };
+
+        img.onerror = (error) => {
+            console.error('Image loading failed', error, img);
+            reject('Error loading image.');
+        };
+    });
+}
+
+
+
 
 export function getSizeToMax(maxWidth: number, maxHeight: number, image: HTMLImageElement) {
     try {

@@ -19,24 +19,30 @@ export const fetchImageWithCache = async (url: string, cacheKey: string, cacheDu
     // Fetch the image from the API
     const response = await api.get(url, { responseType: 'blob' });
 
-    // Convert the image blob to Base64
-    const base64Image = await blobToBase64(response.data);
+    // Check if the response is a 200 OK
+    if (response.status === 200) {
+        // Convert the image blob to Base64
+        const base64Image = await blobToBase64(response.data);
 
-    // Attempt to cache the result
-    try {
-        localStorage.setItem(cacheKey, base64Image);
-        localStorage.setItem(`${cacheKey}_time`, now.toString());
-    } catch (error: any) {
-        // Catch QuotaExceededError and fallback to just returning the image
-        if (error.name === 'QuotaExceededError') {
-            console.warn('LocalStorage quota exceeded, skipping caching.');
-        } else {
-            throw error;
+        // Attempt to cache the result
+        try {
+            localStorage.setItem(cacheKey, base64Image);
+            localStorage.setItem(`${cacheKey}_time`, now.toString());
+        } catch (error: any) {
+            // Catch QuotaExceededError and fallback to just returning the image
+            if (error.name === 'QuotaExceededError') {
+                console.warn('LocalStorage quota exceeded, skipping caching.');
+            } else {
+                throw error;
+            }
         }
-    }
 
-    return base64Image;
+        return base64Image;
+    } else {
+        throw new Error(`Failed to fetch image. Status code: ${response.status}`);
+    }
 };
+
 
 // Example component to display cached images
 export const ImageCache: React.FC<{ src: string; alt: string; cacheKey: string; className: string }> = ({ src, alt, cacheKey, className }) => {
