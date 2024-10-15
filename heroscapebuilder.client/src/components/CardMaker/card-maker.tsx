@@ -16,6 +16,7 @@ interface CardMakerProps {
 
 const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     const [loading, setLoading] = useState<boolean>(true);
+    const [submitting, setSubmitting] = useState<boolean>(false); // For handling button spinner
     const [unitData, setUnitData] = useState<Unit[]>([]);
     const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -243,74 +244,81 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
 
         // If no errors, submit the form
         if (Object.keys(newErrors).length === 0) {
-            const formData: UnitFormData = {
-                creator, // Maps directly to creator
-                general, // Optional, so mapped directly to general
-                name: unitName, // unitName maps to name
-                race: unitRace, // unitRace maps to race
-                role: unitRole, // unitRole maps to role
-                personality: unitPersonality, // unitPersonality maps to personality
-                planet: unitPlanet, // unitPlanet maps to planet
-                rarity: unitRarity, // unitRarity maps to rarity
-                type: unitType, // unitType maps to type
-                sizeCategory: unitSizeCategory, // unitSizeCategory maps to sizeCategory
-                size: unitSize, // unitSize maps to size
-                life, // Maps directly to life
-                advMove: advancedMove, // advancedMove maps to advMove
-                advRange: advancedRange, // advancedRange maps to advRange
-                advAttack: advancedAttack, // advancedAttack maps to advAttack
-                advDefense: advancedDefense, // advancedDefense maps to advDefense
-                points, // Maps directly to points
-                basicMove, // Maps directly to basicMove
-                basicRange, // Maps directly to basicRange
-                basicAttack, // Maps directly to basicAttack
-                basicDefense, // Maps directly to basicDefense
-                unitNumbers, // Maps directly to unitNumbers
-                abilities, // Maps directly to abilities (Ability[])
-                set: { // setName and numberOfUnitsInSet map to the Set model
-                    id: 0, // Set ID can be fetched or assigned later
-                    creator: creator, // Maps to the creator of the set
-                    name: setName, // Maps to the setName
-                    unitsInSet: numberOfUnitsInSet, // Maps to numberOfUnitsInSet
-                    createdAt: new Date()
-                },
-                files: [],
-                uploadedFiles: [
-                    {
-                        fileName: hitboxImageRef.current?.files?.[0]?.name || '',
-                        filePurpose: "Card_Hitbox_Image",
-                        data: hitboxImageRef.current?.files?.[0],
+            try {
+                setSubmitting(true); // Show spinner while submitting
+                const formData: UnitFormData = {
+                    creator, // Maps directly to creator
+                    general, // Optional, so mapped directly to general
+                    name: unitName, // unitName maps to name
+                    race: unitRace, // unitRace maps to race
+                    role: unitRole, // unitRole maps to role
+                    personality: unitPersonality, // unitPersonality maps to personality
+                    planet: unitPlanet, // unitPlanet maps to planet
+                    rarity: unitRarity, // unitRarity maps to rarity
+                    type: unitType, // unitType maps to type
+                    sizeCategory: unitSizeCategory, // unitSizeCategory maps to sizeCategory
+                    size: unitSize, // unitSize maps to size
+                    life, // Maps directly to life
+                    advMove: advancedMove, // advancedMove maps to advMove
+                    advRange: advancedRange, // advancedRange maps to advRange
+                    advAttack: advancedAttack, // advancedAttack maps to advAttack
+                    advDefense: advancedDefense, // advancedDefense maps to advDefense
+                    points, // Maps directly to points
+                    basicMove, // Maps directly to basicMove
+                    basicRange, // Maps directly to basicRange
+                    basicAttack, // Maps directly to basicAttack
+                    basicDefense, // Maps directly to basicDefense
+                    unitNumbers, // Maps directly to unitNumbers
+                    abilities, // Maps directly to abilities (Ability[])
+                    set: { // setName and numberOfUnitsInSet map to the Set model
+                        id: 0, // Set ID can be fetched or assigned later
+                        creator: creator, // Maps to the creator of the set
+                        name: setName, // Maps to the setName
+                        unitsInSet: numberOfUnitsInSet, // Maps to numberOfUnitsInSet
+                        createdAt: new Date()
                     },
-                    {
-                        fileName: AdvancedImageRef.current?.files?.[0]?.name || '',
-                        filePurpose: "Card_Advanced_Image",
-                        data:AdvancedImageRef.current?.files?.[0],
-                    },
-                    {
-                        fileName: BasicImageRef.current?.files?.[0]?.name || '',
-                        filePurpose: "Card_Basic_Image",
-                        data: BasicImageRef.current?.files?.[0],
+                    files: [],
+                    uploadedFiles: [
+                        {
+                            fileName: hitboxImageRef.current?.files?.[0]?.name || '',
+                            filePurpose: "Card_Hitbox_Image",
+                            data: hitboxImageRef.current?.files?.[0],
+                        },
+                        {
+                            fileName: AdvancedImageRef.current?.files?.[0]?.name || '',
+                            filePurpose: "Card_Advanced_Image",
+                            data: AdvancedImageRef.current?.files?.[0],
+                        },
+                        {
+                            fileName: BasicImageRef.current?.files?.[0]?.name || '',
+                            filePurpose: "Card_Basic_Image",
+                            data: BasicImageRef.current?.files?.[0],
+                        }
+                    ],
+                    condenseAbilities: condenseAbilitiesChecked, // Custom field for condensing abilities
+                    id: 0, // ID will be fetched or assigned later
+                    note: "", // Add any note if necessary
+                };
+
+
+                let doc: jsPDF = initializePDF(cardSize);
+                doc = await generateIndexCard(doc, formData, cardSize);
+
+                var fileName = `Index_${cardSize}_${formData.name.replace(/\s+/g, "_")}.pdf`;
+                if (cardSize == "Standard") {
+                    fileName = `${formData.name.replace(/\s+/g, "_")}.pdf`;
+
+                    if (formData.creator == "Renegade") {
+                        fileName = `${formData.name.replace(/\s+/g, "_")}-OG.pdf`;
                     }
-                ],
-                condenseAbilities: condenseAbilitiesChecked, // Custom field for condensing abilities
-                id: 0, // ID will be fetched or assigned later
-                note: "", // Add any note if necessary
-            };
-
-
-            let doc: jsPDF = initializePDF(cardSize);
-            doc = await generateIndexCard(doc, formData, cardSize);
-
-            var fileName = `Index_${cardSize}_${formData.name.replace(/\s+/g, "_")}.pdf`;
-            if (cardSize == "Standard") {
-                fileName = `${formData.name.replace(/\s+/g, "_")}.pdf`;
-
-                if (formData.creator == "Renegade") {
-                    fileName = `${formData.name.replace(/\s+/g, "_")}-OG.pdf`;
                 }
-            }
 
-            await savePDF(doc, fileName);
+                await savePDF(doc, fileName);
+            } catch (e) {
+                throw e;
+            } finally {
+                setSubmitting(false); // Hide spinner once done
+            }
         }
     };
 
@@ -848,7 +856,16 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
 
                 {/*Submit Button*/}
                 <div className="col-md-12">
-                    <button type="submit" className="btn btn-primary">Generate Heroscape Card</button>
+                    <button type="submit" className="btn btn-primary" disabled={submitting}>
+                        {submitting ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Generating...
+                            </>
+                        ) : (
+                            "Generate Heroscape Card"
+                        )}
+                    </button>
                 </div>
             </form>
             <div id="errorMessages" className="text-danger mt-3"></div>

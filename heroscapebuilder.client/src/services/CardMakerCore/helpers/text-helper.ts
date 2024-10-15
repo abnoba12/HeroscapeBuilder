@@ -171,11 +171,12 @@ export async function SizeAndCenterAbilities(doc: jsPDF, formData: UnitFormData,
 
 function combineAbilityText(abilities: Ability[], condense: boolean) {
     const commonAbilities = ["flying", "disengage", "counter strike", "stealth flying", "slither", "double attack", "lava resistant"];
+    let a: Ability[] = JSON.parse(JSON.stringify(abilities)); //Deep copy
 
     //Turn stealth flying into its composite abilities "flying" and "disengage".
-    if (condense && abilities.map(x => x.abilityName?.toLowerCase()).includes("stealth flying")) {
-        abilities = abilities.filter(ability => ability.abilityName?.toLowerCase() !== "stealth flying");
-        abilities.push({
+    if (condense && a.map(x => x.abilityName?.toLowerCase()).includes("stealth flying")) {
+        a = a.filter(ability => ability.abilityName?.toLowerCase() !== "stealth flying");
+        a.push({
             abilityName: "Flying, Disengage",
             ability: "",
             id: 0,
@@ -185,22 +186,22 @@ function combineAbilityText(abilities: Ability[], condense: boolean) {
 
     // Turn any common ability into just its name and remove the ability text
     if (condense) {
-        for (let i = 0; i < abilities.length; i++) {
-            if (commonAbilities.includes(abilities[i].abilityName?.toLowerCase() || '')) {
-                abilities[i].ability = undefined;
+        for (let i = 0; i < a.length; i++) {
+            if (commonAbilities.includes(a[i].abilityName?.toLowerCase() || '')) {
+                a[i].ability = undefined;
             }
         }
     }
 
-    let nonEmptyText = abilities.filter(item => item.ability);
-    let emptyText = abilities.filter(item => !item.ability);
+    let nonEmptyText = a.filter(item => item.ability);
+    let emptyText = a.filter(item => !item.ability);
 
     // Combine names of empty text objects
     if (emptyText.length > 0) {
         let combinedNames = emptyText.map(item => item.abilityName).join(", ");
 
         // Add the new object with combined names to the array
-        nonEmptyText.unshift({
+        nonEmptyText.push({
             abilityName: combinedNames,
             ability: "",
             id: 0,

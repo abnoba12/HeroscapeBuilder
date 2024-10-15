@@ -23,10 +23,15 @@ body{
     @include transition($general-transition-time, $transition-ease);
 }
 
+.sidebar .submenu {
+    list-style-type: none;
+}
+
+
 //transition for dropdown caret
 .dropdown-toggle:after,
 .bootstrap-switch-label:before,
-.caret{
+.caret {
     @include transition($fast-transition-time, $transition-ease);
 }
 
