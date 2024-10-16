@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
 import { loadImage, getSizeToMax } from "../../image-service.js";
 import { SizeAndCenterAbilities, SizeAndCenterText } from "../helpers/text-helper.js"
-import { fetchImageWithCache } from "../../image-cache-service.js";
+import { base64Cache } from "../../cache-manager.js";
 
 export async function addPageOneStandard(formData: UnitFormData, doc: jsPDF, GlobalAdjustX = 0, GlobalAdjustY = 0, GlobalYGapAdjust = 0) {
     try {
@@ -52,7 +52,7 @@ export async function addPageOneStandard(formData: UnitFormData, doc: jsPDF, Glo
 
         // Load the General's image
         const generalImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Front_EW.png`;
-        const generalImg = await fetchImageWithCache(generalImgSrc, `${formData.general}Front_EW.png`);
+        const generalImg = await base64Cache(generalImgSrc, `${formData.general}Front_EW.png`);
 
         // Add the General's image to the first page
         doc.addImage(generalImg, 'PNG', 0, 0, pageWidth, pageHeight);

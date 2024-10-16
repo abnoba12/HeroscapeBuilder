@@ -11,6 +11,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.1.4",
+    "@mui/x-data-grid": "^7.20.0",
     "@popperjs/core": "^2.11.8",
     "@types/file-saver": "^2.0.7",
     "@types/react-router-dom": "^5.3.3",

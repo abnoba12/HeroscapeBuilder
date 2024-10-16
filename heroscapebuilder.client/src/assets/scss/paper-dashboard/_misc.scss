@@ -153,3 +153,14 @@ a[data-toggle="collapse"][aria-expanded="true"] .caret,
     }
   }
 }
+
+input {
+    background-color: $medium-pale-bg;
+    color: $font-color;
+    padding: 0 8px;
+}
+
+#bmc-wbtn {
+    height: 34px !important;
+    width: 34px !important;
+}

@@ -1,14 +1,13 @@
-import { UnitFile } from '../models/unit-file';
-import { blobCache, GetWithCache } from './cache-manager';
-import JSZip from "jszip";
-import axios from 'axios';
 import { saveAs } from 'file-saver';
+import JSZip from "jszip";
+import { UnitFile } from '../models/unit-file';
+import { blobCache, GetAPIDataWithCache } from './cache-manager';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 export const getFilesByPurpose = async (purpose:string) => {
     try {
-        return await GetWithCache<UnitFile[]>(`${API_BASE_URL}/File/GetFilesByPurpose?purpose=${purpose}`, `/File?purpose=${purpose}`, 3600);
+        return await GetAPIDataWithCache<UnitFile[]>(`${API_BASE_URL}/File/GetFilesByPurpose?purpose=${purpose}`, `/File?purpose=${purpose}`, 240);
     } catch (error) {
         console.error('Error fetching files:', error);
         throw error;
@@ -85,10 +84,7 @@ export async function downloadAllAsZip(files: any, zipName: any) {
 
     for (const file of files) {
         const fileName = file.split('/').pop();
-        const blob = await blobCache(`pdf-cache_${fileName}`, async () => {
-            const response = await axios.get(fileName, { responseType: 'blob' });
-            return response.data;
-        });
+        const blob = await blobCache(fileName, `pdf-cache_${fileName}`);
         zip.file(fileName, blob);
     }
 

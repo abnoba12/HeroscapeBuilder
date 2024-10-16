@@ -4,11 +4,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Ability } from '../../models/ability';
 import { Unit } from '../../models/unit';
 import { UnitFormData } from '../../models/unit-form-data';
+import { blobCache } from '../../services/cache-manager';
 import { generateIndexCard, initializePDF, savePDF } from '../../services/card-maker-service';
 import { getUnits } from '../../services/unit-service';
 import './card-maker.scss';
-import { base64ToBlob } from '../../services/image-service';
-import { fetchImageWithCache } from '../../services/image-cache-service';
 
 interface CardMakerProps {
     cardSize: string;
@@ -175,21 +174,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     const loadImage = (imageUrl: string, inputElement: HTMLInputElement | null) => {
         if (!inputElement) return;
 
-        fetch(imageUrl)
+        const urlParts = imageUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+
+        blobCache(imageUrl, fileName)
             .then(async response => {
-                const contentDisposition = response.headers.get('Content-Disposition');
-                let fileName = 'default.png'; // Default file name
-
-                if (contentDisposition && contentDisposition.includes('filename=')) {
-                    fileName = contentDisposition.split('filename=')[1].split(';')[0].replace(/"/g, '');
-                } else {
-                    const urlParts = imageUrl.split('/');
-                    fileName = urlParts[urlParts.length - 1];
-                }
-
-                const mimeType = response.headers.get('Content-Type') || 'image/png';
-
-                return { blob: base64ToBlob(await fetchImageWithCache(imageUrl, fileName)), fileName, mimeType };
+                return { blob: response, fileName, mimeType: response.type };
             })
             .then(({ blob, fileName, mimeType }) => {
                 const file = new File([blob], fileName, { type: mimeType });

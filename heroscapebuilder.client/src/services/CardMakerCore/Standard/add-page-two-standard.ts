@@ -2,7 +2,7 @@ import { SizeAndCenterText, CenterTextInArea } from "../helpers/text-helper";
 import { loadImage, getSizeToMax, createHTMLImageElementFromBlob } from "../../image-service";
 import { UnitFormData } from "../../../models/unit-form-data";
 import jsPDF from "jspdf";
-import { fetchImageWithCache } from "../../image-cache-service";
+import { base64Cache } from "../../cache-manager";
 
 export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, GlobalAdjustX = 0, GlobalAdjustY = 0, GlobalYGapAdjust = 0) {
     doc.addPage();
@@ -22,7 +22,7 @@ export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, Glo
 
     // Load the General's image
     const stdImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Back_EW.png`;
-    const stdImg = await fetchImageWithCache(stdImgSrc, `${formData.general}Back_EW.png`);
+    const stdImg = await base64Cache(stdImgSrc, `${formData.general}Back_EW.png`);
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();

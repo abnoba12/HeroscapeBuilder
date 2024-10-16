@@ -1,0 +1,26 @@
+.unit-data-active{
+    .main-panel {
+        > .content {
+            padding: 0;
+            margin: 0;
+            min-height: calc(100vh - 100px);
+        }
+        /*.MuiDataGrid-topContainer .MuiDataGrid-columnHeaders .css-yseucu-MuiDataGrid-columnHeaderRow {
+            background-color: #4a637a;
+        }*/
+
+        .footer {
+            padding: 0 0 20px 0;
+
+            .container-fluid {
+                .row {
+                    margin-top: 0;
+
+                    hr {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+}

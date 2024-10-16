@@ -1,11 +1,10 @@
-import "./card-gallery.scss";
-import React, { useEffect, useState } from 'react';
-import { getFilesByPurpose } from '../../services/file-service';
-import { UnitFile } from '../../models/unit-file';
-//import ImageCache from '../../services/image-cache';
-import { blobCache } from '../../services/cache-manager';
 import { PDFDocument } from 'pdf-lib';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { UnitFile } from '../../models/unit-file';
+import { blobCache } from '../../services/cache-manager';
+import { getFilesByPurpose } from '../../services/file-service';
+import ImageCache from "../../services/image-cache-service";
+import "./card-gallery.scss";
 
 interface CardGalleryProps {
     cardSize: string;
@@ -17,6 +16,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
     const [error, setError] = useState<string | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
     const [gallerySize, setGallerySize] = useState<string>("thumbnail col-xl-2 col-lg-3 col-md-4");
+    const [isDownloading, setIsDownloading] = useState<boolean>(false); // Track download state
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -56,16 +56,18 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
             return;
         }
 
-        await mergePDFs(selectedFiles, cardSize, true);
+        try {
+            setIsDownloading(true); // Start showing spinner
+            await mergePDFs(selectedFiles, cardSize);
+        } finally {
+            setIsDownloading(false); // Stop showing spinner
+        }
     };
 
     const mergePDFs = async (urls: string[], cardSize: string, debug = false) => {
         if (urls.length === 1) {
             if (debug) console.log('Only one PDF provided, downloading it directly...');
-            const blob = await blobCache(`pdf-cache_${urls[0]}`, async () => {
-                const response = await axios.get(urls[0], { responseType: 'blob' });
-                return response.data;
-            });
+            const blob = await blobCache(urls[0], `pdf-cache_${urls[0]}`);
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = urls[0].split('/').pop()!;
@@ -86,10 +88,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                 const pdfs = [];
                 for (let j = 0; j < 4; j++) {
                     if (urls[i + j]) {
-                        const blob = await blobCache(`pdf-cache_${urls[i + j]}`, async () => {
-                            const response = await axios.get(urls[i + j], { responseType: 'blob' });
-                            return response.data;
-                        });
+                        const blob = await blobCache(urls[i + j], `pdf-cache_${urls[i + j]}`);
                         const pdfArrayBuffer = await blobToArrayBuffer(blob);
 
                         const pdf = await PDFDocument.load(pdfArrayBuffer);
@@ -188,15 +187,9 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
             // 4x6 or standard logic
             for (let i = 0; i < urls.length; i += 2) {
                 if (debug) console.log(`Processing pair: ${urls[i]} and ${urls[i + 1] ? urls[i + 1] : 'N/A'}`);
-                const blob1 = await blobCache(`pdf-cache_${urls[i]}`, async () => {
-                    const response = await axios.get(urls[i], { responseType: 'blob' });
-                    return response.data;
-                });
+                const blob1 = await blobCache(urls[i], `pdf-cache_${urls[i]}`);
                 const pdfArrayBuffer1 = await blobToArrayBuffer(blob1);
-                const blob2 = await blobCache(`pdf-cache_${urls[i+1]}`, async () => {
-                    const response = await axios.get(urls[i + 1], { responseType: 'blob' });
-                    return response.data;
-                });
+                const blob2 = await blobCache(urls[i + 1], `pdf-cache_${urls[i+1]}`);
                 const pdfArrayBuffer2 = await blobToArrayBuffer(blob2);
 
                 const pdf1 = await PDFDocument.load(pdfArrayBuffer1);
@@ -287,7 +280,16 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
         <div className="card-gallery">
             <div className="row">
                 <div className="col-12 text-center">
-                    <button id="download" className="btn btn-primary" onClick={handleDownloadClick}>Download PDF for Print</button>
+                    <button id="download" className="btn btn-primary" onClick={handleDownloadClick} disabled={isDownloading}>
+                        {isDownloading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                &nbsp;Generating PDF...
+                            </>
+                        ) : (
+                            'Download PDF for Print'
+                        )}
+                    </button>
                 </div>
             </div>
             <div className="row pdf-gallery">
@@ -302,17 +304,17 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                             <label className="label-make-pdf">Add to PDF</label>
                         </div>
                         <a href={card.filePath} target="_blank">
-                            {/*<ImageCache*/}
-                            {/*    className="img-fluid"*/}
-                            {/*    src={card.thumb}*/}
-                            {/*    alt="PDF Thumbnail"*/}
-                            {/*    cacheKey={card.thumb}*/}
-                            {/*/>*/}
-                            <img
+                            <ImageCache
                                 className="img-fluid"
                                 src={card.thumb}
                                 alt="PDF Thumbnail"
+                                cacheKey={card.thumb}
                             />
+                            {/*<img*/}
+                            {/*    className="img-fluid"*/}
+                            {/*    src={card.thumb}*/}
+                            {/*    alt="PDF Thumbnail"*/}
+                            {/*/>*/}
                         </a>
                     </div>
                 ))}

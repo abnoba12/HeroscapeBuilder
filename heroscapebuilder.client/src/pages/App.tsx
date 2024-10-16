@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.css";
-import React from "react";
+import React, { useEffect } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "../assets/scss/paper-dashboard.scss";
 import Footer from "../components/Footer/Footer";
@@ -17,6 +17,7 @@ import StandardArmyCards from "./army-cards/standard/standard-army-cards";
 import DownloadThreeByFive from "./army-cards/threebyfive/download-threebyfive";
 import MakeCard3x5 from "./army-cards/threebyfive/make-card-3x5";
 import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
+import UnitData from "./units/unit-data/unit-data";
 
 const App: React.FC = () => {
     return (
@@ -39,7 +40,7 @@ const App: React.FC = () => {
                             <Route path="/army-cards/fourbysix/create" element={<MakeCard4x6 />} />
                             <Route path="/army-cards/printing" element={<Printing />} />
                             <Route path="/units" element={<Home />} />
-                            <Route path="/units/unit-data" element={<Home />} />
+                            <Route path="/units/unit-data" element={<UnitData/>} />
                             <Route path="/game-play" element={<GamePlayCalc />} />
                             <Route path="/game-play/game-play-calc" element={<GamePlayCalc />} />
                         </Routes>

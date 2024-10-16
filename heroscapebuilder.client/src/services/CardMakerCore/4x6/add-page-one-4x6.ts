@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
 import { createHTMLImageElementFromBase64, getSizeToMax, loadImage } from "../../image-service";
-import { fetchImageWithCache } from "../../image-cache-service";
 import { SizeAndCenterAbilities, SizeAndCenterText } from "../helpers/text-helper";
+import { base64Cache } from "../../cache-manager";
 
 export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
     try {
@@ -28,7 +28,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
 
         // Load the General's image
         const generalImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Front_4x6.png`
-        const generalImg = await fetchImageWithCache(generalImgSrc, `${formData.general}Front_4x6.png`);
+        const generalImg = await base64Cache(generalImgSrc, `${formData.general}Front_4x6.png`);
 
         // Add the General's image to the first page
         doc.addImage(generalImg, 'PNG', 0, 0, pageWidth, pageHeight);
@@ -81,7 +81,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
 
         // Load the unit type image
         var unitTypeImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.rarity}${formData.type}.png`;
-        const unitTypeImg = await createHTMLImageElementFromBase64(await fetchImageWithCache(unitTypeImgSrc, `${formData.rarity}${formData.type}.png`));
+        const unitTypeImg = await createHTMLImageElementFromBase64(await base64Cache(unitTypeImgSrc, `${formData.rarity}${formData.type}.png`));
 
         const unitTypeImgWidth = 48;
         const aspectRatio = unitTypeImg.height / unitTypeImg.width;
@@ -96,7 +96,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
 
         // Load the unit size image
         var unitSizeImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.sizeCategory}.png`;
-        const unitSizeImg = await createHTMLImageElementFromBase64(await fetchImageWithCache(unitSizeImgSrc, `${formData.sizeCategory}.png`));
+        const unitSizeImg = await createHTMLImageElementFromBase64(await base64Cache(unitSizeImgSrc, `${formData.sizeCategory}.png`));
 
         const unitSizeImgWidth = 48;
         const unitSizeAspectRatio = unitSizeImg.height / unitSizeImg.width;

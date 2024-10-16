@@ -1,12 +1,11 @@
-import axios from 'axios';
 import { Unit } from '../models/unit';
+import { GetAPIDataWithCache } from './cache-manager';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 export const getUnits = async () => {
     try {
-        const response = await axios.get<Unit[]>(`${API_BASE_URL}/Unit`);
-        return response.data;
+        return GetAPIDataWithCache<Unit[]>(`${API_BASE_URL}/Unit`, "Unit");
     } catch (error) {
         console.error('Error fetching cards:', error);
         throw error;

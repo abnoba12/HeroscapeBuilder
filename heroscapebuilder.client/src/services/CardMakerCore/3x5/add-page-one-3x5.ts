@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
-import { fetchImageWithCache } from "../../image-cache-service";
 import { getSizeToMax, loadImage } from "../../image-service";
 import { SizeAndCenterAbilities, SizeAndCenterText } from "../helpers/text-helper";
+import { base64Cache } from "../../cache-manager";
 
 export async function addPageOne3x5(formData: UnitFormData, doc: jsPDF) {
     try {
@@ -25,7 +25,7 @@ export async function addPageOne3x5(formData: UnitFormData, doc: jsPDF) {
 
         // Load the General's image
         const generalImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Front_3x5.png`
-        const generalImg = await fetchImageWithCache(generalImgSrc, `${formData.general}Front_3x5.png`);
+        const generalImg = await base64Cache(generalImgSrc, `${formData.general}Front_3x5.png`);
 
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();

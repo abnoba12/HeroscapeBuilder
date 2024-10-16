@@ -13,6 +13,6 @@
     <Folder Include="src\pages\army-cards\printing\" />
     <Folder Include="src\pages\army-cards\standard\" />
     <Folder Include="src\pages\Home\" />
-    <Folder Include="src\pages\units\" />
+    <Folder Include="src\pages\units\unit-data\" />
   </ItemGroup>
 </Project>

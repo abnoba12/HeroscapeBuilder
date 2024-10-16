@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
 import { createHTMLImageElementFromBase64, getSizeToMax, loadImage } from "../../image-service";
-import { fetchImageWithCache } from "../../image-cache-service";
 import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
+import { base64Cache } from "../../cache-manager";
 
 export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     doc.addPage();
@@ -22,7 +22,7 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
 
     // Load the General's image
     const stdImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Back_3x5.png`
-    const stdImg = await fetchImageWithCache(stdImgSrc, `${formData.general}Back_3x5.png`);
+    const stdImg = await base64Cache(stdImgSrc, `${formData.general}Back_3x5.png`);
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -51,7 +51,7 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
 
     if (formData.creator) {
         var creatorImgSrc = `/cardGenerator/assets/images/logos/${formData.creator}.png`;
-        const creatorImg = await createHTMLImageElementFromBase64(await fetchImageWithCache(creatorImgSrc, `${formData.creator}.png`));
+        const creatorImg = await createHTMLImageElementFromBase64(await base64Cache(creatorImgSrc, `${formData.creator}.png`));
 
         const creatorImgMaxWidth = 153;
         const creatorImgMaxHeight = 12;
