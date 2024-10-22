@@ -2,17 +2,18 @@ import { saveAs } from 'file-saver';
 import JSZip from "jszip";
 import { UnitFile } from '../models/unit-file';
 import { blobCache, GetAPIDataWithCache } from './cache-manager';
+import { debounce } from './debounce';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
-export const getFilesByPurpose = async (purpose:string) => {
+export const getFilesByPurpose = debounce(async (purpose:string) => {
     try {
         return await GetAPIDataWithCache<UnitFile[]>(`${API_BASE_URL}/File/GetFilesByPurpose?purpose=${purpose}`, `/File?purpose=${purpose}`, 240);
     } catch (error) {
         console.error('Error fetching files:', error);
         throw error;
     }
-};
+});
 
 // Function to read the CSV file
 export function readCSVFile(file: Blob) {

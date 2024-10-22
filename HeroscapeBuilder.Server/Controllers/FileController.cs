@@ -19,7 +19,7 @@ namespace HeroscapeBuilder.Server.Controllers
 
         [HttpGet]
         public async Task<List<UnitFileEntity>> GetFilesByPurposeAsync(string purpose)
-        {
+        {            
             return await _fileService.GetFilesByPurpose(purpose);
         }
 

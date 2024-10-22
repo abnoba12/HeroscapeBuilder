@@ -4,7 +4,7 @@
     {
         public long Id { get; set; }
 
-        //public int ArmyCardId { get; set; }
+        public int ArmyCardId { get; set; }
 
         public string FilePurpose { get; set; } = null!;
 

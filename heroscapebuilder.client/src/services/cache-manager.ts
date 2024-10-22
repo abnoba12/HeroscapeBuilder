@@ -93,8 +93,12 @@ export const getCache = async <T>(
             cacheDuration,
         };
 
-        // Try to save in each storage layer in order
-        trySaveInSessionStorage(cacheKey, cacheEntry);
+        if (!result) {
+            console.warn("No data provided for caching");
+        } else {
+            // Try to save in each storage layer in order
+            trySaveInSessionStorage(cacheKey, cacheEntry);
+        }
 
         return result;
     } catch (error) {

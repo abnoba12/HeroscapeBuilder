@@ -6,9 +6,9 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 {
     public class ArmyCardRepository
     {
-        private readonly SupabaseDbContext _context;
+        private readonly HsbDbContext _context;
 
-        public ArmyCardRepository(SupabaseDbContext context)
+        public ArmyCardRepository(HsbDbContext context)
         {
             _context = context;
         }

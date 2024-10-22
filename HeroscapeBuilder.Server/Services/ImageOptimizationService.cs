@@ -1,31 +1,31 @@
 ﻿using HeroscapeBuilder.Server.Domain;
-using HeroscapeBuilder.Server.Integrations.SupabaseIntegration;
+using HeroscapeBuilder.Server.Integrations.AzureStorage;
 
 namespace HeroscapeBuilder.Server.Services
 {
     public class ImageOptimizationService
     {
-        private readonly SupabaseStorage _supabaseClient;
+        private readonly AzureBlobStorage _azureBlobStorage;
         private readonly ImageOptimizer _imageOptimizer;
 
-        public ImageOptimizationService(SupabaseStorage supabaseClient, ImageOptimizer imageOptimizer)
+        public ImageOptimizationService(AzureBlobStorage azureBlobStorage, ImageOptimizer imageOptimizer)
         {
-            _supabaseClient = supabaseClient;
+            _azureBlobStorage = azureBlobStorage;
             _imageOptimizer = imageOptimizer;
         }
 
         public async Task<List<string>> OptimizeImagesAsync(string bucketId, string folderPath, string purpose, int? maxWidth, int? maxHeight)
         {
-            var b = _supabaseClient.ListBuckets();
-            var files = await _supabaseClient.GetFilesFromFolderAsync(bucketId, folderPath);
+            _azureBlobStorage.ContainerName = bucketId;
+            var files = await _azureBlobStorage.ListFilesAsync(folderPath);
             List<string> optimized = new List<string>(); 
 
             foreach (var file in files)
             {
                 // Only process image files (e.g., .jpg, .png)
                 if (file.Name.EndsWith(".jpg") || file.Name.EndsWith(".png"))
-                {
-                    var fileData = await _supabaseClient.DownloadFileAsync(bucketId, folderPath, file.Name);
+                {                    
+                    var fileData = await _azureBlobStorage.DownloadAsync(Path.Combine(folderPath, file.Name));
 
                     //Optimize the image
                     var optimizedImage = _imageOptimizer.OptimizeImage(fileData, purpose, maxWidth, maxHeight, true);
@@ -34,7 +34,7 @@ namespace HeroscapeBuilder.Server.Services
                     if(fileData.Length > optimizedImage.Length)
                     {
                         // Upload the optimized image back to Supabase
-                        optimized.Add(await _supabaseClient.UploadFileAsync(bucketId, folderPath, file.Name, optimizedImage));
+                        optimized.Add(await _azureBlobStorage.UploadAsync(optimizedImage, Path.Combine(folderPath, file.Name)));
                     }
                     else
                     {

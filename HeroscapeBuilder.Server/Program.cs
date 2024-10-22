@@ -1,7 +1,9 @@
 using EFCoreSecondLevelCacheInterceptor;
 using HeroscapeBuilder.Server;
+using HeroscapeBuilder.Server.Common.Helpers;
 using HeroscapeBuilder.Server.Data;
-using HeroscapeBuilder.Server.Integrations.SupabaseIntegration;
+using HeroscapeBuilder.Server.Integrations.AzureStorage;
+using HeroscapeBuilder.Server.Integrations.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -25,8 +27,6 @@ builder.Services.RegisterServices();
 
 builder.Services.AddControllers();
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "HeroscapeBuilder", Version = "v1" });
@@ -34,22 +34,15 @@ builder.Services.AddSwaggerGen(c => {
 
 builder.Services.AddDistributedMemoryCache();
 
-var connectionString = builder.Configuration.GetConnectionString("SupabaseDb");
-if (!string.IsNullOrEmpty(connectionString))
-{
-    connectionString = connectionString.Replace("%SUPABASE_HOST%", Environment.GetEnvironmentVariable("SUPABASE_HOST"))
-        .Replace("%SUPABASE_PORT%", Environment.GetEnvironmentVariable("SUPABASE_PORT"))
-        .Replace("%SUPABASE_DB%", Environment.GetEnvironmentVariable("SUPABASE_DB"))
-        .Replace("%SUPABASE_USER%", Environment.GetEnvironmentVariable("SUPABASE_USER"))
-        .Replace("%SUPABASE_PASSWORD%", Environment.GetEnvironmentVariable("SUPABASE_PASSWORD"));
-}
-builder.Services.AddDbContext<SupabaseDbContext>((serviceProvider, options) => {
-    options.UseNpgsql(connectionString);
+var connectionString = builder.Configuration.GetConnectionStringFromEnv("HerscapeBuilder", "AzureSqlDb");
+builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) => {
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        sqlOptions.CommandTimeout(180);  // Increase timeout to 180 seconds
+        sqlOptions.EnableRetryOnFailure();  // Enable retries for transient errors
+    });
     options.AddInterceptors(serviceProvider.GetRequiredService<SecondLevelCacheInterceptor>());
 });
-
-builder.Services.Configure<SupabaseConfig>(builder.Configuration.GetSection("Supabase"));
-builder.Services.AddHttpClient<SupabaseStorage>();
 
 var app = builder.Build();
 

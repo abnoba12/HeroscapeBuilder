@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.css";
-import React, { useEffect } from "react";
+import React from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "../assets/scss/paper-dashboard.scss";
 import Footer from "../components/Footer/Footer";

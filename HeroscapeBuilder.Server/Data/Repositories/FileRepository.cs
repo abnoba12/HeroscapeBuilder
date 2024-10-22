@@ -5,9 +5,9 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 {
     public class FileRepository
     {
-        private readonly SupabaseDbContext _context;
+        private readonly HsbDbContext _context;
 
-        public FileRepository(SupabaseDbContext context)
+        public FileRepository(HsbDbContext context)
         {
             _context = context;
         }
@@ -16,5 +16,18 @@ namespace HeroscapeBuilder.Server.Data.Repositories
         {
             return await _context.ArmyCardFiles.Include(f => f.Children).Where(x => x.FilePurpose == purpose).ToListAsync();
         }
+
+        public async Task<int> AddArmyCardFilesAsync(List<ArmyCardFile> acfs)
+        {
+            _context.Database.AutoTransactionsEnabled = false;
+            int saved = 0;
+            foreach (var armyCardFile in acfs)
+            {
+                _context.ArmyCardFiles.Add(armyCardFile);
+                saved += await _context.SaveChangesAsync();
+            }
+            return saved;
+        }
+
     }
 }
