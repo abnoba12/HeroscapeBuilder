@@ -15,17 +15,11 @@ public partial class HsbDbContext : DbContext
     }
 
     public virtual DbSet<ArmyCard> ArmyCards { get; set; }
-
     public virtual DbSet<ArmyCardAbility> ArmyCardAbilities { get; set; }
-
     public virtual DbSet<ArmyCardFile> ArmyCardFiles { get; set; }
-
     public virtual DbSet<Creator> Creators { get; set; }
-
     public virtual DbSet<Set> Sets { get; set; }
-
     public virtual DbSet<SetTerrain> SetTerrains { get; set; }
-
     public virtual DbSet<Terrain> Terrains { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -47,7 +41,7 @@ public partial class HsbDbContext : DbContext
 
             entity.HasOne(d => d.SetNavigation)
                 .WithMany(p => p.ArmyCards)
-                .HasForeignKey(d => d.Set)  // Use the correct column name here
+                .HasForeignKey(d => d.Set)
                 .HasConstraintName("army_card_Set_fkey");
         });
 
@@ -58,8 +52,8 @@ public partial class HsbDbContext : DbContext
             entity.ToTable("army_card_abilities");
 
             entity.Property(e => e.Id)
-                .HasDefaultValueSql("nextval('army_card_abilites_id_seq'::regclass)")
                 .HasColumnName("id");
+
             entity.Property(e => e.Ability).HasColumnName("ability");
             entity.Property(e => e.AbilityName).HasColumnName("ability_name");
             entity.Property(e => e.ArmyCardId).HasColumnName("army_card_id");
@@ -78,7 +72,7 @@ public partial class HsbDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ArmyCardId).HasColumnName("army_card_id");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
+                .HasDefaultValueSql("GETDATE()")
                 .HasColumnName("created_at");
             entity.Property(e => e.FilePath).HasColumnName("file_path");
             entity.Property(e => e.FilePurpose).HasColumnName("file_purpose");
@@ -90,12 +84,14 @@ public partial class HsbDbContext : DbContext
             entity.Property(e => e.ParentId)
                 .HasColumnName("parent");
 
+            // Set OnDelete behavior to Restrict or NoAction to prevent cycles
             entity.HasOne(e => e.Parent)
                 .WithMany(e => e.Children)
-                .HasForeignKey(e => e.ParentId) // Foreign key
+                .HasForeignKey(e => e.ParentId)
                 .HasConstraintName("army_card_files_parent_fkey")
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);  // Or use DeleteBehavior.NoAction
         });
+
 
         modelBuilder.Entity<Creator>(entity =>
         {
@@ -110,7 +106,7 @@ public partial class HsbDbContext : DbContext
                 .HasColumnName("id");
             entity.Property(e => e.CreatorName).HasColumnName("Creator");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
+                .HasDefaultValueSql("GETDATE()")  // Updated to SQL Server syntax
                 .HasColumnName("created_at");
         });
 
@@ -122,10 +118,10 @@ public partial class HsbDbContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
+                .HasDefaultValueSql("GETDATE()")  // Updated to SQL Server syntax
                 .HasColumnName("created_at");
             entity.Property(e => e.Creator)
-                .HasDefaultValueSql("'Heroscape'::text")
+                .HasDefaultValue("Heroscape")  // Removed PostgreSQL "::text" cast
                 .HasColumnName("creator");
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.ReleaseDate).HasColumnName("release_date");

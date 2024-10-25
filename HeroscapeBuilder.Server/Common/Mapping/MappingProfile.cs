@@ -19,8 +19,6 @@ namespace HeroscapeBuilder.Server.Common.Mapping
             CreateMap<ArmyCardFile, UnitFileEntity>()
                 .ForMember(dest => dest.Thumb, opt => opt.MapFrom(src => src.Children.FirstOrDefault(x => x.FilePurpose.Contains("Thumb")).FilePath));
 
-            CreateMap<Supabase.Storage.FileObject, IFile>();
-
             CreateMap<Set, SetEntity>();
         }
     }

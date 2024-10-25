@@ -30,7 +30,7 @@ namespace HeroscapeBuilder.Server
             services.AddScoped<AzureBlobStorage>(provider =>
             {
                 var configuration = provider.GetRequiredService<IConfiguration>();
-                string azureBlobConnectionString = configuration.GetConnectionStringFromEnv("HerscapeBuilder", "AzureBlobStorage");
+                string azureBlobConnectionString = configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "AzureBlobStorage");
                 return new AzureBlobStorage(azureBlobConnectionString);
             });
 
@@ -38,7 +38,7 @@ namespace HeroscapeBuilder.Server
             services.AddScoped<IFileStorage<byte[]>>(provider =>
             {
                 var configuration = provider.GetRequiredService<IConfiguration>();
-                string azureBlobConnectionString = configuration.GetConnectionStringFromEnv("HerscapeBuilder", "AzureBlobStorage");
+                string azureBlobConnectionString = configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "AzureBlobStorage");
                 return new AzureBlobStorage(azureBlobConnectionString);
             });
 

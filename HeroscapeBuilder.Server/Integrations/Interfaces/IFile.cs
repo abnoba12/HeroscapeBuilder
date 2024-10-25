@@ -1,6 +1,4 @@
-﻿using Supabase.Storage;
-
-namespace HeroscapeBuilder.Server.Integrations.Interfaces
+﻿namespace HeroscapeBuilder.Server.Integrations.Interfaces
 {
     public interface IFile
     {

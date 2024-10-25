@@ -2,8 +2,6 @@ using EFCoreSecondLevelCacheInterceptor;
 using HeroscapeBuilder.Server;
 using HeroscapeBuilder.Server.Common.Helpers;
 using HeroscapeBuilder.Server.Data;
-using HeroscapeBuilder.Server.Integrations.AzureStorage;
-using HeroscapeBuilder.Server.Integrations.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -34,7 +32,7 @@ builder.Services.AddSwaggerGen(c => {
 
 builder.Services.AddDistributedMemoryCache();
 
-var connectionString = builder.Configuration.GetConnectionStringFromEnv("HerscapeBuilder", "AzureSqlDb");
+var connectionString = builder.Configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "AzureSqlDb");
 builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) => {
     options.UseSqlServer(connectionString, sqlOptions =>
     {
@@ -58,7 +56,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Apply migrations automatically
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<HsbDbContext>();
+    dbContext.Database.Migrate();
+}
+
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
