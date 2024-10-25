@@ -5,9 +5,32 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "80:80"  # Expose React
     environment:
-      - ASPNETCORE_URLS=http://+
-      - HeroscapeBuilder=/app/config/HeroscapeBuilder.config.json  # Path within the container
+      - ASPNETCORE_URLS=http://+  # Enable listening on all IPs within the container
+      - HeroscapeBuilder=/app/config/HeroscapeBuilder.config.json
     volumes:
-      - ./HeroscapeBuilder.config.json:/app/config/HeroscapeBuilder.config.json  # Mount file in container
+      - ./HeroscapeBuilder.config.json:/app/config/HeroscapeBuilder.config.json  # Mount config file into the container
+    depends_on:
+      - mssql  # Ensure MSSQL starts before the WebAPI
+    networks:
+      - internal_network
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=R9DL337kY^QC^MBbel7j  # Replace with a strong password
+      - MSSQL_PID=Express  # Use the Express version for development
+    volumes:
+      - mssql_data:/var/opt/mssql  # Persist database data
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    driver: bridge
+
+volumes:
+  mssql_data:
+    driver: local
