@@ -104,7 +104,7 @@ CREATE TABLE dbo.terrain (
     type VARCHAR(MAX) NOT NULL
 );
 
-
+SET IDENTITY_INSERT dbo.army_card ON;
 INSERT INTO dbo.army_card VALUES
 	('Heroscape', 'Utgar', 'Anubian Wolves', 'Wolves', 'Devourers', 'Relentless', 'Common', 'Squad', 'Medium', 5, 1, 6, 1, 1, 4, 75, 6, 1, 3, 4, 'Feylund', '16, 17, 18', 4, 4, NULL, 'https://www.thingiverse.com/thing:6018871
 

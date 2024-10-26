@@ -1,18 +1,19 @@
-version: '3.8'
+# See .env file for passwords to SQL and Minio
 services:
   heroscapebuilder:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:80"  # Expose React
+      - "80:80"
     environment:
-      - ASPNETCORE_URLS=http://+  # Enable listening on all IPs within the container
+      - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=/app/config/HeroscapeBuilder.config.json
+      - MINIO_ENDPOINT=http://minio:9000
     volumes:
-      - ./HeroscapeBuilder.config.json:/app/config/HeroscapeBuilder.config.json  # Mount config file into the container
+      - ./HeroscapeBuilder.config.json:/app/config/HeroscapeBuilder.config.json
     depends_on:
-      - mssql  # Ensure MSSQL starts before the WebAPI
+      - mssql
     networks:
       - internal_network
 
@@ -20,10 +21,25 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=R9DL337kY^QC^MBbel7j  # Replace with a strong password
-      - MSSQL_PID=Express  # Use the Express version for development
+      - SA_PASSWORD=${MSSQL_SA_PASSWORD}
+      - MSSQL_PID=Express
     volumes:
-      - mssql_data:/var/opt/mssql  # Persist database data
+      - mssql_data:/var/opt/mssql
+    networks:
+      - internal_network
+      
+  minio:
+    image: minio/minio
+    command: server --console-address ":9001" /data  # Set WebUI to port 9001
+    ports:
+      - "9000:9000"  # Expose API
+      - "9001:9001"  # Expose WebUI
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BROWSER=on
+    volumes:
+      - minio_data:/data
     networks:
       - internal_network
 
@@ -34,3 +50,5 @@ networks:
 volumes:
   mssql_data:
     driver: local
+  minio_data:
+    driver: local  
