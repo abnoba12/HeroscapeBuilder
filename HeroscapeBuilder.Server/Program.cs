@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
 });
 
 // Call the extension method to register services for DI
-builder.Services.RegisterServices();
+builder.Services.RegisterServices(builder.Configuration);
 
 builder.Services.AddControllers();
 

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
+using HeroscapeBuilder.Server.Common.Helpers;
 using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Domain.Entities;
-using HeroscapeBuilder.Server.Integrations.Interfaces;
 
 namespace HeroscapeBuilder.Server.Common.Mapping
 {
@@ -9,6 +9,8 @@ namespace HeroscapeBuilder.Server.Common.Mapping
     {
         public MappingProfile()
         {
+
+
             CreateMap<ArmyCard, UnitEntity>()
                 .ForMember(dest => dest.Set, opt => opt.MapFrom(src => src.SetNavigation))
                 .ForMember(dest => dest.Abilities, opt => opt.MapFrom(src => src.ArmyCardAbilities.ToList()))

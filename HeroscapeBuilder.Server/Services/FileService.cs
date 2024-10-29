@@ -2,7 +2,7 @@
 using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Data.Repositories;
 using HeroscapeBuilder.Server.Domain.Entities;
-using HeroscapeBuilder.Server.Integrations.AzureStorage;
+using HeroscapeBuilder.Server.Integrations.Interfaces;
 
 namespace HeroscapeBuilder.Server.Services
 {
@@ -11,20 +11,18 @@ namespace HeroscapeBuilder.Server.Services
         private readonly FileRepository _fileRepository;
         private readonly IMapper _mapper;
         private readonly PdfThumbnailService _pdfThumbnailService;
-        private readonly AzureBlobStorage _azureBlobStorage;
+        private readonly IFileStorage<byte[]> _blobStorage;
 
-        public FileService(FileRepository fileRepository, IMapper mapper, AzureBlobStorage azureBlobStorage, PdfThumbnailService pdfThumbnailService)
+        public FileService(FileRepository fileRepository, IMapper mapper, IFileStorage<byte[]> blobStorage, PdfThumbnailService pdfThumbnailService)
         {
             _fileRepository = fileRepository;
             _mapper = mapper;
             _pdfThumbnailService = pdfThumbnailService;
-            _azureBlobStorage = azureBlobStorage;
+            _blobStorage = blobStorage;
         }
 
         public async Task<List<UnitFileEntity>> GetFilesByPurpose(string purpose)
         {
-            //TODO: this is getting called twice and causing two thumbnails to be created. This needs to be fixed
-
             var files = (await _fileRepository.GetFilesByPurposeAsync(purpose)).ToList()?.OrderBy(x => x.FilePath).ToList();            
 
             if (files == null)
@@ -45,8 +43,8 @@ namespace HeroscapeBuilder.Server.Services
                     string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pdf.FilePath);
 
                     //Save the image to supabase
-                    _azureBlobStorage.ContainerName = "thumbs";
-                    var r = await _azureBlobStorage.UploadAsync(thumb, $"pdf_thumbs/pdf-thumbnail-{fileNameWithoutExtension}.png");
+                    _blobStorage.BucketName = "thumbs";
+                    var r = await _blobStorage.UploadAsync(thumb, $"pdf_thumbs/pdf-thumbnail-{fileNameWithoutExtension}.png");
                     if (!string.IsNullOrEmpty(r))
                     {
                         acfs.Add(new ArmyCardFile
@@ -65,6 +63,7 @@ namespace HeroscapeBuilder.Server.Services
                     await _fileRepository.AddArmyCardFilesAsync(acfs);
                 }
             }
+
 
             return unitFiles;
         }

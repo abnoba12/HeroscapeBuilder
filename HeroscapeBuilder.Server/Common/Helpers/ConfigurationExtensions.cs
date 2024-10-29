@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace HeroscapeBuilder.Server.Common.Helpers
 {
@@ -16,10 +18,56 @@ namespace HeroscapeBuilder.Server.Common.Helpers
             }
 
             // Transform the connection string using ConfigurationHelper's GetConfig method
-            return GetConfig(connectionString, environmentVariableName);
+            return GetConfigWithPlaceholders(connectionString, environmentVariableName);
         }
 
-        private static string GetConfig(string connectionString, string environmentVariableName)
+        public static IConfigurationSection GetSectionWithEnvVariables(this IConfiguration configuration, string environmentVariableName, string sectionName)
+        {
+            var section = configuration.GetSection(sectionName);
+            if (!section.Exists())
+            {
+                throw new ArgumentNullException($"Configuration section '{sectionName}' not found.");
+            }
+
+            // Build a dictionary recursively with all key-value pairs
+            var sectionDict = BuildSectionDictionary(section);
+
+            // Serialize to JSON and replace placeholders with env variables
+            var sectionJson = JsonConvert.SerializeObject(sectionDict, Formatting.Indented);
+            var updatedJson = GetConfigWithPlaceholders(sectionJson, environmentVariableName);
+
+            // Wrap in a root element
+            var wrappedJson = $"{{ \"{sectionName}\": {updatedJson} }}";
+
+            // Parse wrapped JSON back into an IConfigurationSection
+            var updatedSection = new ConfigurationBuilder()
+                .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(wrappedJson)))
+                .Build()
+                .GetSection(sectionName);
+
+            return updatedSection;
+        }
+
+        private static Dictionary<string, object> BuildSectionDictionary(IConfigurationSection section)
+        {
+            var dict = new Dictionary<string, object>();
+
+            foreach (var child in section.GetChildren())
+            {
+                if (child.GetChildren().Any())
+                {
+                    dict[child.Key] = BuildSectionDictionary(child); // Recursive for nested sections
+                }
+                else
+                {
+                    dict[child.Key] = child.Value;
+                }
+            }
+
+            return dict;
+        }
+
+        private static string GetConfigWithPlaceholders(string connectionString, string environmentVariableName)
         {
             var _ConfigurationPath = Environment.GetEnvironmentVariable(environmentVariableName);
             if (string.IsNullOrEmpty(_ConfigurationPath))
@@ -31,6 +79,11 @@ namespace HeroscapeBuilder.Server.Common.Helpers
             if (!File.Exists(_ConfigurationPath))
             {
                 throw new FileNotFoundException("Configuration file not found.");
+            }
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                return null;
             }
 
             // Step 2: Read the content of the file

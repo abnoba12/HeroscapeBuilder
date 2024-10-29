@@ -2,6 +2,8 @@
 {
     public interface IFileStorage<TFile>
     {
+        string BucketName { get; set; }
+
         // Create or upload a file
         Task<string> UploadAsync(TFile file, string path);
 

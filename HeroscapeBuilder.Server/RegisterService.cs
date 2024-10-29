@@ -2,15 +2,15 @@
 using HeroscapeBuilder.Server.Common.Helpers;
 using HeroscapeBuilder.Server.Data.Repositories;
 using HeroscapeBuilder.Server.Domain;
-using HeroscapeBuilder.Server.Integrations.AzureStorage;
 using HeroscapeBuilder.Server.Integrations.Interfaces;
+using HeroscapeBuilder.Server.Integrations.MinioStorage;
 using HeroscapeBuilder.Server.Services;
 
 namespace HeroscapeBuilder.Server
 {
     public static class RegisterService
     {
-        public static IServiceCollection RegisterServices(this IServiceCollection services)
+        public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
         {
             //IMapper
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -25,21 +25,12 @@ namespace HeroscapeBuilder.Server
             //Domain
             services.AddScoped<ImageOptimizer>();
 
-            //Integrations                    
-            // Register AzureBlobStorage directly for DI to inject it as AzureBlobStorage
-            services.AddScoped<AzureBlobStorage>(provider =>
-            {
-                var configuration = provider.GetRequiredService<IConfiguration>();
-                string azureBlobConnectionString = configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "AzureBlobStorage");
-                return new AzureBlobStorage(azureBlobConnectionString);
-            });
-
-            // Also register it as the implementation of IFileStorage<byte[]>
+            //Integrations
+            // Register the implementation of IFileStorage<byte[]>
             services.AddScoped<IFileStorage<byte[]>>(provider =>
             {
-                var configuration = provider.GetRequiredService<IConfiguration>();
-                string azureBlobConnectionString = configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "AzureBlobStorage");
-                return new AzureBlobStorage(azureBlobConnectionString);
+                var blobStorageConfig = configuration.GetSectionWithEnvVariables("HeroscapeBuilder", "BlobStorage");
+                return new MinioStorage(blobStorageConfig["API"], blobStorageConfig["User"], blobStorageConfig["Password"]);
             });
 
             //Repos
@@ -51,6 +42,9 @@ namespace HeroscapeBuilder.Server
                 options.UseMemoryCacheProvider()
                .CacheAllQueries(CacheExpirationMode.Absolute, TimeSpan.FromMinutes(240))
                .UseCacheKeyPrefix("EF_"));
+
+            //tool to prepend the file path to any string
+            FileHelper.Initialize(configuration);
 
             return services;
         }

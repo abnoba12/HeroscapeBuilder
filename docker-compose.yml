@@ -30,13 +30,13 @@ services:
       
   minio:
     image: minio/minio
-    command: server --console-address ":9001" /data  # Set WebUI to port 9001
+    command: server --console-address ":9081" /data  # Set WebUI to port 9001
     ports:
-      - "9000:9000"  # Expose API
-      - "9001:9001"  # Expose WebUI
+      - "9080:9080"  # Expose API
+      - "9081:9081"  # Expose WebUI
     environment:
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_BROWSER=on
     volumes:
       - minio_data:/data
