@@ -9,7 +9,6 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=/app/config/HeroscapeBuilder.config.json
-      - MINIO_ENDPOINT=http://minio:9000
     volumes:
       - ./HeroscapeBuilder.config.json:/app/config/HeroscapeBuilder.config.json
     depends_on:
@@ -27,21 +26,22 @@ services:
       - mssql_data:/var/opt/mssql
     networks:
       - internal_network
-      
-  minio:
-    image: minio/minio
-    command: server --console-address ":9081" /data  # Set WebUI to port 9001
-    ports:
-      - "9080:9080"  # Expose API
-      - "9081:9081"  # Expose WebUI
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_BROWSER=on
-    volumes:
-      - minio_data:/data
-    networks:
-      - internal_network
+
+# I am using a single instances of minio instead of one inside docker      
+#  minio:
+#    image: minio/minio
+#    command: server --console-address ":9081" /data  # Set WebUI to port 9001
+#    ports:
+#      - "9000:9080"  # Expose API
+#      - "9081:9081"  # Expose WebUI
+#    environment:
+#      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+#      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+#      - MINIO_BROWSER=on
+#    volumes:
+#      - minio_data:/data
+#    networks:
+#      - internal_network
 
 networks:
   internal_network:
@@ -50,5 +50,5 @@ networks:
 volumes:
   mssql_data:
     driver: local
-  minio_data:
-    driver: local  
+#  minio_data:
+#    driver: local  
