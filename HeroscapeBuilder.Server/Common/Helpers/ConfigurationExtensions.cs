@@ -69,37 +69,56 @@ namespace HeroscapeBuilder.Server.Common.Helpers
 
         private static string GetConfigWithPlaceholders(string connectionString, string environmentVariableName)
         {
-            var _ConfigurationPath = Environment.GetEnvironmentVariable(environmentVariableName);
-            if (string.IsNullOrEmpty(_ConfigurationPath))
+            var _Configuration = Environment.GetEnvironmentVariable(environmentVariableName);
+            if (string.IsNullOrEmpty(_Configuration))
             {
-                throw new ArgumentNullException(nameof(_ConfigurationPath));
+                throw new ArgumentNullException(nameof(_Configuration));
             }
 
-            // Step 1: Check if the file exists at the given path
-            if (!File.Exists(_ConfigurationPath))
-            {
-                throw new FileNotFoundException("Configuration file not found.");
-            }
-
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                return null;
-            }
-
-            // Step 2: Read the content of the file
-            string fileContent = File.ReadAllText(_ConfigurationPath);
-
-            // Step 3: Verify the file is a valid JSON file by attempting to parse it
             JObject jsonConfig;
-            try
+            //Configuration can be either a file path to a JSON file or it can be just the JSON content.
+            if (_Configuration.StartsWith('{'))
             {
-                jsonConfig = JObject.Parse(fileContent);
+                //_Configuration is raw JSON
+                try
+                {
+                    jsonConfig = JObject.Parse(_Configuration);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidDataException("The configuration file is not a valid JSON.", ex);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                throw new InvalidDataException("The configuration file is not a valid JSON.", ex);
-            }
+                //_Configuration is a file path
 
+                // Step 1: Check if the file exists at the given path
+                if (!File.Exists(_Configuration))
+                {
+                    throw new FileNotFoundException("Configuration file not found.");
+                }
+
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    return null;
+                }
+
+                // Step 2: Read the content of the file
+                string fileContent = File.ReadAllText(_Configuration);
+
+                // Step 3: Verify the file is a valid JSON file by attempting to parse it
+
+                try
+                {
+                    jsonConfig = JObject.Parse(fileContent);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidDataException("The configuration file is not a valid JSON.", ex);
+                }
+            }
+            
             // Step 4: Replace placeholders in the input "config" string using keys from the JSON file
             foreach (var property in jsonConfig.Properties())
             {
