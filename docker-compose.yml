@@ -8,24 +8,25 @@ services:
       - "80:80"
     environment:
       - ASPNETCORE_URLS=http://+
-      - HeroscapeBuilder=/app/config/HeroscapeBuilder.config.json
-    volumes:
-      - ./HeroscapeBuilder.config.json:/app/config/HeroscapeBuilder.config.json
-    depends_on:
-      - mssql
+#      - HeroscapeBuilder=/app/config/HeroscapeBuilder.config.json
+#    volumes:
+#      - ./HeroscapeBuilder.config.json:/app/config/HeroscapeBuilder.config.json
+#    depends_on:
+#      - mssql
     networks:
-      - internal_network
+      - external_network
+#      - internal_network
 
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=${MSSQL_SA_PASSWORD}
-      - MSSQL_PID=Express
-    volumes:
-      - mssql_data:/var/opt/mssql
-    networks:
-      - internal_network
+#  mssql:
+#    image: mcr.microsoft.com/mssql/server:2022-latest
+#    environment:
+#      - ACCEPT_EULA=Y
+#      - SA_PASSWORD=${MSSQL_SA_PASSWORD}
+#      - MSSQL_PID=Express
+#    volumes:
+#      - mssql_data:/var/opt/mssql
+#    networks:
+#      - internal_network
 
 # I am using a single instances of minio instead of one inside docker      
 #  minio:
@@ -47,8 +48,8 @@ networks:
   internal_network:
     driver: bridge
 
-volumes:
-  mssql_data:
-    driver: local
+#volumes:
+#  mssql_data:
+#    driver: local
 #  minio_data:
 #    driver: local  
