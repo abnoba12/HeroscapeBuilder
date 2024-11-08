@@ -14,8 +14,7 @@ services:
 #    depends_on:
 #      - mssql
     networks:
-      - external_network
-#      - internal_network
+      - internal_network
 
 #  mssql:
 #    image: mcr.microsoft.com/mssql/server:2022-latest
@@ -45,10 +44,8 @@ services:
 #      - internal_network
 
 networks:
-#  internal_network:
-#    driver: bridge
-  external_network:
-    external: true
+  internal_network:
+    driver: bridge
 
 #volumes:
 #  mssql_data:
