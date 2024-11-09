@@ -8,3 +8,5 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
+    networks:
+      - bridge
