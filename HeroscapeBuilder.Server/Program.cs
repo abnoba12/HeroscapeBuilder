@@ -33,6 +33,7 @@ builder.Services.AddSwaggerGen(c => {
 builder.Services.AddDistributedMemoryCache();
 
 var connectionString = builder.Configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "MsSqlDb");
+Console.WriteLine($"Starting migrations with connection string: {connectionString}");
 builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) => {
     options.UseSqlServer(connectionString, sqlOptions =>
     {
@@ -60,8 +61,6 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<HsbDbContext>();
-    Console.WriteLine($"Starting migrations with connection string: {connectionString}");
-
     dbContext.Database.Migrate();
 }
 
