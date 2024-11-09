@@ -1,12 +1,11 @@
 services:
   heroscapebuilder:
+    pull_policy: build
     build:
       context: .
       dockerfile: Dockerfile
-      pull_policy: build
     ports:
       - "8012:80"
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
-      
