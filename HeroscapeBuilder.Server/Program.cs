@@ -60,6 +60,8 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<HsbDbContext>();
+    Console.WriteLine($"Starting migrations with connection string: {connectionString}");
+
     dbContext.Database.Migrate();
 }
 
