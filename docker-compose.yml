@@ -4,12 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "8012:80"
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
-    networks:
-      - internal_network    
-networks:
-  internal_network:
-    driver: bridge
