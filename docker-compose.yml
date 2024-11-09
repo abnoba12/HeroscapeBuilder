@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      pull_policy: build
     ports:
       - "8012:80"
     environment:
