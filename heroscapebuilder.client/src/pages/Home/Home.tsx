@@ -27,10 +27,10 @@ const Home: React.FC = () => {
             </div>
             <div className="row">
                 <div className="col-6 text-center">
-                    <a href="https://github.com/abnoba12/HeroscapeIndexCardBuilder/discussions" target="_blank" className="btn btn-outline-success btn-sm mb-2">Visit our Discussions Page</a>
+                    <a href="https://github.com/abnoba12/HeroscapeBuilder/discussions" target="_blank" className="btn btn-outline-success btn-sm mb-2">Visit our Discussions Page</a>
                 </div>
                 <div className="col-6 text-center">
-                    <a href="https://github.com/abnoba12/HeroscapeIndexCardBuilder/issues" target="_blank" className="btn btn-outline-success btn-sm mb-2">Report Bugs and Issues</a>
+                    <a href="https://github.com/abnoba12/HeroscapeBuilder/issues" target="_blank" className="btn btn-outline-success btn-sm mb-2">Report Bugs and Issues</a>
                 </div>
                 <div className="col-12 text-center">
                     <hr />
