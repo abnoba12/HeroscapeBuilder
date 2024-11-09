@@ -5,6 +5,8 @@ import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
 import { base64Cache } from "../../cache-manager";
 
 export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
+    const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;
+
     doc.addPage();
 
     const drawOutlines = false;
@@ -21,13 +23,13 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     doc.addImage(unitAdvanceImg, 'PNG', 8, 148, 217, 217);
 
     // Load the General's image
-    const stdImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Back_3x5.png`
+    const stdImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}Back_3x5.png`
     const stdImg = await base64Cache(stdImgSrc, `${formData.general}Back_3x5.png`);
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Add the Standard's image to the second page
+    // Add the General's image to the second page
     doc.addImage(stdImg, 'PNG', 0, 0, pageWidth, pageHeight);
 
     // Set font for the first page
@@ -50,7 +52,7 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     if (drawOutlines) doc.rect(statsX, statsY, 1, 100);
 
     if (formData.creator) {
-        var creatorImgSrc = `/cardGenerator/assets/images/logos/${formData.creator}.png`;
+        var creatorImgSrc = `/src/assets/img/logos/${formData.creator}.png`;
         const creatorImg = await createHTMLImageElementFromBase64(await base64Cache(creatorImgSrc, `${formData.creator}.png`));
 
         const creatorImgMaxWidth = 153;
@@ -69,6 +71,6 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     }
 
     doc.setFontSize(8);
-    var setText = `${formData.set}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
+    var setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
     CenterTextInArea(doc, setText, 16, 98, 153, 34, 0, 6, drawOutlines, undefined);
 }

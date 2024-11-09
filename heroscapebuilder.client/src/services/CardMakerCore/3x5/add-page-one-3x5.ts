@@ -6,6 +6,8 @@ import { base64Cache } from "../../cache-manager";
 
 export async function addPageOne3x5(formData: UnitFormData, doc: jsPDF) {
     try {
+        const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;
+
         if (doc.getNumberOfPages() != 1) {
             doc.addPage();
         }
@@ -24,7 +26,7 @@ export async function addPageOne3x5(formData: UnitFormData, doc: jsPDF) {
         doc.addImage(unitAdvanceImg, 'PNG', 13, 63, 109, 109);
 
         // Load the General's image
-        const generalImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Front_3x5.png`
+        const generalImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}Front_3x5.png`
         const generalImg = await base64Cache(generalImgSrc, `${formData.general}Front_3x5.png`);
 
         const pageWidth = doc.internal.pageSize.getWidth();

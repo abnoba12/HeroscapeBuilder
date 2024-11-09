@@ -5,6 +5,8 @@ import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
 import { base64Cache } from "../../cache-manager";
 
 export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
+    const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;
+
     doc.addPage();
 
     const drawOutlines = false;
@@ -21,7 +23,7 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
     doc.addImage(unitBasicImg, 'PNG', 16, 17.5, 417.5, 271);
 
     // Load the General's image
-    const stdImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Back_4x6.png`;
+    const stdImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}Back_4x6.png`;
     const stdImg = await base64Cache(stdImgSrc, `${formData.general}Back_4x6.png`);
 
     const pageWidth = doc.internal.pageSize.getWidth();

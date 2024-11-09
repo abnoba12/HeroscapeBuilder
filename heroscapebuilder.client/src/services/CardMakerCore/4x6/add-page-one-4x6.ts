@@ -6,6 +6,8 @@ import { base64Cache } from "../../cache-manager";
 
 export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
     try {
+        const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;
+
         if (doc.getNumberOfPages() != 1) {
             doc.addPage();
         }
@@ -27,7 +29,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         doc.addImage(unitAdvanceImg, 'PNG', 259, 17, 174.5, 177.5);
 
         // Load the General's image
-        const generalImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Front_4x6.png`
+        const generalImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}Front_4x6.png`
         const generalImg = await base64Cache(generalImgSrc, `${formData.general}Front_4x6.png`);
 
         // Add the General's image to the first page
@@ -80,7 +82,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         doc.text(formData.points?.toString() || '', statsX, statsY + (statsYGap * 5) + lifeYGap + pointsYGap, { align: 'center' });
 
         // Load the unit type image
-        var unitTypeImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.rarity}${formData.type}.png`;
+        var unitTypeImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.rarity}${formData.type}.png`;
         const unitTypeImg = await createHTMLImageElementFromBase64(await base64Cache(unitTypeImgSrc, `${formData.rarity}${formData.type}.png`));
 
         const unitTypeImgWidth = 48;
@@ -95,7 +97,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         doc.addImage(unitTypeImg, 'PNG', unitTypeImgX, unitTypeImgY, unitTypeImgWidth, unitTypeImgHeight);
 
         // Load the unit size image
-        var unitSizeImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.sizeCategory}.png`;
+        var unitSizeImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.sizeCategory}.png`;
         const unitSizeImg = await createHTMLImageElementFromBase64(await base64Cache(unitSizeImgSrc, `${formData.sizeCategory}.png`));
 
         const unitSizeImgWidth = 48;

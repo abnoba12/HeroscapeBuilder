@@ -786,7 +786,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                     {errors.unitImageAdvanced && <div className="invalid-feedback">{errors.unitImageAdvanced}</div>}
                 </div>
 
-                <div className="col-md-6">
+                <div className={`${cardSize == '3x5' ? 'invisible d-none' : 'col-md-6'}`} >
                     <label htmlFor="unitImageBasic" className="form-label">
                         Unit Image Basic <span className="text-danger">*</span>
                         <span

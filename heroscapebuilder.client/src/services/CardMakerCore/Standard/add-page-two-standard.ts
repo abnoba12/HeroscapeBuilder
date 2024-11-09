@@ -5,6 +5,8 @@ import jsPDF from "jspdf";
 import { base64Cache } from "../../cache-manager";
 
 export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, GlobalAdjustX = 0, GlobalAdjustY = 0, GlobalYGapAdjust = 0) {
+    const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;
+
     doc.addPage();
 
     const drawOutlines = false;
@@ -21,7 +23,7 @@ export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, Glo
     doc.addImage(unitBasicImg, 'PNG', 15 + GlobalAdjustX, 35 + GlobalAdjustY, 334, 242);
 
     // Load the General's image
-    const stdImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Back_EW.png`;
+    const stdImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}Back_EW.png`;
     const stdImg = await base64Cache(stdImgSrc, `${formData.general}Back_EW.png`);
 
     const pageWidth = doc.internal.pageSize.getWidth();

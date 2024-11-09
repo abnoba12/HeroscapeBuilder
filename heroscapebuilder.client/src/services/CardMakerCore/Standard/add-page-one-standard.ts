@@ -6,6 +6,8 @@ import { base64Cache } from "../../cache-manager.js";
 
 export async function addPageOneStandard(formData: UnitFormData, doc: jsPDF, GlobalAdjustX = 0, GlobalAdjustY = 0, GlobalYGapAdjust = 0) {
     try {
+        const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;
+
         if (doc.getNumberOfPages() != 1) {
             doc.addPage();
         }
@@ -23,8 +25,8 @@ export async function addPageOneStandard(formData: UnitFormData, doc: jsPDF, Glo
         // var coverY = 14;
         // var coverWidth = 253 //115;
         // var coverHeight = 253;
-        // const unitImageAdvancedCoverSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Cover.png`;
-        //https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/UniqueSquad.png
+        // const unitImageAdvancedCoverSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}Cover.png`;
+        //${BASE_IMAGE_PATH}/card-blanks/UniqueSquad.png
         // const unitAdvanceImgCover = await loadImage(unitImageAdvancedCoverSrc);
         // doc.addImage(unitAdvanceImgCover, 'PNG', coverX, coverY, coverWidth, coverHeight);
 
@@ -51,7 +53,7 @@ export async function addPageOneStandard(formData: UnitFormData, doc: jsPDF, Glo
         // doc.addImage(unitAdvanceImg, 'PNG', 173, 14, 117, 253);
 
         // Load the General's image
-        const generalImgSrc = `https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/card_blanks/${formData.general}/${formData.general}Front_EW.png`;
+        const generalImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}Front_EW.png`;
         const generalImg = await base64Cache(generalImgSrc, `${formData.general}Front_EW.png`);
 
         // Add the General's image to the first page
