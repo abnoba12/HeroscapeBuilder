@@ -9,4 +9,7 @@ services:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
     networks:
-      - bridge
+      - internal_network    
+networks:
+  internal_network:
+    driver: bridge
