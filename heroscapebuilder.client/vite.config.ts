@@ -6,11 +6,11 @@ import fs from 'fs';
 import path from 'path';
 import child_process from 'child_process';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+//const isDevelopment = process.env.NODE_ENV === 'development';
 
 let httpsConfig: undefined | { key: Buffer; cert: Buffer } = undefined;
 
-if (isDevelopment) {
+//if (isDevelopment) {
     const baseFolder =
         process.env.APPDATA !== undefined && process.env.APPDATA !== ''
             ? `${process.env.APPDATA}/ASP.NET/https`
@@ -40,7 +40,7 @@ if (isDevelopment) {
             throw new Error("Could not create certificate.");
         }
     }
-}
+//}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -62,6 +62,6 @@ export default defineConfig({
         //    key: fs.readFileSync(keyFilePath),
         //    cert: fs.readFileSync(certFilePath),
         //}
-        https: isDevelopment ? httpsConfig : undefined, // Only use HTTPS in development
+        https: httpsConfig,
     }
 })
