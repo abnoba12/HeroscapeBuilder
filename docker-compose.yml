@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8012:80"
+      - "8043:443"
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
