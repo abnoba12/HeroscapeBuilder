@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import logo from "../../assets/img/logo.png";
 
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
@@ -46,7 +45,7 @@ const Sidebar: React.FC = () => {
         <div className={`sidebar ${isOpen ? "open" : ""}`} data-color={getColor()} data-active-color="info">
             <div className="logo">
                 <a href="/" className="simple-text logo-mini">
-                    <div className="logo-img"><img src={logo} alt="logo" /></div>
+                    <div className="logo-img"><img src="/assets/img/logo.png" alt="logo" /></div>
                 </a>
                 <a href="/" className="simple-text logo-normal">Heroscape Builder</a>
             </div>

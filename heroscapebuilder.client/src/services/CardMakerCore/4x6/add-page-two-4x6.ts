@@ -59,7 +59,7 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
 
     if (formData.creator) {
         // Load the hitbox image
-        var creatorImgSrc = `/src/assets/img/logos/${formData.creator}.png`;
+        var creatorImgSrc = `/assets/img/logos/${formData.creator}.png`;
         const creatorImg = await createHTMLImageElementFromBase64(await base64Cache(creatorImgSrc, `${formData.creator}.png`));
 
         const creatorImgMaxWidth = 76;

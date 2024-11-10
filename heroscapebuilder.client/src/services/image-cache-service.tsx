@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { base64Cache } from './cache-manager';
-import brokenImage from "../../src/assets/img/imageNotFound.png";
 
 // Example component to display cached images
 export const ImageCache: React.FC<{ src?: string; alt: string; cacheKey?: string; className: string }> = ({ src, alt, cacheKey, className }) => {
@@ -10,7 +9,7 @@ export const ImageCache: React.FC<{ src?: string; alt: string; cacheKey?: string
         // If src or cacheKey is not provided, return the broken image
         if (!src || !cacheKey) {
             console.error(`Image path not set: ${src} - ${cacheKey}`);
-            setImageSrc(brokenImage);
+            setImageSrc("/assets/img/imageNotFound.png");
             return;
         }
 
@@ -21,7 +20,7 @@ export const ImageCache: React.FC<{ src?: string; alt: string; cacheKey?: string
             } catch (error) {
                 console.error(`Error fetching image: ${src}`, error);
                 // If an error occurs, fall back to the broken image
-                setImageSrc(brokenImage);
+                setImageSrc("/assets/img/imageNotFound.png");
             }
         };
 

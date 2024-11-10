@@ -1,6 +1,4 @@
 import React from 'react';
-import cardsImg from '../../../assets/img/card_pile_4x6.png';
-import cardMaker from '../../../assets/img/CardMaker.png'
 
 const FourbysixArmyCards: React.FC = () => {
     return (
@@ -8,7 +6,7 @@ const FourbysixArmyCards: React.FC = () => {
             <div className="cards row gy-6">
                 <div className="offset-md-1 col-md-2 card-option text-center">
                     <a href="/army-cards/fourbysix/download" className="text-decoration-none text-dark">
-                        <img src={cardsImg} alt="Standard Heroscape Card" className="img-fluid" />
+                        <img src="/assets/img/card_pile_4x6.png" alt="Standard Heroscape Card" className="img-fluid" />
                     </a>
                 </div>
                 <div className="col-md-6 card-option d-flex align-items-center">
@@ -20,7 +18,7 @@ const FourbysixArmyCards: React.FC = () => {
             <div className="cards row gy-6">
                 <div className="offset-md-1 col-md-2 card-option text-center">
                     <a href="/army-cards/fourbysix/create" className="text-decoration-none text-dark">
-                        <img src={cardMaker} alt="Create standard Heroscape Card" className="img-fluid" />
+                        <img src="/assets/img/CardMaker.png" alt="Create standard Heroscape Card" className="img-fluid" />
                     </a>
                 </div>
                 <div className="col-md-6 card-option d-flex align-items-center">

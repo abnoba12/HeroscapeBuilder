@@ -52,7 +52,7 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     if (drawOutlines) doc.rect(statsX, statsY, 1, 100);
 
     if (formData.creator) {
-        var creatorImgSrc = `/src/assets/img/logos/${formData.creator}.png`;
+        var creatorImgSrc = `/assets/img/logos/${formData.creator}.png`;
         const creatorImg = await createHTMLImageElementFromBase64(await base64Cache(creatorImgSrc, `${formData.creator}.png`));
 
         const creatorImgMaxWidth = 153;

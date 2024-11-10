@@ -1,8 +1,5 @@
 import React from 'react';
 import "./Home.scss";
-import armyCardImg from "../../assets/img/cardThumbnails/Charos-SQ.png";
-import unitsImg from "../../assets/img/DataBuilderLogo.png";
-import gamePlayImg from "../../assets/img/game-play.png"
 
 const Home: React.FC = () => {
     return (
@@ -39,19 +36,19 @@ const Home: React.FC = () => {
             <section className="cards row gy-4">
                 <div className="col-md-4 site-area">
                     <a href="/army-cards" className="text-decoration-none text-dark">
-                        <img src={armyCardImg} alt="Heroscape Army Cards" className="img-fluid" />
+                        <img src="/assets/img/cardThumbnails/Charos-SQ.png" alt="Heroscape Army Cards" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Army Cards</p>
                     </a>
                 </div>
                 <div className="col-md-4 site-area">
                     <a href="/units" className="text-decoration-none text-dark">
-                        <img src={unitsImg} alt="Heroscape Data" className="img-fluid" />
+                        <img src="/assets/img/DataBuilderLogo.png" alt="Heroscape Data" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Data</p>
                     </a>
                 </div>
                 <div className="col-md-4 site-area">
                     <a href="/game-play" className="text-decoration-none text-dark">
-                        <img src={gamePlayImg} alt="Heroscape Data" className="img-fluid" />
+                        <img src="/assets/img/game-play.png" alt="Heroscape Data" className="img-fluid" />
                         <p className="text-center mt-2">Game Play</p>
                     </a>
                 </div>
