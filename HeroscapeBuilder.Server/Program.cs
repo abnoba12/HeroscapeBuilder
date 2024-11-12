@@ -45,8 +45,6 @@ builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) => {
     options.AddInterceptors(serviceProvider.GetRequiredService<SecondLevelCacheInterceptor>());
 });
 
-var apiKey = builder.Configuration["ApiSettings:ApiKey"];
-
 var app = builder.Build();
 
 app.UseCors("AllowSpecificOrigins");

@@ -372,7 +372,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         return;
                 }
 
-                await AddFileToUnit(pdf, selectedUnit, pdfPurpose, `${unitName}.pdf`);
+                await AddFileToUnit(pdf, selectedUnit, pdfPurpose, `Index_${cardSize}_${unitName}.pdf`.replace(" ", "_"));
             }
 
             removeCache("Unit");

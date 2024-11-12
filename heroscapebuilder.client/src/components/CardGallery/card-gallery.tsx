@@ -25,7 +25,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                     setGallerySize("thumbnail col-xxl-2 col-lg-3 col-lg-4");
                 }
 
-                const data = await getFilesByPurpose(`${cardSize}_Army_Card`);
+                const data = (await getFilesByPurpose(`${cardSize}_Army_Card`)).sort((a, b) => a.filePath.localeCompare(b.filePath));
                 setFiles(data);
                 setLoading(false);
             } catch (err) {

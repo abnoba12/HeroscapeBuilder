@@ -7,7 +7,14 @@ namespace HeroscapeBuilder.Server.Common.Helpers
 {
     public static class ConfigurationExtensions
     {
-        // Extension method on IConfiguration to get and transform a connection string
+        /// <summary>
+        /// Get a connection string by name
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="environmentVariableName">What is the name of the environment variable this is stored in</param>
+        /// <param name="connectionStringName">Name of the desired connection string</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static string GetConnectionStringFromEnv(this IConfiguration configuration, string environmentVariableName, string connectionStringName)
         {
             // Fetch the connection string using the built-in GetConnectionString method
@@ -21,6 +28,14 @@ namespace HeroscapeBuilder.Server.Common.Helpers
             return GetConfigWithPlaceholders(connectionString, environmentVariableName);
         }
 
+        /// <summary>
+        /// Get a configuration section by name
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="environmentVariableName">What is the name of the environment variable this is stored in</param>
+        /// <param name="sectionName">Name of the desired config section</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static IConfigurationSection GetSectionWithEnvVariables(this IConfiguration configuration, string environmentVariableName, string sectionName)
         {
             var section = configuration.GetSection(sectionName);
@@ -46,6 +61,28 @@ namespace HeroscapeBuilder.Server.Common.Helpers
                 .GetSection(sectionName);
 
             return updatedSection;
+        }
+
+        /// <summary>
+        /// Get a single configuration item
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="environmentVariableName">What is the name of the environment variable this is stored in</param>
+        /// <param name="key">Name of the config item desired</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static string GetConfigValue(this IConfiguration configuration, string environmentVariableName, string key)
+        {
+            // Retrieve the value from the configuration by key
+            var configValue = configuration[key];
+
+            if (string.IsNullOrEmpty(configValue))
+            {
+                throw new ArgumentNullException($"Configuration key '{key}' not found.");
+            }
+
+            // Replace placeholders in the config value using environment variables
+            return GetConfigWithPlaceholders(configValue, environmentVariableName);
         }
 
         private static Dictionary<string, object> BuildSectionDictionary(IConfigurationSection section)

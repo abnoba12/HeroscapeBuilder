@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HeroscapeBuilder.Server.Common.Helpers;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
@@ -9,7 +10,7 @@ public class ApiKeyAuthorizeAttribute : Attribute, IAuthorizationFilter
 
     public static void Initialize(IConfiguration configuration)
     {
-        _configuredApiKey = configuration["ApiKey"];
+        _configuredApiKey = configuration.GetConfigValue("HeroscapeBuilder", "ApiKey");
     }
 
     public void OnAuthorization(AuthorizationFilterContext context)
