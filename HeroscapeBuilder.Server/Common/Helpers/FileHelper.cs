@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-
-namespace HeroscapeBuilder.Server.Common.Helpers
+﻿namespace HeroscapeBuilder.Server.Common.Helpers
 {
     public static class FileHelper
     {
@@ -15,7 +13,7 @@ namespace HeroscapeBuilder.Server.Common.Helpers
         // Extension method to prepend blob storage path
         public static string PrependFilePath(this string filePath)
         {
-            return string.IsNullOrEmpty(filePath) ? null : $"{_blobStoragePath}{filePath}";
+            return string.IsNullOrEmpty(filePath) ? null : UrlHelper.Combine(_blobStoragePath, filePath);
         }
     }
 

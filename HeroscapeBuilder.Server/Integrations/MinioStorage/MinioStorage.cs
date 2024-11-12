@@ -15,7 +15,8 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
             _minioClient = new MinioClient()
                 .WithEndpoint(endpoint)
                 .WithCredentials(accessKey, secretKey)
-                .Build();
+                .Build()
+                .WithSSL(true);
         }
 
         public string BucketName
@@ -43,7 +44,7 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
                 .WithContentType("application/octet-stream"));
 
             // Constructing the URL manually as Endpoint is not directly accessible
-            return $"http://{_minioClient.Config.Endpoint}/{_bucketName}/{path}";
+            return $"/{_bucketName}/{path}";
         }
 
         public async Task<byte[]> DownloadAsync(string path)
@@ -126,6 +127,12 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
 
             await completionSource.Task; // Wait until the subscription is complete
             return files;
+        }
+
+        public string PathCombine(IEnumerable<string> pathParts)
+        {
+
+            return string.Join("/", pathParts.Select(p => p.Replace("\\", "/").Trim('/')));
         }
     }
 }

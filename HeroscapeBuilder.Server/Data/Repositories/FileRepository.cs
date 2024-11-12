@@ -17,6 +17,11 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             return await _context.ArmyCardFiles.Include(f => f.Children).Where(x => x.FilePurpose == purpose).ToListAsync();
         }
 
+        /// <summary>
+        /// Save a list of files and return the count of how many files were saved
+        /// </summary>
+        /// <param name="acfs"></param>
+        /// <returns></returns>
         public async Task<int> AddArmyCardFilesAsync(List<ArmyCardFile> acfs)
         {
             _context.Database.AutoTransactionsEnabled = false;
@@ -29,5 +34,21 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             return saved;
         }
 
+        /// <summary>
+        /// Save a single army card file and get its ID back.
+        /// </summary>
+        /// <param name="acfs"></param>
+        /// <returns></returns>
+        public async Task<long> AddArmyCardFileAsync(ArmyCardFile acfs)
+        {            
+            _context.ArmyCardFiles.Add(acfs);
+            await _context.SaveChangesAsync();
+            return acfs.Id;
+        }
+
+        public bool FileExists(ArmyCardFile acf)
+        {
+            return _context.ArmyCardFiles.Any(x => x.ArmyCardId == acf.ArmyCardId && x.FilePurpose == acf.FilePurpose && x.FilePath == acf.FilePath);
+        }
     }
 }

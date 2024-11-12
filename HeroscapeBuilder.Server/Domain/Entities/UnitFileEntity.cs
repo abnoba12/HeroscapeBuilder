@@ -1,4 +1,6 @@
-﻿namespace HeroscapeBuilder.Server.Domain.Entities
+﻿using HeroscapeBuilder.Server.Common.Helpers;
+
+namespace HeroscapeBuilder.Server.Domain.Entities
 {
     public class UnitFileEntity
     {
@@ -8,7 +10,12 @@
 
         public string FilePurpose { get; set; } = null!;
 
-        public string FilePath { get; set; } = null!;
+        public string RawFilePath { get; set; }
+        public string FilePath
+        {
+            get => RawFilePath.PrependFilePath();
+            set => RawFilePath = value;
+        }
 
         public string Thumb { get; set; } = null;
 

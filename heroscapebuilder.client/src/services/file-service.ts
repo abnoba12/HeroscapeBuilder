@@ -3,6 +3,8 @@ import JSZip from "jszip";
 import { UnitFile } from '../models/unit-file';
 import { blobCache, GetAPIDataWithCache } from './cache-manager';
 import { debounce } from './debounce';
+import axios from 'axios';
+import { getCookie } from './cookie-service';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
@@ -78,7 +80,6 @@ export async function readZipFile(file: any) {
     }
 }
 
-
 // Function to download all files as a zip file
 export async function downloadAllAsZip(files: any, zipName: any) {
     const zip = new JSZip();
@@ -93,57 +94,29 @@ export async function downloadAllAsZip(files: any, zipName: any) {
     saveAs(content, zipName);
 }
 
-/**
- * Requires 
- * 'https://cdn.jsdelivr.net/npm/aws-sdk/dist/aws-sdk.min.js'
- * Initializes the AWS S3 connection
- * @param {*} k The key
- * @param {*} s The secret
- * @returns 
- */
-//export function setAWS(k: string, s: string) {
-//    AWS.config.update({
-//        accessKeyId: k,
-//        secretAccessKey: s,
-//        region: 'us-west-1',
-//    });
-//    return new AWS.S3({
-//        endpoint: 'https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/s3',
-//        s3ForcePathStyle: true, // Needed for S3-compatible storage
-//        signatureVersion: 'v4', // Ensure the signature version is compatible
-//    });
-//}
+export async function AddFileToUnit(file: Blob, armyCardId: string, filePurpose: string, fileName: string) {
+    const cookie = getCookie('X-API-KEY');
+    if (cookie) {
+        const formData = new FormData();
+        formData.append("file", file);
 
-/**
- * Saves the provided file to the AWS S3 file storage
- * @param {*} s3 Use the SetAWS function to initialize the AWS S3 connection
- * @param {*} fileInput The file input element. EX: $("#hitbox")[0]
- * @param {*} path Full path on where to store the file inside of S3
- * @returns 
- */
-//export function saveFileToS3(s3: AWS.S3, file: File, path: string) {
-//    return new Promise((resolve, reject) => {
-//        if (file.size === 0) {
-//            alert('Please select a file to upload.');
-//            return reject('Please select a file to upload.');
-//        }
+        try {
+            const response = await axios.put(`${API_BASE_URL}/File/AddFileToUnit`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "X-API-KEY": cookie
+                },
+                params: {
+                    armyCardId,
+                    filePurpose,
+                    fileName
+                }
+            });
 
-//        const fileName = file.name.trim().replace(/\s+/g, "_");
-//        const bucketName = path;
+            console.log(`Uploaded ${filePurpose} file successfully:`, response.data);
+        } catch (error) {
+            console.error("Error uploading file:", error);
+        }
+    }
+}
 
-//        s3.putObject({
-//            Bucket: bucketName,
-//            Key: fileName,
-//            Body: file,
-//            ContentType: file.type, // Specify the MIME type
-//        }, (err) => {
-//            if (err) {
-//                reject(`Error uploading file: ${err}`);
-//            } else {
-//                // Construct the URL of the uploaded file
-//                const fileUrl = `https://${s3.endpoint.hostname}/storage/v1/object/public/${bucketName}/${fileName}`;
-//                resolve(fileUrl);
-//            }
-//        });
-//    });
-//}

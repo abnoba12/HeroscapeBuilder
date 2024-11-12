@@ -1,4 +1,5 @@
 ﻿using HeroscapeBuilder.Server.Common.Helpers;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HeroscapeBuilder.Server.Data.Entities;
 
@@ -10,12 +11,7 @@ public partial class ArmyCardFile
 
     public string FilePurpose { get; set; } = null!;
 
-    private string _filePath = null!;
-    public string FilePath
-    {
-        get => _filePath.PrependFilePath();
-        set => _filePath = value;
-    }
+    public string FilePath { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

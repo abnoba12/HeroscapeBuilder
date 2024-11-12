@@ -18,9 +18,9 @@ namespace HeroscapeBuilder.Server
             //Services
             services.AddScoped<UnitService>();
             services.AddScoped<FileService>();
-            services.AddScoped<ImageOptimizationService>();
-            services.AddScoped<PdfThumbnailService>();
-            services.AddHttpClient<PdfThumbnailService>();
+            services.AddScoped<ImageService>();
+            services.AddScoped<PdfService>();
+            services.AddHttpClient<PdfService>();
 
             //Domain
             services.AddScoped<ImageOptimizer>();

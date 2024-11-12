@@ -21,5 +21,7 @@
 
         // Optionally, you can include a method for listing files in a directory
         Task<IEnumerable<IFile>> ListFilesAsync(string directoryPath);
+
+        string PathCombine(IEnumerable<string> pathParts);
     }
 }

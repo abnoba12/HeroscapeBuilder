@@ -25,6 +25,9 @@ builder.Services.RegisterServices(builder.Configuration);
 
 builder.Services.AddControllers();
 
+// Initialize the API key for ApiKeyAuthorizeAttribute
+ApiKeyAuthorizeAttribute.Initialize(builder.Configuration);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "HeroscapeBuilder", Version = "v1" });
@@ -41,6 +44,8 @@ builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) => {
     });
     options.AddInterceptors(serviceProvider.GetRequiredService<SecondLevelCacheInterceptor>());
 });
+
+var apiKey = builder.Configuration["ApiSettings:ApiKey"];
 
 var app = builder.Build();
 

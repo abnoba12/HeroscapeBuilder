@@ -3,18 +3,18 @@ using HeroscapeBuilder.Server.Integrations.Interfaces;
 
 namespace HeroscapeBuilder.Server.Services
 {
-    public class ImageOptimizationService
+    public class ImageService
     {
         private readonly IFileStorage<byte[]> _blobStorage;
         private readonly ImageOptimizer _imageOptimizer;
 
-        public ImageOptimizationService(IFileStorage<byte[]> blobStorage, ImageOptimizer imageOptimizer)
+        public ImageService(IFileStorage<byte[]> blobStorage, ImageOptimizer imageOptimizer)
         {
             _blobStorage = blobStorage;
             _imageOptimizer = imageOptimizer;
         }
 
-        public async Task<List<string>> OptimizeImagesAsync(string bucketId, string folderPath, string purpose, int? maxWidth, int? maxHeight)
+        public async Task<List<string>> OptimizeImagesInStorageAsync(string bucketId, string folderPath, string purpose, int? maxWidth, int? maxHeight)
         {
             _blobStorage.BucketName = bucketId;
             var files = await _blobStorage.ListFilesAsync(folderPath);
@@ -45,6 +45,29 @@ namespace HeroscapeBuilder.Server.Services
             }
 
             return optimized;
+        }
+
+        public byte[] OptimizeImage(byte[] image)
+        {
+            return _imageOptimizer.OptimizeImage(image, "PRINT", null, null, true);
+        }
+
+        // Helper method to check for JPG
+        public bool IsJpg(byte[] fileData)
+        {
+            return fileData.Length > 2 &&
+                   fileData[0] == 0xFF && fileData[1] == 0xD8 && // Start of JPG file
+                   fileData[^2] == 0xFF && fileData[^1] == 0xD9; // End of JPG file
+        }
+
+        // Helper method to check for PNG
+        public bool IsPng(byte[] fileData)
+        {
+            return fileData.Length > 8 &&
+                   fileData[0] == 0x89 && fileData[1] == 0x50 &&
+                   fileData[2] == 0x4E && fileData[3] == 0x47 &&
+                   fileData[4] == 0x0D && fileData[5] == 0x0A &&
+                   fileData[6] == 0x1A && fileData[7] == 0x0A;
         }
     }
 }

@@ -4,10 +4,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Ability } from '../../models/ability';
 import { Unit } from '../../models/unit';
 import { UnitFormData } from '../../models/unit-form-data';
-import { blobCache } from '../../services/cache-manager';
+import { blobCache, removeCache } from '../../services/cache-manager';
 import { generateIndexCard, initializePDF, savePDF } from '../../services/card-maker-service';
 import { getUnits } from '../../services/unit-service';
 import './card-maker.scss';
+import { getCookie } from '../../services/cookie-service';
+import { UnitFormFile } from '../../models/unit-form-file';
+import { AddFileToUnit } from '../../services/file-service';
 
 interface CardMakerProps {
     cardSize: string;
@@ -304,6 +307,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                 }
 
                 await savePDF(doc, fileName);
+                await saveToDB(formData, doc.output('blob'));
             } catch (e) {
                 throw e;
             } finally {
@@ -311,6 +315,71 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             }
         }
     };
+
+    const saveToDB = async function (formData: UnitFormData, pdf: Blob) {
+        const cookieExists = getCookie('X-API-KEY');
+        if (cookieExists && selectedUnit) {
+            const userConfirmed = confirm("Save the changes to the database?");
+            if (!userConfirmed) {
+                return;
+            }
+
+            var unitFormFiles: UnitFormFile[] = formData.uploadedFiles;
+
+            //Save Hitbox Image
+            var hb = unitFormFiles.find(x => x.filePurpose == "Card_Hitbox_Image");
+            if (hb && hb.data != undefined) {
+                await AddFileToUnit(hb.data, selectedUnit, hb.filePurpose, hb.fileName);
+            }
+
+            //Save Adv Image
+            var ai = unitFormFiles.find(x => x.filePurpose == "Card_Advanced_Image");
+            if (ai && ai.data != undefined) {
+                switch (cardSize) {
+                    case "3x5":
+                        ai.filePurpose = "Card_3x5_Advanced_Image";
+                        break;
+                    case "4x6":
+                        ai.filePurpose = "Card_4x6_Advanced_Image";
+                        break;
+                    case "Standard":
+                        ai.filePurpose = "Card_Advanced_Image_Standard";
+                        break;
+                }
+                await AddFileToUnit(ai.data, selectedUnit, ai.filePurpose, ai.fileName);
+            }
+
+            //Save Basic image
+            var bi = unitFormFiles.find(x => x.filePurpose == "Card_Basic_Image");
+            if (bi && bi.data != undefined) {
+                await AddFileToUnit(bi.data, selectedUnit, bi.filePurpose, bi.fileName);
+            }
+
+            //Save PDF
+            if (pdf) {
+                var pdfPurpose: string;
+                switch (cardSize) {
+                    case "3x5":
+                        pdfPurpose = "3x5_Army_Card";
+                        break;
+                    case "4x6":
+                        pdfPurpose = "4x6_Army_Card";
+                        break;
+                    case "Standard":
+                        pdfPurpose = "Standard_Army_Card";
+                        break;
+                    default:
+                        return;
+                }
+
+                await AddFileToUnit(pdf, selectedUnit, pdfPurpose, `${unitName}.pdf`);
+            }
+
+            removeCache("Unit");
+        }
+
+        return;
+    }
 
     if (loading) return <p>Loading...</p>;
 
@@ -370,7 +439,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Select the general the unit belongs to. <br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/General.png' alt='Unit General Image' />"
+                            title="Select the general the unit belongs to. <br/><img src='/assets/img/tooltips/General.png' alt='Unit General Image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -394,7 +463,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the name of the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/Unit.png' alt='Unit name image' />"
+                            title="Enter the name of the unit.<br/><img src='/assets/img/tooltips/Unit.png' alt='Unit name image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -409,7 +478,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the race of the unit. Such as Human, Marro, Dragon, Kyrie.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/race.png' alt='race image' />"
+                            title="Enter the race of the unit. Such as Human, Marro, Dragon, Kyrie.<br/><img src='/assets/img/tooltips/race.png' alt='race image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -424,7 +493,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the role of the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/role.png' alt='role image' />"
+                            title="Enter the role of the unit.<br/><img src='/assets/img/tooltips/role.png' alt='role image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -439,7 +508,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the personality of the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/personality.png' alt='personality image' />"
+                            title="Enter the personality of the unit.<br/><img src='/assets/img/tooltips/personality.png' alt='personality image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -454,7 +523,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the planet of origin for the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/planet.png' alt='planet image' />"
+                            title="Enter the planet of origin for the unit.<br/><img src='/assets/img/tooltips/planet.png' alt='planet image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -469,7 +538,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Select the rarity of the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/rarity.png' alt='rarity image' />"
+                            title="Select the rarity of the unit.<br/><img src='/assets/img/tooltips/rarity.png' alt='rarity image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -488,7 +557,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Select whether the unit is a Hero or a Squad.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/heroOSquad.png' alt='Hero or squad image' />"
+                            title="Select whether the unit is a Hero or a Squad.<br/><img src='/assets/img/tooltips/heroOSquad.png' alt='Hero or squad image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -506,7 +575,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Select the size category of the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/sizecat.png' alt='size category image' />"
+                            title="Select the size category of the unit.<br/><img src='/assets/img/tooltips/sizecat.png' alt='size category image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -526,7 +595,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the size of the unit.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/size.png' alt='size image' />"
+                            title="Enter the size of the unit.<br/><img src='/assets/img/tooltips/size.png' alt='size image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -611,7 +680,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the life value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/life.png' alt='life image' />"
+                            title="Enter the life value.<br/><img src='/assets/img/tooltips/life.png' alt='life image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -626,7 +695,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the advanced move value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/a_move.png' alt='Adv move image' />"
+                            title="Enter the advanced move value.<br/><img src='/assets/img/tooltips/a_move.png' alt='Adv move image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -641,7 +710,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the advanced range value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/a_range.png' alt='Adv range image' />"
+                            title="Enter the advanced range value.<br/><img src='/assets/img/tooltips/a_range.png' alt='Adv range image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -656,7 +725,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the advanced attack value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/a_attack.png' alt='Adv attack image' />"
+                            title="Enter the advanced attack value.<br/><img src='/assets/img/tooltips/a_attack.png' alt='Adv attack image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -671,7 +740,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the advanced defense value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/a_defence.png' alt='Adv defense image' />"
+                            title="Enter the advanced defense value.<br/><img src='/assets/img/tooltips/a_defence.png' alt='Adv defense image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -686,7 +755,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the points value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/points.png' alt='points image' />"
+                            title="Enter the points value.<br/><img src='/assets/img/tooltips/points.png' alt='points image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -701,7 +770,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the basic move value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/b_move.png' alt='basic move image' />"
+                            title="Enter the basic move value.<br/><img src='/assets/img/tooltips/b_move.png' alt='basic move image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -716,7 +785,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the basic range value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/b_range.png' alt='basic range image' />"
+                            title="Enter the basic range value.<br/><img src='/assets/img/tooltips/b_range.png' alt='basic range image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -731,7 +800,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the basic attack value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/b_attack.png' alt='basic attack image' />"
+                            title="Enter the basic attack value.<br/><img src='/assets/img/tooltips/b_attack.png' alt='basic attack image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -746,7 +815,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the basic defense value.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/b_defense.png' alt='basic defense image' />"
+                            title="Enter the basic defense value.<br/><img src='/assets/img/tooltips/b_defense.png' alt='basic defense image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -762,7 +831,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="This image will maintain its aspect ratio and will be scaled and centered to fit. It is highly recommended you use a transparent background.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/hitbox.png' alt='hitbox image' />"
+                            title="This image will maintain its aspect ratio and will be scaled and centered to fit. It is highly recommended you use a transparent background.<br/><img src='/assets/img/tooltips/hitbox.png' alt='hitbox image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -777,7 +846,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="To ensure the best quality, please upload a tall rectangular image (aspect ratio 467:1000) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom half of the image will be covered by unit statistics.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/adv_unit_image.png' alt='advanced unit image' />"
+                            title="To ensure the best quality, please upload a tall rectangular image (aspect ratio 467:1000) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom half of the image will be covered by unit statistics.<br/><img src='/assets/img/tooltips/adv_unit_image.png' alt='advanced unit image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -792,7 +861,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="To ensure the best quality, please upload a wide rectangular image (aspect ratio 3:2) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom half of the image will be covered by unit statistics.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/basic_unit_image.png' alt='basic unit image' />"
+                            title="To ensure the best quality, please upload a wide rectangular image (aspect ratio 3:2) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom half of the image will be covered by unit statistics.<br/><img src='/assets/img/tooltips/basic_unit_image.png' alt='basic unit image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -808,7 +877,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the set the unit belongs to.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/set.png' alt='set image' />"
+                            title="Enter the set the unit belongs to.<br/><img src='/assets/img/tooltips/set.png' alt='set image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -822,7 +891,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the unit number(s).<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/unit_num.png' alt='unit number image' />"
+                            title="Enter the unit number(s).<br/><img src='/assets/img/tooltips/unit_num.png' alt='unit number image' />"
                         >
                             <span className="q">[?]</span>
                         </span>
@@ -836,7 +905,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="Enter the number of units in the set.<br/><img src='https://dnqjtsaxybwrurmucsaa.supabase.co/storage/v1/object/public/tooltips/total_units.png' alt='unit in set image' />"
+                            title="Enter the number of units in the set.<br/><img src='/assets/img/tooltips/total_units.png' alt='unit in set image' />"
                         >
                             <span className="q">[?]</span>
                         </span>

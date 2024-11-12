@@ -1,17 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using iText.Kernel.Pdf;
 using MuPDFCore;
 using VectSharp.Raster;
 
 namespace HeroscapeBuilder.Server.Services
 {
-    public class PdfThumbnailService
+    public class PdfService
     {
         private readonly HttpClient _httpClient;
 
-        public PdfThumbnailService(HttpClient httpClient)
+        public PdfService(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
@@ -25,15 +22,29 @@ namespace HeroscapeBuilder.Server.Services
             return await CreateThumbnailFromPdf(pdfBytes);
         }
 
-        private async Task<byte[]> DownloadPdfAsync(string pdfUrl)
+        public byte[] CompressPdf(byte[] inputPdfData)
         {
-            var response = await _httpClient.GetAsync(pdfUrl);
-            response.EnsureSuccessStatusCode();  // Ensures the request was successful
+            // Initialize the writer properties for optimal print compression
+            var writerProperties = new WriterProperties()
+                .SetCompressionLevel(CompressionConstants.BEST_COMPRESSION);
 
-            return await response.Content.ReadAsByteArrayAsync();
+            // Use memory streams for in-memory processing
+            using (var inputStream = new MemoryStream(inputPdfData))
+            using (var outputStream = new MemoryStream())
+            {
+                // Initialize the PdfReader and PdfWriter with memory streams
+                using (var pdfReader = new PdfReader(inputStream))
+                using (var pdfWriter = new PdfWriter(outputStream, writerProperties))
+                using (var pdfDoc = new PdfDocument(pdfReader, pdfWriter))
+                {
+                    pdfDoc.GetNumberOfPages(); // Forces the document to be fully loaded into memory
+                }
+
+                // Return the compressed PDF as a byte array
+                return outputStream.ToArray();
+            }
         }
-
-        private async Task<byte[]> CreateThumbnailFromPdf(byte[] pdfBytes)
+        public async Task<byte[]> CreateThumbnailFromPdf(byte[] pdfBytes)
         {
             string tempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pdf");
 
@@ -102,6 +113,37 @@ namespace HeroscapeBuilder.Server.Services
                     File.Delete(tempFilePath);
                 }
             }
+        }
+
+        public bool IsPdf(byte[] fileData)
+        {
+            // PDF files start with the bytes representing "%PDF-"
+            var pdfHeader = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D }; // Corresponds to "%PDF-"
+
+            // Ensure fileData is at least as long as the PDF header
+            if (fileData.Length < pdfHeader.Length)
+            {
+                return false;
+            }
+
+            // Compare the first few bytes of fileData to the PDF header
+            for (int i = 0; i < pdfHeader.Length; i++)
+            {
+                if (fileData[i] != pdfHeader[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private async Task<byte[]> DownloadPdfAsync(string pdfUrl)
+        {
+            var response = await _httpClient.GetAsync(pdfUrl);
+            response.EnsureSuccessStatusCode();  // Ensures the request was successful
+
+            return await response.Content.ReadAsByteArrayAsync();
         }
     }
 }
