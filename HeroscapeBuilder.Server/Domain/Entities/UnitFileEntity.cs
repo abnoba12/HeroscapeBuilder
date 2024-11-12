@@ -17,7 +17,13 @@ namespace HeroscapeBuilder.Server.Domain.Entities
             set => RawFilePath = value;
         }
 
-        public string Thumb { get; set; } = null;
+        public string RawThumbPath { get; set; } = null;
+        public string Thumb
+        {
+            get => RawThumbPath.PrependFilePath();
+            set => RawThumbPath = value;
+        }
+
 
         public DateTime CreatedAt { get; set; }
     }
