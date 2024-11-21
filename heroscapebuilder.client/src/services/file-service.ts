@@ -4,7 +4,7 @@ import { UnitFile } from '../models/unit-file';
 import { blobCache, GetAPIDataWithCache } from './cache-manager';
 import { debounce } from './debounce';
 import axios from 'axios';
-import { getCookie } from './cookie-service';
+import { getToken, hasRole } from './authService';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
@@ -95,8 +95,7 @@ export async function downloadAllAsZip(files: any, zipName: any) {
 }
 
 export async function AddFileToUnit(file: Blob, armyCardId: string, filePurpose: string, fileName: string) {
-    const cookie = getCookie('X-API-KEY');
-    if (cookie) {
+    if (hasRole("Admin")) {
         const formData = new FormData();
         formData.append("file", file);
 
@@ -104,7 +103,7 @@ export async function AddFileToUnit(file: Blob, armyCardId: string, filePurpose:
             const response = await axios.put(`${API_BASE_URL}/File/AddFileToUnit`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
-                    "X-API-KEY": cookie
+                    "Authorization": `Bearer ${getToken()}`
                 },
                 params: {
                     armyCardId,

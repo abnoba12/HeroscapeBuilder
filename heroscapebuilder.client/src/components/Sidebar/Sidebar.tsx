@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { getUser, isAuthenticated } from "../../services/authService";
 
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
@@ -51,6 +52,33 @@ const Sidebar: React.FC = () => {
             </div>
             <div className="sidebar-wrapper ps">
                 <ul className="nav sidebar-links">
+                    <li className={`nav-item ${activeMenu === 'user' ? 'active' : ''}`}>
+                        <a href="#!" onClick={() => toggleSubmenu('user')}>
+                            <p>
+                                User
+                                {isAuthenticated() && (
+                                    <>
+                                        <span> - {getUser()?.email?.toString()}</span>
+                                    </>
+                                )}
+                            </p>
+                        </a>
+                        {activeMenu === 'user' && (
+                            <ul className="submenu">
+                                {!isAuthenticated() && (
+                                    <>
+                                    <li><Link to="/user/Register" onClick={toggleSidebar}>Register</Link></li>
+                                    <li><Link to="/user/Login" onClick={toggleSidebar}>Login</Link></li>
+                                    </>
+                                )}
+                                {isAuthenticated() && (
+                                    <>
+                                    <li><Link to="/user/Logout" onClick={toggleSidebar}>Logout</Link></li>
+                                    </>
+                                )}
+                            </ul>
+                        )}
+                    </li>
                     <li className={`nav-item ${activeMenu === 'army-cards' ? 'active' : ''}`}>
                         <a href="#!" onClick={() => toggleSubmenu('army-cards')}><p>Army Cards</p></a>
                         {activeMenu === 'army-cards' && (
@@ -63,7 +91,7 @@ const Sidebar: React.FC = () => {
                         )}
                     </li>
                     <li className={`nav-item ${activeMenu === 'units' ? 'active' : ''}`}>
-                        <a href="#!" onClick={() => toggleSubmenu('units')}><p>Units</p></a>
+                        <a href="#!" onClick={() => toggleSubmenu('units')}><p>Data</p></a>
                         {activeMenu === 'units' && (
                             <ul className="submenu">
                                 <li><Link to="/units/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>

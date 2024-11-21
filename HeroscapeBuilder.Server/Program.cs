@@ -1,7 +1,7 @@
 using EFCoreSecondLevelCacheInterceptor;
-using HeroscapeBuilder.Server;
 using HeroscapeBuilder.Server.Common.Helpers;
 using HeroscapeBuilder.Server.Data;
+using HeroscapeBuilder.Server.Program;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -20,19 +20,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Call the extension method to register services for DI
-builder.Services.RegisterServices(builder.Configuration);
-
-builder.Services.AddControllers();
-
-// Initialize the API key for ApiKeyAuthorizeAttribute
-ApiKeyAuthorizeAttribute.Initialize(builder.Configuration);
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c => {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "HeroscapeBuilder", Version = "v1" });
-});
-
 builder.Services.AddDistributedMemoryCache();
 
 var connectionString = builder.Configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "MsSqlDb");
@@ -43,6 +30,19 @@ builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) => {
         sqlOptions.EnableRetryOnFailure();  // Enable retries for transient errors
     });
     options.AddInterceptors(serviceProvider.GetRequiredService<SecondLevelCacheInterceptor>());
+});
+
+//Add JWT auth to the site
+builder.InitializeJwtAuthentication<HsbDbContext>();
+
+// Call the extension method to register services for DI
+builder.RegisterServices();
+
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c => {
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "HeroscapeBuilder", Version = "v1" });
 });
 
 var app = builder.Build();
@@ -67,6 +67,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 //app.UseHttpsRedirection();
+app.UseAuthentication();
 
 app.UseAuthorization();
 

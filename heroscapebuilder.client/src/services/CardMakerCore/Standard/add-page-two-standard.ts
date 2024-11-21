@@ -51,7 +51,7 @@ export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, Glo
 
     doc.setTextColor(...blackRGB); // Set text color to black
     if (formData.creator) {
-        const creatorImgSrc = `${import.meta.env.BASE_URL}/assets/img/logos/${formData.creator}_dark.png`;
+        const creatorImgSrc = `/assets/img/logos/${formData.creator}_dark.png`;
         const response = await fetch(creatorImgSrc);
         const creatorImg = await createHTMLImageElementFromBlob(await response.blob());
 

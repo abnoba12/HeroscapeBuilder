@@ -1,9 +1,10 @@
 ﻿using HeroscapeBuilder.Server.Data.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace HeroscapeBuilder.Server.Data;
 
-public partial class HsbDbContext : DbContext
+public partial class HsbDbContext : IdentityDbContext
 {
     public HsbDbContext()
     {
@@ -24,6 +25,8 @@ public partial class HsbDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<ArmyCard>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("army_card_pkey");

@@ -4,13 +4,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Ability } from '../../models/ability';
 import { Unit } from '../../models/unit';
 import { UnitFormData } from '../../models/unit-form-data';
+import { UnitFormFile } from '../../models/unit-form-file';
+import { hasRole } from '../../services/authService';
 import { blobCache, removeCache } from '../../services/cache-manager';
 import { generateIndexCard, initializePDF, savePDF } from '../../services/card-maker-service';
+import { AddFileToUnit } from '../../services/file-service';
 import { getUnits } from '../../services/unit-service';
 import './card-maker.scss';
-import { getCookie } from '../../services/cookie-service';
-import { UnitFormFile } from '../../models/unit-form-file';
-import { AddFileToUnit } from '../../services/file-service';
 
 interface CardMakerProps {
     cardSize: string;
@@ -317,8 +317,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     };
 
     const saveToDB = async function (formData: UnitFormData, pdf: Blob) {
-        const cookieExists = getCookie('X-API-KEY');
-        if (cookieExists && selectedUnit) {
+        if (hasRole("Admin") && selectedUnit) {
             const userConfirmed = confirm("Save the changes to the database?");
             if (!userConfirmed) {
                 return;

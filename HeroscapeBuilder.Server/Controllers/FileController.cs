@@ -2,11 +2,6 @@
 using HeroscapeBuilder.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.IO;
-using System.Security.Claims;
-using System.Text;
 
 namespace HeroscapeBuilder.Server.Controllers
 {
@@ -29,8 +24,8 @@ namespace HeroscapeBuilder.Server.Controllers
             return await _fileService.GetFilesByPurpose(purpose);
         }
 
-        [RequestSizeLimit(100 * 1024 * 1024)] // 100 MB limit
-        [ApiKeyAuthorize]
+        [RequestSizeLimit(200 * 1024 * 1024)] // 200 MB limit
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<IActionResult> AddFileToUnit(int armyCardId, string filePurpose, string fileName, long? parentFileId)
         {
@@ -69,7 +64,7 @@ namespace HeroscapeBuilder.Server.Controllers
             }
         }
 
-        [ApiKeyAuthorize]
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<IActionResult> OptmizeImages(string Bucket, string Folder, string Purpose = "PRINT", int? MaxWidth = null, int? MaxHeight = null)
         {

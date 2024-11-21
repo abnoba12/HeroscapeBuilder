@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\components\Footer\" />
+    <Folder Include="src\components\Auth\" />
     <Folder Include="src\pages\army-cards\printing\" />
     <Folder Include="src\pages\army-cards\standard\" />
     <Folder Include="src\pages\Home\" />
