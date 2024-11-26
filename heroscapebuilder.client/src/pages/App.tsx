@@ -27,7 +27,7 @@ import Register from "../components/Auth/Register";
 const App: React.FC = () => {
     return (
         <Router>
-            <div className="wrapper navbar">
+            <div className="wrapper">
                 <Sidebar />
                 <div className="main-panel ps ps--active-y">
                     <div className="content">

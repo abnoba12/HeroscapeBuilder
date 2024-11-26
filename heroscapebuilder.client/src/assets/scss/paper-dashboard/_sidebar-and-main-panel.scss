@@ -391,23 +391,26 @@
   height: 380px
 }
 
+.wrapper .navbar{
+    position: absolute;
 
-.navbar-toggle {
-    background-color: white;
-    float: right;
+    .navbar-toggle {
+        background-color: white;
+        float: right;
 
-    .icon-bar {
-        display: block;
-        position: relative;
-        background: #fff;
-        width: 24px;
-        height: 2px;
-        border-radius: 1px;
-        margin: 0 auto;
-        background-color: black;
+        .icon-bar {
+            display: block;
+            position: relative;
+            background: #fff;
+            width: 24px;
+            height: 2px;
+            border-radius: 1px;
+            margin: 0 auto;
+            background-color: black;
 
-        &.icon-bar {
-            margin-top: 4px;
+            &.icon-bar {
+                margin-top: 4px;
+            }
         }
     }
 }

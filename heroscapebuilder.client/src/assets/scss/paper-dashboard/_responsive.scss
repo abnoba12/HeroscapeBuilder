@@ -1,6 +1,7 @@
 @media screen and (max-width: 991px) {
 
-    .navbar {
+    .wrapper .navbar {
+        position: relative;
         padding: 0;
 
         &.navbar-absolute {

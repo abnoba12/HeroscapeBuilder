@@ -13,9 +13,13 @@
 
   <ItemGroup>
     <Compile Remove="Migrations\**" />
+    <Compile Remove="Tests\**" />
     <Content Remove="Migrations\**" />
+    <Content Remove="Tests\**" />
     <EmbeddedResource Remove="Migrations\**" />
+    <EmbeddedResource Remove="Tests\**" />
     <None Remove="Migrations\**" />
+    <None Remove="Tests\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +41,8 @@
     <PackageReference Include="Minio.AspNetCore" Version="6.0.1" />
     <PackageReference Include="MuPDFCore" Version="1.10.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NLog.Database" Version="5.3.4" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.15" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
     <PackageReference Include="SkiaSharp" Version="2.88.9" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
@@ -58,7 +64,6 @@
     <Folder Include="Domain\Interfaces\" />
     <Folder Include="Domain\Exceptions\" />
     <Folder Include="Data\Configurations\" />
-    <Folder Include="Tests\" />
   </ItemGroup>
 
 </Project>

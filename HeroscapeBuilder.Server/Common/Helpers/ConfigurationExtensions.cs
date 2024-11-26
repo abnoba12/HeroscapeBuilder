@@ -104,7 +104,7 @@ namespace HeroscapeBuilder.Server.Common.Helpers
             return dict;
         }
 
-        private static string GetConfigWithPlaceholders(string connectionString, string environmentVariableName)
+        public static string GetConfigWithPlaceholders(string inputString, string environmentVariableName)
         {
             var _Configuration = Environment.GetEnvironmentVariable(environmentVariableName);
             if (string.IsNullOrEmpty(_Configuration))
@@ -136,7 +136,7 @@ namespace HeroscapeBuilder.Server.Common.Helpers
                     throw new FileNotFoundException("Configuration file not found.");
                 }
 
-                if (string.IsNullOrEmpty(connectionString))
+                if (string.IsNullOrEmpty(inputString))
                 {
                     return null;
                 }
@@ -163,11 +163,11 @@ namespace HeroscapeBuilder.Server.Common.Helpers
                 string value = property.Value.ToString();
 
                 // Replace the placeholder in the "config" string with the value from the JSON file
-                connectionString = connectionString.Replace(placeholder, value);
+                inputString = inputString.Replace(placeholder, value);
             }
 
             // Step 5: Return the updated config string
-            return connectionString;
+            return inputString;
         }
     }
 }
