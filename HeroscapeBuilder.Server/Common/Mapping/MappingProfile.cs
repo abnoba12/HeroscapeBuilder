@@ -9,17 +9,27 @@ namespace HeroscapeBuilder.Server.Common.Mapping
     {
         public MappingProfile()
         {
-
-
             CreateMap<ArmyCard, UnitEntity>()
                 .ForMember(dest => dest.Set, opt => opt.MapFrom(src => src.SetNavigation))
                 .ForMember(dest => dest.Abilities, opt => opt.MapFrom(src => src.ArmyCardAbilities.ToList()))
-                .ForMember(dest => dest.Files, opt => opt.MapFrom(src => src.ArmyCardFiles.ToList()));
+                .ForMember(dest => dest.Files, opt => opt.MapFrom(src => src.ArmyCardFiles.ToList()))
+                .AfterMap((src, dest) =>
+                {
+                    TransformCaseHelper.ApplyTransformations(dest);
+                });
 
-            CreateMap<ArmyCardAbility, AbilityEntity>();
+            CreateMap<ArmyCardAbility, AbilityEntity>()
+                .AfterMap((src, dest) =>
+                {
+                    TransformCaseHelper.ApplyTransformations(dest);
+                });
 
             CreateMap<ArmyCardFile, UnitFileEntity>()
-                .ForMember(dest => dest.Thumb, opt => opt.MapFrom(src => src.Children.FirstOrDefault(x => x.FilePurpose.Contains("Thumb")).FilePath));
+                .ForMember(dest => dest.Thumb, opt => opt.MapFrom(src => src.InverseParentNavigation.FirstOrDefault(x => x.FilePurpose.Contains("Thumb")).FilePath))
+                .AfterMap((src, dest) =>
+                {
+                    TransformCaseHelper.ApplyTransformations(dest);
+                });
 
             CreateMap<Set, SetEntity>();
         }

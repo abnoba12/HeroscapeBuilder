@@ -1,6 +1,6 @@
 using EFCoreSecondLevelCacheInterceptor;
 using HeroscapeBuilder.Server.Common.Helpers;
-using HeroscapeBuilder.Server.Data;
+using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Program;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -57,13 +57,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-
-// Apply migrations automatically
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<HsbDbContext>();
-    dbContext.Database.Migrate();
 }
 
 //app.UseHttpsRedirection();

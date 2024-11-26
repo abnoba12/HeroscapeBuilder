@@ -1,5 +1,5 @@
-﻿using HeroscapeBuilder.Server.Common.Helpers;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
 namespace HeroscapeBuilder.Server.Data.Entities;
 
@@ -11,13 +11,15 @@ public partial class ArmyCardFile
 
     public string FilePurpose { get; set; } = null!;
 
-    public string FilePath { get; set; }
+    public string FilePath { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
 
+    public long? Parent { get; set; }
+
     public virtual ArmyCard ArmyCard { get; set; } = null!;
 
-    public long? ParentId { get; set; }
-    public ArmyCardFile Parent { get; set; } // Navigation property for the parent
-    public ICollection<ArmyCardFile> Children { get; set; } = new List<ArmyCardFile>();
+    public virtual ICollection<ArmyCardFile> InverseParentNavigation { get; set; } = new List<ArmyCardFile>();
+
+    public virtual ArmyCardFile? ParentNavigation { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using HeroscapeBuilder.Server.Common.Helpers;
+using HeroscapeBuilder.Server.Data.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -11,10 +12,10 @@ using System.Text;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
 
-    public AuthController(UserManager<IdentityUser> userManager, IConfiguration configuration)
+    public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
     {
         _userManager = userManager;
         _configuration = configuration;
@@ -23,10 +24,14 @@ public class AuthController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+        var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
         var result = await _userManager.CreateAsync(user, model.Password);
 
         if (!result.Succeeded) return BadRequest(result.Errors);
+
+        // Add the user to the "User" role
+        var roleResult = await _userManager.AddToRoleAsync(user, "User");
+        if (!roleResult.Succeeded) return BadRequest(roleResult.Errors);
 
         return Ok("User registered successfully.");
     }
@@ -44,7 +49,7 @@ public class AuthController : ControllerBase
         return Unauthorized("Invalid credentials.");
     }
 
-    private string GenerateJwtToken(IdentityUser user, IList<string> roles)
+    private string GenerateJwtToken(ApplicationUser user, IList<string> roles)
     {
         var claims = new List<Claim>
         {

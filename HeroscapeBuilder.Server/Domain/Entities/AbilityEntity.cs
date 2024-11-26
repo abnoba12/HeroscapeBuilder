@@ -1,4 +1,5 @@
-﻿using HeroscapeBuilder.Server.Data.Entities;
+﻿using HeroscapeBuilder.Server.Common.Helpers;
+using HeroscapeBuilder.Server.Data.Entities;
 
 namespace HeroscapeBuilder.Server.Domain.Entities
 {
@@ -8,6 +9,7 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public int ArmyCardId { get; set; }
 
+        [TransformCase(Case = "Capitalize")]
         public string AbilityName { get; set; }
 
         public string Ability { get; set; }

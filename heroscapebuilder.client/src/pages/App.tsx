@@ -17,7 +17,7 @@ import StandardArmyCards from "./army-cards/standard/standard-army-cards";
 import DownloadThreeByFive from "./army-cards/threebyfive/download-threebyfive";
 import MakeCard3x5 from "./army-cards/threebyfive/make-card-3x5";
 import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
-import UnitData from "./units/unit-data/unit-data";
+import UnitData from "./data/unit-data/unit-data";
 import PrivateRoute from "../components/Auth/PrivateRoute";
 import User from "./user/User";
 import Login from "../components/Auth/Login";
@@ -27,7 +27,7 @@ import Register from "../components/Auth/Register";
 const App: React.FC = () => {
     return (
         <Router>
-            <div className="wrapper">
+            <div className="wrapper navbar">
                 <Sidebar />
                 <div className="main-panel ps ps--active-y">
                     <div className="content">

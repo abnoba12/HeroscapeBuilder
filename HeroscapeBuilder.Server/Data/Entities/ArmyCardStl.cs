@@ -3,15 +3,15 @@ using System.Collections.Generic;
 
 namespace HeroscapeBuilder.Server.Data.Entities;
 
-public partial class ArmyCardAbility
+public partial class ArmyCardStl
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
 
     public int ArmyCardId { get; set; }
 
-    public string AbilityName { get; set; } = null!;
+    public string StlUrl { get; set; } = null!;
 
-    public string Ability { get; set; } = null!;
+    public DateTime LastUpdated { get; set; }
 
     public virtual ArmyCard ArmyCard { get; set; } = null!;
 }

@@ -1,0 +1,5 @@
+﻿Updating DB Context from DB:
+1. Do not update all the models. Make sure you specify what table you want to scaffold.
+```dotnet ef dbcontext scaffold "YourConnectionStringHere" Microsoft.EntityFrameworkCore.SqlServer --output-dir Data/Entities --table user_cards --context HsbDbContext --force```
+
+If you want to reference the AspNetUsers table use IdentityUser instead

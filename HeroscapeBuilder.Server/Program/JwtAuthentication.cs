@@ -1,4 +1,5 @@
 ﻿using HeroscapeBuilder.Server.Common.Helpers;
+using HeroscapeBuilder.Server.Data.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,7 @@ namespace HeroscapeBuilder.Server.Program
         public static WebApplicationBuilder InitializeJwtAuthentication<TContext>(this WebApplicationBuilder builder)
             where TContext : DbContext
         {
-            builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<TContext>()
             .AddDefaultTokenProviders();
 

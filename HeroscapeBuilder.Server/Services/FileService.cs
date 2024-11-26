@@ -72,7 +72,7 @@ namespace HeroscapeBuilder.Server.Services
             {
                 ArmyCardId = armyCardId,
                 FilePurpose = filePurpose,
-                ParentId = parentFileId,
+                Parent = parentFileId,
                 FilePath = Path.Combine(fullPath, fileName)
             };
 

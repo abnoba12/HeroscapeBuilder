@@ -10,16 +10,16 @@ interface JwtPayload {
 }
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
-const API_URL = `${API_BASE_URL}/auth`;
+const API_AUTH_URL = `${API_BASE_URL}/auth`;
 
 // Register a new user
 export const register = async (email: string, password: string): Promise<void> => {
-    await axios.post(`${API_URL}/register`, { email, password });
+    await axios.post(`${API_AUTH_URL}/register`, { email, password });
 };
 
 // Log in and get a JWT token
 export const login = async (email: string, password: string): Promise<void> => {
-    const response = await axios.post<{ token: string }>(`${API_URL}/login`, { email, password });
+    const response = await axios.post<{ token: string }>(`${API_AUTH_URL}/login`, { email, password });
     saveToken(response.data.token);
 };
 

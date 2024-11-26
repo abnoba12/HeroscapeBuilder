@@ -78,6 +78,6 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
     }
 
     doc.setFontSize(8);
-    var setText = `${formData.set}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
+    var setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
     CenterTextInArea(doc, setText, 261, 224, 76, 58, 0, 6, drawOutlines, undefined);
 }

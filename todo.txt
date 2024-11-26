@@ -1,5 +1,6 @@
 * Setup google analytics again
 * Add ability for users to make accounts
+* Add a marketpace to order cards from me.
 * Build a section of raw data about the game and allow exporting to CSV
     * Play style options - Capture the flag, deathmatch. https://www.heroscapers.com/community/showthread.php?t=35289&fbclid=IwY2xjawEkwnNleHRuA2FlbQIxMQABHSGgatcPHF1P4tw3qDu8PCLukZZ8mwBgavVX8Fi44K-OCA6HUq3X3f4QGw_aem_zdwma1R6VYINnet39niPWw
     * Unit info

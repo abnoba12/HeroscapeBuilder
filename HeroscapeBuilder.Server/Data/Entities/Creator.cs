@@ -7,9 +7,9 @@ public partial class Creator
 {
     public long Id { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public string Creator1 { get; set; } = null!;
 
-    public string CreatorName { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<ArmyCard> ArmyCards { get; set; } = new List<ArmyCard>();
 

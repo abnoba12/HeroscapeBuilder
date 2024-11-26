@@ -14,7 +14,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 
         public async Task<IEnumerable<ArmyCardFile>> GetFilesByPurposeAsync(string purpose)
         {
-            return await _context.ArmyCardFiles.Include(f => f.Children).Where(x => x.FilePurpose == purpose).ToListAsync();
+            return await _context.ArmyCardFiles.Include(f => f.InverseParentNavigation).Where(x => x.FilePurpose == purpose).ToListAsync();
         }
 
         /// <summary>

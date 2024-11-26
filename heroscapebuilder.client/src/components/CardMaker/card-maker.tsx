@@ -380,6 +380,25 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         return;
     }
 
+    const getTooltipText = (cardSize: string) => {
+        let tt: string = '';
+        switch (cardSize) {
+            case "3x5":
+                tt = "To ensure your image looks its best when uploaded, please use a square image (aspect ratio 1:1). This will prevent any distortion, as the image will be scaled to fit the content area.";
+                break;
+            case "4x6":
+                tt = "To ensure the best quality, please upload a square image (aspect ratio 1:1) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom right of the image will be partially covered by unit statistics.";
+                break;
+            case "Standard":
+                tt = "To ensure the best quality, please upload a tall rectangular image (aspect ratio 467:1000) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom half of the image will be covered by unit statistics.";
+                break;
+            default:
+                return "Please select a valid card size to see tooltip instructions.";
+        }
+        tt += "<br/><img src='/assets/img/tooltips/adv_unit_image.png' alt='advanced unit image' />";
+        return tt;
+    };
+
     if (loading) return <p>Loading...</p>;
 
     return (
@@ -400,7 +419,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <option value="">Select Unit (Optional)</option>
                         {unitData.sort((a, b) => a.name.localeCompare(b.name)).map(x => {
                             let t = x.name;
-                            t = x.creator !== 'Heroscape' ? `(${x.creator}) ${t}` : t;
+                            t = x.creator !== 'HEROSCAPE' ? `(${x.creator}) ${t}` : t;
                             t = unitData.map(n => n.name).filter(n => n === x.name).length > 1 ? `${t}-${x.set?.name}` : t;
                             return (
                                 <option key={x.id} value={x.id}>{t}</option>
@@ -420,12 +439,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <select id="creator" value={creator} className="form-select">
+                    <select id="creator" value={creator} className="form-select" onChange={(e) => setCreator(e.target.value)}>
                         <option value="">Custom</option>
-                        <option value="Heroscape">Heroscape - Hasbro / Wizards of the Coast</option>
-                        <option value="Renegade">Heroscape - Renegade</option>
+                        <option value="HEROSCAPE">Heroscape - Hasbro / Wizards of the Coast</option>
+                        <option value="RENEGADE">Heroscape - Renegade</option>
                         <option value="C3V">C3V - Classic Custom Creators of Valhalla</option>
-                        <option value="SoV">SoV - Soldiers of Valhalla</option>
+                        <option value="SOV">SoV - Soldiers of Valhalla</option>
                         <option value="NGC">NGC - New Generation Customs</option>
                         <option value="C3G">C3G - Comic Custom Creators Guild</option>
                     </select>
@@ -443,7 +462,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <select id="unitGeneral" value={general} className="form-select">
+                    <select id="unitGeneral" value={general} className="form-select" onChange={(e) => setGeneral(e.target.value)}>
                         <option value="Aquilla">Aquilla</option>
                         <option value="Einar">Einar</option>
                         <option value="Jandar">Jandar</option>
@@ -542,7 +561,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <select id="unitRarity" value={unitRarity} className="form-select">
+                    <select id="unitRarity" value={unitRarity} className="form-select" onChange={(e) => setUnitRarity(e.target.value)}>
                         <option value="Unique">Unique</option>
                         <option value="Uncommon">Uncommon</option>
                         <option value="Common">Common</option>
@@ -561,7 +580,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <select id="unitType" value={unitType} className="form-select">
+                    <select id="unitType" value={unitType} className="form-select" onChange={(e) => setUnitType(e.target.value)}>
                         <option value="Hero">Hero</option>
                         <option value="Squad">Squad</option>
                     </select>
@@ -579,7 +598,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <select id="unitSizeCategory" value={unitSizeCategory} className="form-select">
+                    <select id="unitSizeCategory" value={unitSizeCategory} className="form-select" onChange={(e) => setUnitSizeCategory(e.target.value)}>
                         <option value="Huge">Huge</option>
                         <option value="Large">Large</option>
                         <option value="Medium">Medium</option>
@@ -845,7 +864,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
-                            title="To ensure the best quality, please upload a tall rectangular image (aspect ratio 467:1000) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom half of the image will be covered by unit statistics.<br/><img src='/assets/img/tooltips/adv_unit_image.png' alt='advanced unit image' />"
+                            title={getTooltipText(cardSize)}
                         >
                             <span className="q">[?]</span>
                         </span>

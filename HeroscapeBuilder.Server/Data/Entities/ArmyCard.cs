@@ -8,6 +8,8 @@ namespace HeroscapeBuilder.Server.Data.Entities;
 /// </summary>
 public partial class ArmyCard
 {
+    public int Id { get; set; }
+
     public string Creator { get; set; } = null!;
 
     public string? General { get; set; }
@@ -52,19 +54,21 @@ public partial class ArmyCard
 
     public string? UnitNumbers { get; set; }
 
-    public int Id { get; set; }
-
     public long? Set { get; set; }
 
     public string? Note { get; set; }
 
-    public string? STL_File { get; set; }
+    public string? StlFile { get; set; }
 
     public virtual ICollection<ArmyCardAbility> ArmyCardAbilities { get; set; } = new List<ArmyCardAbility>();
 
     public virtual ICollection<ArmyCardFile> ArmyCardFiles { get; set; } = new List<ArmyCardFile>();
 
+    public virtual ICollection<ArmyCardStl> ArmyCardStls { get; set; } = new List<ArmyCardStl>();
+
     public virtual Creator CreatorNavigation { get; set; } = null!;
 
     public virtual Set? SetNavigation { get; set; }
+
+    public virtual ICollection<UserCard> UserCards { get; set; } = new List<UserCard>();
 }

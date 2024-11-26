@@ -1,4 +1,7 @@
-﻿namespace HeroscapeBuilder.Server.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace HeroscapeBuilder.Server.Data.Entities;
 
 public partial class Set
 {
