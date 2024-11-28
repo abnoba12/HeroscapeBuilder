@@ -27,19 +27,19 @@ const UnitData: React.FC = () => {
         { field: 'size', headerName: 'Size', type: 'number', width: 30 },
         { field: 'personality', headerName: 'Personality', width: 92 },
         { field: 'life', headerName: 'Life', type: 'number', width: 30 },
-        { field: 'advAttack', headerName: 'Adv Attack', type: 'number', width: 30 },
-        { field: 'advDefense', headerName: 'Adv Defence', type: 'number', width: 30 },
-        { field: 'advMove', headerName: 'Adv Move', type: 'number', width: 30 },
-        { field: 'advRange', headerName: 'Adv Range', type: 'number', width: 30 },
-        { field: 'basicAttack', headerName: 'Basic Attack', type: 'number', width: 30 },
-        { field: 'basicDefense', headerName: 'Basic Defence', type: 'number', width: 30 },
-        { field: 'basicMove', headerName: 'Basic Move', type: 'number', width: 30 },
-        { field: 'basicRange', headerName: 'Basic Range', type: 'number', width: 30 },
-        { field: 'points', headerName: 'Points', type: 'number', width: 30 },
+        { field: 'advAttack', headerName: 'Adv Attack', type: 'number', width: 100 },
+        { field: 'advDefense', headerName: 'Adv Defence', type: 'number', width: 100 },
+        { field: 'advMove', headerName: 'Adv Move', type: 'number', width: 100 },
+        { field: 'advRange', headerName: 'Adv Range', type: 'number', width: 100 },
+        { field: 'basicAttack', headerName: 'Basic Attack', type: 'number', width: 100 },
+        { field: 'basicDefense', headerName: 'Basic Defence', type: 'number', width: 100 },
+        { field: 'basicMove', headerName: 'Basic Move', type: 'number', width: 100 },
+        { field: 'basicRange', headerName: 'Basic Range', type: 'number', width: 100 },
+        { field: 'points', headerName: 'Points', type: 'number', width: 60 },
         {
             field: 'abilities',
             headerName: 'Abilities',
-            width: 300,
+            width: 200,
             renderCell: (params) =>
             (
                 <span
@@ -62,7 +62,7 @@ const UnitData: React.FC = () => {
         },
         { field: 'planet', headerName: 'Planet', width: 100 },
         {
-            field: 'note', headerName: 'Notes', width: 130,
+            field: 'note', headerName: 'Notes', width: 200,
             renderCell: (params) =>
             (
                 <span
@@ -155,6 +155,19 @@ const UnitData: React.FC = () => {
             <DataGrid
                 rows={filteredUnits}
                 columns={generateColumns}
+                initialState={{
+                    columns: {
+                        columnVisibilityModel: {
+                            basicAttack: false,
+                            basicDefense: false,
+                            basicMove: false,
+                            basicRange: false,
+                            unitNumbers: false,
+                            planet: false,
+                            set: false,
+                        },
+                    },
+                }}
             />
 
             {/* Dialog for displaying full content */}

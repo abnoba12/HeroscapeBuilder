@@ -20,9 +20,9 @@ import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
 import UnitData from "./data/unit-data/unit-data";
 import PrivateRoute from "../components/Auth/PrivateRoute";
 import User from "./user/User";
-import Login from "../components/Auth/Login";
-import Logout from "../components/Auth/Logout";
-import Register from "../components/Auth/Register";
+import Login from "../pages/user/Login";
+import Logout from "../pages/user/Logout";
+import Register from "../pages/user/Register";
 
 const App: React.FC = () => {
     return (
@@ -49,11 +49,10 @@ const App: React.FC = () => {
                             <Route path="/game-play" element={<GamePlayCalc />} />
                             <Route path="/game-play/game-play-calc" element={<GamePlayCalc />} />
                             <Route path="/user/login" element={<Login />} />
-                            <Route path="/user/logout" element={<Logout />} />
                             <Route path="/user/register" element={<Register />} />
 
                             {/*Private routes*/}
-                            <Route path="/dashboard" element={<PrivateRoute><User /></PrivateRoute>} />
+                            <Route path="/user/logout" element={<PrivateRoute><Logout /></PrivateRoute>} />
                         </Routes>
                     </div>
                     <Footer />

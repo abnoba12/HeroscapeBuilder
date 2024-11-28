@@ -1,15 +1,82 @@
-.main-panel{
-    label{
-        font-weight: bold;
-        padding-right: 10px;
-        font-size: 2em;
+@import "src/assets/scss/paper-dashboard/_variables";
+
+.game-play-calc-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: $light-blue-bg; // Main background color
+    border: $border-thin solid $blue-bg;
+    border-radius: $border-radius-large;
+    box-shadow: $box-shadow-raised;
+    text-align: center;
+
+    h2 {
+        margin-bottom: 1.5rem;
+        color: $dark-color; // Darker text for high contrast
+        font-size: $font-size-h2;
     }
 
-    input{
-        text-align: center;
+    .description {
+        font-size: $font-size-small;
+        color: $black-color; // Black text for better readability
+        margin-bottom: 2rem;
     }
 
-    .row{
-        margin-top: 50px;
+    .game-play-calc-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+
+            label {
+                font-weight: bold;
+                font-size: $font-size-small;
+                margin-bottom: 0.5rem;
+                color: $black-color; // Black for strong contrast against light blue background
+            }
+
+            input {
+                width: 100%;
+                padding: $padding-input-vertical $padding-input-horizontal;
+                border: $border-thin solid $dark-gray; // Dark gray for subtle contrast
+                border-radius: $border-radius-small;
+                font-size: $font-size-base;
+                background-color: lighten($light-blue-bg, 15%); // Slightly lighter input background
+                color: $black-color; // Black text for readability
+
+                &:focus {
+                    outline: none;
+                    border-color: $primary-color; // Highlighted border on focus
+                    box-shadow: 0 0 5px rgba($primary-color, 0.5);
+                }
+
+                &::placeholder {
+                    color: $dark-gray; // Darker placeholder text for better visibility
+                }
+            }
+        }
+
+        .calculate-button {
+            padding: $padding-btn-vertical $padding-btn-horizontal;
+            font-size: $font-size-medium;
+            color: $white-color; // White text for strong contrast
+            background-color: $blue-bg; // Primary button color
+            border: none;
+            border-radius: $btn-round-radius;
+            cursor: pointer;
+            transition: background-color $general-transition-time;
+
+            &:hover {
+                background-color: darken($blue-bg, 10%); // Darkened blue for hover
+            }
+
+            &:active {
+                transform: scale(0.98);
+            }
+        }
     }
 }

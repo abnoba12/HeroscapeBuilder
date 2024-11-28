@@ -1,0 +1,109 @@
+// Import the variables
+@import "src/assets/scss/paper-dashboard/_variables";
+
+.user-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: $white-bg; // Use the defined white background
+    border: $border-thin solid $light-gray; // Use border thickness and light gray color
+    border-radius: $border-radius-large; // Use predefined border-radius
+    box-shadow: $box-shadow-raised; // Apply shadow
+    text-align: center;
+
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid $light-gray; // Use your existing light gray variable
+        border-top: 2px solid $primary-color; // Primary color for the spinner
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin: 0 auto; // Center the spinner
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem; // Space between text and spinner
+        position: relative; // Keep spinner inline with text
+    }
+
+    h2 {
+        margin-bottom: 1.5rem;
+        color: $primary-color; // Use primary color for headings
+        font-size: $font-size-h2; // Use pre-defined font size
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        input {
+            padding: $padding-input-vertical $padding-input-horizontal; // Use consistent padding
+            border: $border-thin solid $table-line-color; // Border with table line color
+            border-radius: $border-radius-small; // Rounded corners
+            font-size: $font-size-base; // Use base font size
+            background-color: $gray-input-bg; // Light gray input background
+
+            &:focus {
+                outline: none;
+                border-color: $primary-color; // Highlight with primary color
+                box-shadow: 0 0 5px rgba($primary-color, 0.5);
+            }
+
+            &::placeholder {
+                color: $placeholder-gray; // Placeholder text color
+            }
+        }
+
+        button {
+            padding: $padding-btn-vertical $padding-btn-horizontal; // Use button padding
+            font-size: $font-size-medium; // Medium font size
+            color: $white-color; // White text
+            background-color: $success-color; // Success color for button
+            border: none;
+            border-radius: $btn-round-radius; // Rounded button
+            cursor: pointer;
+            transition: background-color $general-transition-time;
+
+            &:hover {
+                background-color: $success-states-color; // Darkened success color
+            }
+
+            &:active {
+                transform: scale(0.98); // Slight press effect
+            }
+        }
+    }
+
+    .error-container {
+        margin-top: 1rem;
+        background-color: lighten($danger-color, 40%); // Lightened danger color
+        color: $danger-color; // Danger color for text
+        padding: 1rem;
+        border-radius: $border-radius-base; // Base border-radius
+        border: $border-thin solid $danger-color; // Danger border
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin: 0.5rem 0;
+            }
+        }
+    }
+}
