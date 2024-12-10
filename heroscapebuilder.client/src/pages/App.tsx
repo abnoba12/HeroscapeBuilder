@@ -19,10 +19,10 @@ import MakeCard3x5 from "./army-cards/threebyfive/make-card-3x5";
 import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
 import UnitData from "./data/unit-data/unit-data";
 import PrivateRoute from "../components/Auth/PrivateRoute";
-import User from "./user/User";
 import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
+import MyArmy from "./data/my-heroscape/my-heroscape";
 
 const App: React.FC = () => {
     return (
@@ -44,8 +44,8 @@ const App: React.FC = () => {
                             <Route path="/army-cards/fourbysix/download" element={<DownloadfourBySix />} />
                             <Route path="/army-cards/fourbysix/create" element={<MakeCard4x6 />} />
                             <Route path="/army-cards/printing" element={<Printing />} />
-                            <Route path="/units" element={<UnitData />} />
-                            <Route path="/units/unit-data" element={<UnitData/>} />
+                            <Route path="/data" element={<UnitData />} />
+                            <Route path="/data/unit-data" element={<UnitData/>} />
                             <Route path="/game-play" element={<GamePlayCalc />} />
                             <Route path="/game-play/game-play-calc" element={<GamePlayCalc />} />
                             <Route path="/user/login" element={<Login />} />
@@ -53,6 +53,7 @@ const App: React.FC = () => {
 
                             {/*Private routes*/}
                             <Route path="/user/logout" element={<PrivateRoute><Logout /></PrivateRoute>} />
+                            <Route path="/data/myarmy" element={<PrivateRoute><MyArmy /></PrivateRoute>} />
                         </Routes>
                     </div>
                     <Footer />

@@ -5,6 +5,7 @@ using HeroscapeBuilder.Server.Domain;
 using HeroscapeBuilder.Server.Integrations.Interfaces;
 using HeroscapeBuilder.Server.Integrations.MinioStorage;
 using HeroscapeBuilder.Server.Services;
+using System.Reflection;
 
 namespace HeroscapeBuilder.Server.Program
 {
@@ -20,14 +21,12 @@ namespace HeroscapeBuilder.Server.Program
             builder.Services.AddAutoMapper(assembliesToScan);
 
             //builder.Services
-            builder.Services.AddScoped<UnitService>();
-            builder.Services.AddScoped<FileService>();
-            builder.Services.AddScoped<ImageService>();
-            builder.Services.AddScoped<PdfService>();
-            builder.Services.AddHttpClient<PdfService>();
+            // Automatically register all services in the HeroscapeBuilder.Server.Services namespace
+            RegisterAllServices(builder.Services, "HeroscapeBuilder.Server.Services");
 
             //Domain
-            builder.Services.AddScoped<ImageOptimizer>();
+            // Automatically register all Domains in the HeroscapeBuilder.Server.Domain namespace
+            RegisterAllServices(builder.Services, "HeroscapeBuilder.Server.Domain");
 
             //Integrations
             // Register the implementation of IFileStorage<byte[]>
@@ -37,9 +36,9 @@ namespace HeroscapeBuilder.Server.Program
                 return new MinioStorage(blobStorageConfig["API"], blobStorageConfig["User"], blobStorageConfig["Password"]);
             });
 
-            //Repos
-            builder.Services.AddScoped<ArmyCardRepository>();
-            builder.Services.AddScoped<FileRepository>();
+            //Repositories
+            // Automatically register all Repositories in the HeroscapeBuilder.Server.Data.Repositories namespace
+            RegisterAllServices(builder.Services, "HeroscapeBuilder.Server.Data.Repositories");
 
             //EF Cache
             builder.Services.AddEFSecondLevelCache(options =>
@@ -52,5 +51,30 @@ namespace HeroscapeBuilder.Server.Program
 
             return builder;
         }
+
+        private static void RegisterAllServices(IServiceCollection services, string targetNamespace)
+        {
+            var assembly = Assembly.Load("HeroscapeBuilder.Server");
+
+            var types = assembly.GetTypes()
+                .Where(t => t.Namespace == targetNamespace && t.IsClass && !t.IsAbstract);
+
+            foreach (var type in types)
+            {
+                var interfaces = type.GetInterfaces();
+                if (interfaces.Length > 0)
+                {
+                    foreach (var @interface in interfaces)
+                    {
+                        services.AddScoped(@interface, type);
+                    }
+                }
+                else
+                {
+                    services.AddScoped(type);
+                }
+            }
+        }
+
     }
 }

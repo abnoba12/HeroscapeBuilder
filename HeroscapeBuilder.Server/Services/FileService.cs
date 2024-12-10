@@ -25,7 +25,7 @@ namespace HeroscapeBuilder.Server.Services
 
         public async Task<List<UnitFileEntity>> GetFilesByPurpose(string purpose)
         {
-            var files = (await _fileRepository.GetFilesByPurposeAsync(purpose)).ToList()?.OrderBy(x => x.FilePath).ToList();            
+            var files = (await _fileRepository.GetFiles(purpose)).ToList()?.OrderBy(x => x.FilePath).ToList();            
 
             if (files == null)
                 throw new ArgumentException("No files found");
@@ -79,10 +79,7 @@ namespace HeroscapeBuilder.Server.Services
             if (!_fileRepository.FileExists(acf))
             {
                 //Upload the file to file storage
-                var parts = fullPath.Split('/').Where(x => !string.IsNullOrEmpty(x)).ToList();
-                _blobStorage.BucketName = parts[0];
-                var fileFolder = _blobStorage.PathCombine(parts.Skip(1));
-                var r = await _blobStorage.UploadAsync(fileData, _blobStorage.PathCombine([fileFolder, fileName]));
+                var r = await _blobStorage.UploadAsync(fileData, fullPath);
                 if (string.IsNullOrEmpty(r))
                 {
                     throw new Exception("Unable to upload file.");
@@ -99,6 +96,55 @@ namespace HeroscapeBuilder.Server.Services
             }
 
             return true;
+        }
+
+        public async Task<bool> UpdateFileForUnitAsync(int armyCardId, string filePurpose, string filePath, byte[] fileData)
+        {
+            //Upload the file to file storage
+            var r = await _blobStorage.UploadAsync(fileData, filePath);
+            if (string.IsNullOrEmpty(r))
+            {
+                throw new Exception("Unable to upload file.");
+            }
+            return true;
+        }
+
+        public async Task<int> RegenerateThumbnailsAsync(List<int> armyCardIds, string filePurpose)
+        {
+            int updated = 0;
+
+            //Get a list of PDF files
+            var files = await _fileRepository.GetFiles(armyCardIds, filePurpose);
+            foreach (var file in files)
+            {
+                //Download the PDF from file storage
+                var pdf = file.ParentNavigation;
+                var pdfData = await _blobStorage.DownloadAsync(pdf.FilePath);
+                if (pdfData != null)
+                {
+                    //make a new thumbnail from the PDF
+                    byte[] thumbImage = await _pdfService.CreateThumbnailFromPdf(pdfData);
+
+                    if (thumbImage != null && thumbImage.Length > 0)
+                    {
+                        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pdf.FilePath);
+                        var filePath = Path.Combine(GetPathByFilePurpose(filePurpose), $"pdf-thumbnail-{fileNameWithoutExtension}.png");
+                        if (await UpdateFileForUnitAsync(file.ArmyCardId, filePurpose, filePath, thumbImage))
+                        {
+                            if (file.FilePath != filePath)
+                            {
+                                await _blobStorage.DeleteAsync(file.FilePath);
+                                file.FilePath = filePath;
+                                await _fileRepository.UpdateArmyCardFileAsync(file);
+                            }
+
+                            updated++;
+                        }
+                    }
+                }
+            }
+
+            return updated;
         }
 
         private string? GetPathByFilePurpose(string filePurpose)
@@ -131,6 +177,5 @@ namespace HeroscapeBuilder.Server.Services
                     return null;
             }
         }
-
     }
 }

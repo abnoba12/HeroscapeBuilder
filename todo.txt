@@ -1,3 +1,4 @@
+* Build a way to regenerate thumbnail images for PDFs
 * Setup google analytics again
 * Add ability for users to make accounts
 * Add a marketpace to order cards from me.

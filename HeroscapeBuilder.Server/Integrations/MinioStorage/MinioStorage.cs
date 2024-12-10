@@ -8,7 +8,6 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
     public class MinioStorage : IFileStorage<byte[]>
     {
         private readonly IMinioClient _minioClient;
-        private string _bucketName;
 
         public MinioStorage(string endpoint, string accessKey, string secretKey)
         {
@@ -19,41 +18,31 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
                 .WithSSL(true);
         }
 
-        public string BucketName
-        {
-            get => _bucketName;
-            set => _bucketName = value;
-        }
-
-        private void EnsureBucketNameIsSet()
-        {
-            if (string.IsNullOrWhiteSpace(_bucketName))
-                throw new InvalidOperationException("Bucket name is not set. Please set the BucketName property before performing any operations.");
-        }
-
         public async Task<string> UploadAsync(byte[] fileData, string path)
         {
-            EnsureBucketNameIsSet();
+            var bucketName = GetBucketName(path);
+            path = path.Replace($"/{bucketName}", "");
 
             using var stream = new MemoryStream(fileData);
             await _minioClient.PutObjectAsync(new PutObjectArgs()
-                .WithBucket(_bucketName)
+                .WithBucket(bucketName)
                 .WithObject(path)
                 .WithStreamData(stream)
                 .WithObjectSize(stream.Length)
                 .WithContentType("application/octet-stream"));
 
             // Constructing the URL manually as Endpoint is not directly accessible
-            return $"/{_bucketName}/{path}";
+            return $"/{bucketName}{path}";
         }
 
         public async Task<byte[]> DownloadAsync(string path)
         {
-            EnsureBucketNameIsSet();
+            var bucketName = GetBucketName(path);
+            path = path.Replace($"/{bucketName}", "");
 
             using var memoryStream = new MemoryStream();
             await _minioClient.GetObjectAsync(new GetObjectArgs()
-                .WithBucket(_bucketName)
+                .WithBucket(bucketName)
                 .WithObject(path)
                 .WithCallbackStream(stream => stream.CopyTo(memoryStream)));
             return memoryStream.ToArray();
@@ -66,22 +55,33 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
 
         public async Task<bool> DeleteAsync(string path)
         {
-            EnsureBucketNameIsSet();
+            // Extract the bucket name
+            var bucketName = GetBucketName(path);
 
+            // Remove the bucket name from the path
+            path = path.Replace($"/{bucketName}", "").Trim('/');
+
+            // Ensure the path is not empty
+            if (string.IsNullOrWhiteSpace(path))
+                throw new ArgumentException("Invalid path: Path must specify an object to delete.", nameof(path));
+
+            // Delete the object from the bucket
             await _minioClient.RemoveObjectAsync(new RemoveObjectArgs()
-                .WithBucket(_bucketName)
+                .WithBucket(bucketName)
                 .WithObject(path));
             return true;
         }
 
+
         public async Task<bool> FileExistsAsync(string path)
         {
-            EnsureBucketNameIsSet();
+            var bucketName = GetBucketName(path);
+            path = path.Replace($"/{bucketName}", "");
 
             try
             {
                 await _minioClient.StatObjectAsync(new StatObjectArgs()
-                    .WithBucket(_bucketName)
+                    .WithBucket(bucketName)
                     .WithObject(path));
                 return true;
             }
@@ -91,16 +91,17 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
             }
         }
 
-        public async Task<IEnumerable<IFile>> ListFilesAsync(string directoryPath)
+        public async Task<IEnumerable<IFile>> ListFilesAsync(string path)
         {
-            EnsureBucketNameIsSet();
+            var bucketName = GetBucketName(path);
+            path = path.Replace($"/{bucketName}", "");
 
             var files = new List<IFile>();
             var completionSource = new TaskCompletionSource<bool>();
 
             var listObjectsArgs = new ListObjectsArgs()
-                .WithBucket(_bucketName)
-                .WithPrefix(directoryPath)
+                .WithBucket(bucketName)
+                .WithPrefix(path)
                 .WithRecursive(false);
 
             var observable = _minioClient.ListObjectsAsync(listObjectsArgs);
@@ -133,6 +134,19 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
         {
 
             return string.Join("/", pathParts.Select(p => p.Replace("\\", "/").Trim('/')));
+        }
+
+        private string GetBucketName(string path)
+        {
+            var parts = path.Split('/').Where(x => !string.IsNullOrEmpty(x)).ToList();
+            if (parts.Count > 0)
+            {
+                return parts.First();
+            }
+            else
+            {
+                throw new ArgumentException("Unable to determine file path");
+            }
         }
     }
 }

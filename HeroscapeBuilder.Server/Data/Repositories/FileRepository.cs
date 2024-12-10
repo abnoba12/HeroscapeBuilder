@@ -12,9 +12,26 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<ArmyCardFile>> GetFilesByPurposeAsync(string purpose)
+        public async Task<IEnumerable<ArmyCardFile>> GetFiles(string purpose)
         {
             return await _context.ArmyCardFiles.Include(f => f.InverseParentNavigation).Where(x => x.FilePurpose == purpose).ToListAsync();
+        }
+
+        public async Task<IEnumerable<ArmyCardFile>> GetFiles(List<int> armyCardIds, string purpose)
+        {
+            var find = _context.ArmyCardFiles.Include(f => f.InverseParentNavigation).Include(f => f.ParentNavigation);
+            if(armyCardIds.Count == 1 && armyCardIds.First() == -1)
+            {
+                return await find.Where(x => x.FilePurpose == purpose).ToListAsync();
+            }
+            else
+            {
+                return await find
+                    .Where(x => x.FilePurpose == purpose)
+                    .Where(x => armyCardIds.Contains(x.ArmyCardId))
+                    .ToListAsync();
+            }
+                
         }
 
         /// <summary>
@@ -44,6 +61,19 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             _context.ArmyCardFiles.Add(acfs);
             await _context.SaveChangesAsync();
             return acfs.Id;
+        }
+
+        public async Task<ArmyCardFile> UpdateArmyCardFileAsync(ArmyCardFile acfs)
+        {
+            // Attach the entity to the context if it's not already tracked
+            _context.ArmyCardFiles.Attach(acfs);
+
+            // Mark the entity as modified
+            _context.Entry(acfs).State = EntityState.Modified;
+
+            // Save changes
+            await _context.SaveChangesAsync();
+            return acfs;
         }
 
         public bool FileExists(ArmyCardFile acf)

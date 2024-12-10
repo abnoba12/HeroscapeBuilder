@@ -15,7 +15,7 @@ const Sidebar: React.FC = () => {
         if (location.pathname.startsWith("/army-cards")) {
             return "green";
         }
-        if (location.pathname.startsWith("/units")) {
+        if (location.pathname.startsWith("/data")) {
             return "blue";
         }
         if (location.pathname.startsWith("/game-play")) {
@@ -28,8 +28,8 @@ const Sidebar: React.FC = () => {
     useEffect(() => {
         if (location.pathname.startsWith("/army-cards")) {
             setActiveMenu("army-cards");
-        } else if (location.pathname.startsWith("/units")) {
-            setActiveMenu("units");
+        } else if (location.pathname.startsWith("/data")) {
+            setActiveMenu("data");
         } else if (location.pathname.startsWith("/game-play")) {
             setActiveMenu("game-play");
         }
@@ -97,11 +97,14 @@ const Sidebar: React.FC = () => {
                                     </ul>
                                 )}
                             </li>
-                            <li className={`nav-item ${activeMenu === 'units' ? 'active' : ''}`}>
-                                <a href="#!" onClick={() => toggleSubmenu('units')}><p>Data</p></a>
-                                {activeMenu === 'units' && (
+                            <li className={`nav-item ${activeMenu === 'data' ? 'active' : ''}`}>
+                                <a href="#!" onClick={() => toggleSubmenu('data')}><p>Data</p></a>
+                                {activeMenu === 'data' && (
                                     <ul className="submenu">
-                                        <li><Link to="/units/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
+                                        <li><Link to="/data/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
+                                        {isAuthenticated() && (
+                                            <li><Link to="/data/myarmy" onClick={toggleSidebar}>My Army</Link></li>
+                                        )}
                                     </ul>
                                 )}
                             </li>

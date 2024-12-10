@@ -13,7 +13,7 @@ function DownloadStandard() {
                     of their cards. Please refer to this
                     <a href="https://docs.google.com/spreadsheets/d/1krZZ8-Vqw29URCuTV1TqgFdFICMtGWUQPmpFTLoKcZE/edit?usp=sharing"> Google Sheet </a>
                     to see which card scans are still needed. You can contact me through the
-                    <a href="https://github.com/abnoba12/HeroscapeIndexCardBuilder/discussions"> discussion board on GitHub. </a>
+                    <a href="https://github.com/abnoba12/HeroscapeBuilder/discussions"> discussion board on GitHub. </a>
                 </h3>
             </div>
         </div>

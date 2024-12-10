@@ -2,6 +2,7 @@
 using HeroscapeBuilder.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.Eventing.Reader;
 
 namespace HeroscapeBuilder.Server.Controllers
 {
@@ -66,9 +67,9 @@ namespace HeroscapeBuilder.Server.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut]
-        public async Task<IActionResult> OptmizeImages(string Bucket, string Folder, string Purpose = "PRINT", int? MaxWidth = null, int? MaxHeight = null)
+        public async Task<IActionResult> OptmizeImages(string Folder, string Purpose = "PRINT", int? MaxWidth = null, int? MaxHeight = null)
         {
-            var optImgs = await _imageOptimizationService.OptimizeImagesInStorageAsync(Bucket, Folder, Purpose, MaxWidth, MaxHeight);
+            var optImgs = await _imageOptimizationService.OptimizeImagesInStorageAsync(Folder, Purpose, MaxWidth, MaxHeight);
 
             if (optImgs != null && optImgs.Count > 0)
             {
@@ -76,6 +77,13 @@ namespace HeroscapeBuilder.Server.Controllers
             }
 
             return StatusCode(500, "Failed to optimize images.");
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut]
+        public async Task<int> RegenerateThumbnailsAsync(List<int> armyCardIds, string filePurpose)
+        {
+            return await _fileService.RegenerateThumbnailsAsync(armyCardIds, filePurpose);
         }
     }
 }

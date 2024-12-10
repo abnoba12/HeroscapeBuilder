@@ -6,7 +6,7 @@ const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 export const getUnits = debounce(async () => {
     try {
-        return GetAPIDataWithCache<Unit[]>(`${API_BASE_URL}/Unit`, "Unit");
+        return GetAPIDataWithCache<Unit[]>(`${API_BASE_URL}/Unit/GetAllUnits`, "Unit");
     } catch (error) {
         console.error('Error fetching cards:', error);
         throw error;

@@ -14,9 +14,8 @@ namespace HeroscapeBuilder.Server.Services
             _imageOptimizer = imageOptimizer;
         }
 
-        public async Task<List<string>> OptimizeImagesInStorageAsync(string bucketId, string folderPath, string purpose, int? maxWidth, int? maxHeight)
+        public async Task<List<string>> OptimizeImagesInStorageAsync(string folderPath, string purpose, int? maxWidth, int? maxHeight)
         {
-            _blobStorage.BucketName = bucketId;
             var files = await _blobStorage.ListFilesAsync(folderPath);
             List<string> optimized = new List<string>(); 
 
@@ -38,7 +37,7 @@ namespace HeroscapeBuilder.Server.Services
                     }
                     else
                     {
-                        var fullPath = Path.Combine(bucketId, folderPath, file.Name);
+                        var fullPath = Path.Combine(folderPath, file.Name);
                         optimized.Add($"File already optimized, no changes made. {fullPath}");
                     }
                 }

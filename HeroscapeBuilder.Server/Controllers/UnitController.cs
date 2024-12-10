@@ -1,10 +1,9 @@
 ﻿using HeroscapeBuilder.Server.Services;
 using Microsoft.AspNetCore.Mvc;
-using NLog;
 
 namespace HeroscapeBuilder.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class UnitController : ControllerBase
     {

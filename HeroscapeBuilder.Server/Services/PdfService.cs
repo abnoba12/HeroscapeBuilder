@@ -1,4 +1,6 @@
-﻿using iText.Kernel.Pdf;
+﻿using HeroscapeBuilder.Server.Data.Repositories;
+using HeroscapeBuilder.Server.Integrations.Interfaces;
+using iText.Kernel.Pdf;
 using MuPDFCore;
 using VectSharp.Raster;
 
@@ -6,22 +8,6 @@ namespace HeroscapeBuilder.Server.Services
 {
     public class PdfService
     {
-        private readonly HttpClient _httpClient;
-
-        public PdfService(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
-
-        public async Task<byte[]> CreatePdfThumbnailAsync(string pdfUrl)
-        {
-            // Download the PDF from the URL
-            byte[] pdfBytes = await DownloadPdfAsync(pdfUrl);
-
-            // Create the thumbnail from the downloaded PDF
-            return await CreateThumbnailFromPdf(pdfBytes);
-        }
-
         public byte[] CompressPdf(byte[] inputPdfData)
         {
             // Initialize the writer properties for optimal print compression
@@ -44,6 +30,7 @@ namespace HeroscapeBuilder.Server.Services
                 return outputStream.ToArray();
             }
         }
+
         public async Task<byte[]> CreateThumbnailFromPdf(byte[] pdfBytes)
         {
             string tempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pdf");
@@ -136,14 +123,6 @@ namespace HeroscapeBuilder.Server.Services
             }
 
             return true;
-        }
-
-        private async Task<byte[]> DownloadPdfAsync(string pdfUrl)
-        {
-            var response = await _httpClient.GetAsync(pdfUrl);
-            response.EnsureSuccessStatusCode();  // Ensures the request was successful
-
-            return await response.Content.ReadAsByteArrayAsync();
-        }
+        }        
     }
 }
