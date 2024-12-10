@@ -102,9 +102,9 @@ const Sidebar: React.FC = () => {
                                 {activeMenu === 'data' && (
                                     <ul className="submenu">
                                         <li><Link to="/data/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
-                                        {isAuthenticated() && (
-                                            <li><Link to="/data/myarmy" onClick={toggleSidebar}>My Army</Link></li>
-                                        )}
+                                        {/*{isAuthenticated() && (*/}
+                                        {/*    <li><Link to="/data/myarmy" onClick={toggleSidebar}>My Army</Link></li>*/}
+                                        {/*)}*/}
                                     </ul>
                                 )}
                             </li>
