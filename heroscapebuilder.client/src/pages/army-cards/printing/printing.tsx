@@ -28,17 +28,17 @@ const Printing: React.FC = () => {
 
                     <h2 id="downloads">Downloads</h2>
 
-                    <h3 id="image-assets">Image Assets</h3>
+                    {/*<h3 id="image-assets">Image Assets</h3>*/}
 
-                    <p>Image assets to assist you in creating your own custom Heroscape cards.</p>
+                    {/*<p>Image assets to assist you in creating your own custom Heroscape cards.</p>*/}
 
-                    <ul>
-                        <li><a id="download-standard-assets" href="#">Download Standard Army Card Image Assets<span className="spinner"></span></a></li>
-                        <li><a id="download-3x5-assets" href="#">Download 3x5 Army Card Image Assets<span className="spinner"></span></a></li>
-                        <li><a id="download-4x6-assets" href="#">Download 4x6 Army Card Image Assets<span className="spinner"></span></a></li>
-                    </ul>
+                    {/*<ul>*/}
+                    {/*    <li><a id="download-standard-assets" href="#">Download Standard Army Card Image Assets<span className="spinner"></span></a></li>*/}
+                    {/*    <li><a id="download-3x5-assets" href="#">Download 3x5 Army Card Image Assets<span className="spinner"></span></a></li>*/}
+                    {/*    <li><a id="download-4x6-assets" href="#">Download 4x6 Army Card Image Assets<span className="spinner"></span></a></li>*/}
+                    {/*</ul>*/}
 
-                    <h3 id="download-executables-for-formatting-and-compressing-pdfs"><a href="/cardGenerator/printing/PDFUils.zip">Download executables for formatting and compressing PDFs</a></h3>
+                    <h3 id="download-executables-for-formatting-and-compressing-pdfs"><a href="/files/PDFUils.zip">Download executables for formatting and compressing PDFs</a></h3>
 
                     <h4 id="note">Note:</h4>
                     <p>All files are designed for use on Windows.</p>
