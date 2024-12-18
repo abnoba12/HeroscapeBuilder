@@ -1,8 +1,8 @@
-﻿using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Diagnostics; // For running external PNG optimizers
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace HeroscapeBuilder.Server.Domain
 {
@@ -10,22 +10,28 @@ namespace HeroscapeBuilder.Server.Domain
     {
         public byte[] OptimizeImage(byte[] imageData, string purpose, int? maxWidth, int? maxHeight, bool maintainAspectRatio)
         {
-            using var originalImage = Image.FromStream(new MemoryStream(imageData));
+            using var image = Image.Load(imageData);
+            var format = Image.DetectFormat(imageData);
 
             // Ensure we only scale down the image, never up
-            var scale = CalculateScaleDown(originalImage.Width, originalImage.Height, maxWidth, maxHeight, maintainAspectRatio);
+            var scale = CalculateScaleDown(image.Width, image.Height, maxWidth, maxHeight, maintainAspectRatio);
 
             // Resize image if needed
-            using var resizedImage = ResizeImage(originalImage, scale);
-
-            // Optimize based on purpose and image format (PNG-specific)
-            var optimizedImage = purpose.ToUpper() switch
+            if (scale < 1.0)
             {
-                "PRINT" => OptimizeForPrint(resizedImage, originalImage.RawFormat),
-                "WEB" => OptimizeForWeb(resizedImage, originalImage.RawFormat)  // Default is "WEB"
-            };
+                image.Mutate(x => x.Resize(
+                    (int)(image.Width * scale),
+                    (int)(image.Height * scale),
+                    KnownResamplers.Bicubic));
+            }
 
-            return optimizedImage;
+            // Optimize based on purpose
+            return purpose.ToUpper() switch
+            {
+                "PRINT" => OptimizeForPrint(image, format),
+                "WEB" => OptimizeForWeb(image, format),
+                _ => throw new ArgumentException("Invalid purpose specified."),
+            };
         }
 
         private double CalculateScaleDown(int originalWidth, int originalHeight, int? maxWidth, int? maxHeight, bool maintainAspectRatio)
@@ -39,111 +45,40 @@ namespace HeroscapeBuilder.Server.Domain
             return Math.Min(1.0, scale); // Ensure we only scale down, never up
         }
 
-        private Image ResizeImage(Image image, double scale)
-        {
-            if (scale >= 1.0) return image;  // No need to resize if the scale is 1 or higher
-
-            var newWidth = (int)(image.Width * scale);
-            var newHeight = (int)(image.Height * scale);
-            var resizedImage = new Bitmap(newWidth, newHeight);
-
-            using (var graphics = Graphics.FromImage(resizedImage))
-            {
-                graphics.CompositingQuality = CompositingQuality.HighQuality;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = SmoothingMode.HighQuality;
-                graphics.DrawImage(image, 0, 0, newWidth, newHeight);
-            }
-
-            return resizedImage;
-        }
-
-        private byte[] OptimizeForPrint(Image image, ImageFormat originalFormat)
+        private byte[] OptimizeForPrint(Image image, IImageFormat format)
         {
             using var memoryStream = new MemoryStream();
 
-            if (originalFormat.Equals(ImageFormat.Png))
+            if (format is PngFormat)
             {
-                // Use lossless PNG, but you can run an external optimizer after saving
-                image.Save(memoryStream, ImageFormat.Png);
-                return memoryStream.ToArray();
+                // Use PNG format for high-quality print
+                image.Save(memoryStream, new PngEncoder { CompressionLevel = PngCompressionLevel.BestCompression });
             }
             else
             {
-                // Save as high-quality JPEG
-                var encoderParameters = new EncoderParameters(1);
-                encoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 85L); // Print quality (high)
-                var jpegCodec = GetEncoder(ImageFormat.Jpeg);
-                image.Save(memoryStream, jpegCodec, encoderParameters);
+                // Use high-quality JPEG for print
+                image.Save(memoryStream, new JpegEncoder { Quality = 85 });
             }
 
             return memoryStream.ToArray();
         }
 
-        private byte[] OptimizeForWeb(Image image, ImageFormat originalFormat)
+        private byte[] OptimizeForWeb(Image image, IImageFormat format)
         {
             using var memoryStream = new MemoryStream();
 
-            if (originalFormat.Equals(ImageFormat.Png))
+            if (format is PngFormat)
             {
-                image.Save(memoryStream, ImageFormat.Png);
-                return OptimizePng(memoryStream.ToArray()); // Run external PNG optimizer
+                // Use PNG with medium compression for web
+                image.Save(memoryStream, new PngEncoder { CompressionLevel = PngCompressionLevel.DefaultCompression });
             }
             else
             {
-                // Save as compressed JPEG for web
-                var encoderParameters = new EncoderParameters(1);
-                encoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 65L); // Web optimized (compressed)
-                var jpegCodec = GetEncoder(ImageFormat.Jpeg);
-                image.Save(memoryStream, jpegCodec, encoderParameters);
+                // Use compressed JPEG for web
+                image.Save(memoryStream, new JpegEncoder { Quality = 65 });
             }
 
             return memoryStream.ToArray();
-        }
-
-        private byte[] OptimizePng(byte[] pngData)
-        {
-            // You can run an external optimizer like PNGCrush or OptiPNG here
-            // Example (using command line):
-            var tempPngPath = Path.GetTempFileName() + ".png";
-            File.WriteAllBytes(tempPngPath, pngData);
-
-            var optimizedPngPath = Path.GetTempFileName() + "_optimized.png";
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "pngcrush", // Or optipng, if available
-                    Arguments = $"\"{tempPngPath}\" \"{optimizedPngPath}\"",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-            process.Start();
-            process.WaitForExit();
-
-            if (File.Exists(optimizedPngPath))
-            {
-                return File.ReadAllBytes(optimizedPngPath);
-            }
-
-            // Fallback to original PNG if optimization fails
-            return pngData;
-        }
-
-        private ImageCodecInfo GetEncoder(ImageFormat format)
-        {
-            var codecs = ImageCodecInfo.GetImageDecoders();
-            foreach (var codec in codecs)
-            {
-                if (codec.FormatID == format.Guid)
-                {
-                    return codec;
-                }
-            }
-            return null;
         }
     }
 }
