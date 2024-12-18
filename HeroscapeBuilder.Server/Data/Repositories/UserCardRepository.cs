@@ -18,6 +18,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .Where(x => x.UserId == userId.ToString())
                 .Include(x => x.OwnedArmyCardNavigation)
                 .Select(x => x.OwnedArmyCardNavigation)
+                .OrderBy(x => x.Name)
                 .ToListAsync();
         }
 

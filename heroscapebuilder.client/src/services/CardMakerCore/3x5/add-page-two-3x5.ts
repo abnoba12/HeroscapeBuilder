@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
-import { createHTMLImageElementFromBase64, getSizeToMax, loadImage } from "../../image-service";
+import { createHTMLImageElementFromBase64, DownloadImage, getSizeToMax, loadImage } from "../../image-service";
 import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
 import { base64Cache } from "../../cache-manager";
 
@@ -15,7 +15,7 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
         doc.setDrawColor(0, 0, 255);
     }
 
-    var whiteRGB: [number, number, number] = [255, 255, 255];
+    const whiteRGB: [number, number, number] = [255, 255, 255];
     //var blackRGB: [number, number, number] = [0, 0, 0];
 
     const unitImageAdvancedSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Advanced_Image")?.data;
@@ -52,12 +52,12 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     if (drawOutlines) doc.rect(statsX, statsY, 1, 100);
 
     if (formData.creator) {
-        var creatorImgSrc = `/assets/img/logos/${formData.creator}.png`;
-        const creatorImg = await createHTMLImageElementFromBase64(await base64Cache(creatorImgSrc, `${formData.creator}.png`));
+        const creatorImgSrc = `/assets/img/logos/${formData.creator}.png`;
+        const creatorImg = await loadImage(await DownloadImage(creatorImgSrc));
 
         const creatorImgMaxWidth = 153;
         const creatorImgMaxHeight = 12;
-        var size = getSizeToMax(creatorImgMaxWidth, creatorImgMaxHeight, creatorImg);
+        const size = getSizeToMax(creatorImgMaxWidth, creatorImgMaxHeight, creatorImg);
 
         const creatorX = 16;
         const creatorY = 83;
@@ -71,6 +71,6 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     }
 
     doc.setFontSize(8);
-    var setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
+    const setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
     CenterTextInArea(doc, setText, 16, 98, 153, 34, 0, 6, drawOutlines, undefined);
 }

@@ -1,5 +1,5 @@
 import { SizeAndCenterText, CenterTextInArea } from "../helpers/text-helper";
-import { loadImage, getSizeToMax, createHTMLImageElementFromBlob } from "../../image-service";
+import { loadImage, getSizeToMax, createHTMLImageElementFromBlob, DownloadImage } from "../../image-service";
 import { UnitFormData } from "../../../models/unit-form-data";
 import jsPDF from "jspdf";
 import { base64Cache } from "../../cache-manager";
@@ -15,8 +15,8 @@ export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, Glo
         doc.setDrawColor(0, 0, 255);
     }
 
-    var whiteRGB: [number, number, number] = [211, 212, 205];
-    var blackRGB: [number, number, number] = [33, 35, 32];
+    const whiteRGB: [number, number, number] = [211, 212, 205];
+    const blackRGB: [number, number, number] = [33, 35, 32];
 
     const unitImageBasicSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Basic_Image")?.data;
     const unitBasicImg: HTMLImageElement = await loadImage(unitImageBasicSrc);
@@ -52,8 +52,7 @@ export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, Glo
     doc.setTextColor(...blackRGB); // Set text color to black
     if (formData.creator) {
         const creatorImgSrc = `/assets/img/logos/${formData.creator}_dark.png`;
-        const response = await fetch(creatorImgSrc);
-        const creatorImg = await createHTMLImageElementFromBlob(await response.blob());
+        const creatorImg = await loadImage(await DownloadImage(creatorImgSrc));
 
         const creatorImgMaxWidth = 76;
         const creatorImgMaxHeight = 8;
@@ -71,6 +70,6 @@ export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, Glo
     }
 
     doc.setFontSize(6);
-    var setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
+    const setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
     CenterTextInArea(doc, setText, 80, 240 + GlobalAdjustX, 80 + GlobalAdjustY, 65, 0, 6, drawOutlines, undefined);
 }

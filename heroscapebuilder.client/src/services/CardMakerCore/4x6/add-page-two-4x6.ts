@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
-import { createHTMLImageElementFromBase64, getSizeToMax, loadImage } from "../../image-service";
+import { createHTMLImageElementFromBase64, DownloadImage, getSizeToMax, loadImage } from "../../image-service";
 import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
 import { base64Cache } from "../../cache-manager";
 
@@ -15,7 +15,7 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
         doc.setDrawColor(0, 0, 255);
     }
 
-    var whiteRGB: [number, number, number] = [255, 255, 255];
+    const whiteRGB: [number, number, number] = [255, 255, 255];
     //var blackRGB: [number, number, number] = [0, 0, 0];
 
     const unitImageBasicSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Basic_Image")?.data;
@@ -40,10 +40,10 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
 
 
 
-    var statsX = 385;
-    var statsY = 136.5
-    var statsXGap = 27.5;
-    var statsYGap = 23.25;
+    const statsX = 385;
+    let statsY = 136.5
+    const statsXGap = 27.5;
+    let statsYGap = 23.25;
 
     if (formData.general == "Revna") {
         statsY = 150
@@ -59,12 +59,12 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
 
     if (formData.creator) {
         // Load the hitbox image
-        var creatorImgSrc = `/assets/img/logos/${formData.creator}.png`;
-        const creatorImg = await createHTMLImageElementFromBase64(await base64Cache(creatorImgSrc, `${formData.creator}.png`));
+        const creatorImgSrc = `/assets/img/logos/${formData.creator}.png`;
+        const creatorImg = await loadImage(await DownloadImage(creatorImgSrc));
 
         const creatorImgMaxWidth = 76;
         const creatorImgMaxHeight = 12;
-        var size = getSizeToMax(creatorImgMaxWidth, creatorImgMaxHeight, creatorImg);
+        const size = getSizeToMax(creatorImgMaxWidth, creatorImgMaxHeight, creatorImg);
 
         const creatorX = 261;
         const creatorY = 212;
@@ -78,6 +78,6 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
     }
 
     doc.setFontSize(8);
-    var setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
+    const setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
     CenterTextInArea(doc, setText, 261, 224, 76, 58, 0, 6, drawOutlines, undefined);
 }

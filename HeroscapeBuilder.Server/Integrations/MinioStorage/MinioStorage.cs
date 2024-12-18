@@ -53,23 +53,27 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
             return await UploadAsync(fileData, path);
         }
 
-        public async Task<bool> DeleteAsync(string path)
+        public async Task<bool> DeleteAsync(string oPath)
         {
             // Extract the bucket name
-            var bucketName = GetBucketName(path);
+            var bucketName = GetBucketName(oPath);
 
             // Remove the bucket name from the path
-            path = path.Replace($"/{bucketName}", "").Trim('/');
+            var path = oPath.Replace($"/{bucketName}", "").Trim('/');
 
-            // Ensure the path is not empty
-            if (string.IsNullOrWhiteSpace(path))
-                throw new ArgumentException("Invalid path: Path must specify an object to delete.", nameof(path));
+            if (await FileExistsAsync(oPath))
+            {
+                // Ensure the path is not empty
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("Invalid path: Path must specify an object to delete.", nameof(path));
 
-            // Delete the object from the bucket
-            await _minioClient.RemoveObjectAsync(new RemoveObjectArgs()
-                .WithBucket(bucketName)
-                .WithObject(path));
-            return true;
+                // Delete the object from the bucket
+                await _minioClient.RemoveObjectAsync(new RemoveObjectArgs()
+                    .WithBucket(bucketName)
+                    .WithObject(path));
+                return true;
+            }
+            return false;
         }
 
 
@@ -80,10 +84,10 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
 
             try
             {
-                await _minioClient.StatObjectAsync(new StatObjectArgs()
+                var file = await _minioClient.StatObjectAsync(new StatObjectArgs()
                     .WithBucket(bucketName)
                     .WithObject(path));
-                return true;
+                return file.Size > 0;
             }
             catch (Minio.Exceptions.ObjectNotFoundException)
             {

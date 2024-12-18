@@ -33,6 +33,11 @@ export async function loadImage(data: Blob | undefined): Promise<HTMLImageElemen
     });
 }
 
+export async function DownloadImage(imagePath: string): Promise<Blob> {
+    const response = await fetch(imagePath);
+    return response.blob();
+}
+
 export async function createHTMLImageElementFromBlob(blob: Blob): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -87,13 +92,10 @@ export async function createHTMLImageElementFromBase64(base64: string, mimeType:
     });
 }
 
-
-
-
 export function getSizeToMax(maxWidth: number, maxHeight: number, image: HTMLImageElement) {
     try {
-        var heightAdj = maxHeight / image.height;
-        var widthAdj = maxWidth / image.width;
+        const heightAdj = maxHeight / image.height;
+        const widthAdj = maxWidth / image.width;
 
         if ((image.width * heightAdj) <= maxWidth) {
             return { height: image.height * heightAdj, width: image.width * heightAdj, wPadding: (maxWidth - (image.width * heightAdj)) / 2 };
@@ -101,7 +103,7 @@ export function getSizeToMax(maxWidth: number, maxHeight: number, image: HTMLIma
             return { height: image.height * widthAdj, width: image.width * widthAdj, hPadding: (maxHeight - (image.height * widthAdj)) / 2 };
         }
     } catch (e) {
-        var message = `Error determining max size for ${image.name}`;
+        const message = `Error determining max size for ${image.name}`;
         console.error(message, e);
         throw e;
     }

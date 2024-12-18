@@ -3,14 +3,14 @@ import JSZip from "jszip";
 import { UnitFile } from '../models/unit-file';
 import { blobCache, GetAPIDataWithCache } from './cache-manager';
 import { debounce } from './debounce';
-import axios from 'axios';
 import { getToken, hasRole } from './authService';
+import AxiosSingletonService from './AxiosSingletonService';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
+const api = AxiosSingletonService.getInstance();
 
 export const getFilesByPurpose = debounce(async (purpose:string) => {
     try {
-        return await GetAPIDataWithCache<UnitFile[]>(`${API_BASE_URL}/File/GetFilesByPurpose?purpose=${purpose}`, `/File?purpose=${purpose}`, 240);
+        return await GetAPIDataWithCache<UnitFile[]>(`/File/GetFilesByPurpose?purpose=${purpose}`, `/File?purpose=${purpose}`, 240);
     } catch (error) {
         console.error('Error fetching files:', error);
         throw error;
@@ -90,7 +90,7 @@ export async function downloadAllAsZip(files: any, zipName: any) {
         zip.file(fileName, blob);
     }
 
-    var content = await zip.generateAsync({ type: 'blob' });
+    const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, zipName);
 }
 
@@ -100,7 +100,7 @@ export async function AddFileToUnit(file: Blob, armyCardId: string, filePurpose:
         formData.append("file", file);
 
         try {
-            const response = await axios.put(`${API_BASE_URL}/File/AddFileToUnit`, formData, {
+            const response = await api.put(`/File/AddFileToUnit`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${getToken()}`

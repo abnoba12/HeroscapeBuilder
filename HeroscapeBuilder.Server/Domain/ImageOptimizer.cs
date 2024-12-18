@@ -22,7 +22,7 @@ namespace HeroscapeBuilder.Server.Domain
             var optimizedImage = purpose.ToUpper() switch
             {
                 "PRINT" => OptimizeForPrint(resizedImage, originalImage.RawFormat),
-                _ => OptimizeForWeb(resizedImage, originalImage.RawFormat)  // Default is "WEB"
+                "WEB" => OptimizeForWeb(resizedImage, originalImage.RawFormat)  // Default is "WEB"
             };
 
             return optimizedImage;

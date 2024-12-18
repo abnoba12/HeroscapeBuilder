@@ -76,7 +76,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             return acfs;
         }
 
-        public bool FileExists(ArmyCardFile acf)
+        public bool FileRecordExists(ArmyCardFile acf)
         {
             return _context.ArmyCardFiles.Any(x => x.ArmyCardId == acf.ArmyCardId && x.FilePurpose == acf.FilePurpose && x.FilePath == acf.FilePath);
         }

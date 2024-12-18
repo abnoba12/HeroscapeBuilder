@@ -2,11 +2,9 @@ import { Unit } from '../models/unit';
 import { GetAPIDataWithCache } from './cache-manager';
 import { debounce } from './debounce';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
-
 export const getUnits = debounce(async () => {
     try {
-        return GetAPIDataWithCache<Unit[]>(`${API_BASE_URL}/Unit/GetAllUnits`, "Unit");
+        return GetAPIDataWithCache<Unit[]>(`/Unit/GetAllUnits`, "Unit");
     } catch (error) {
         console.error('Error fetching cards:', error);
         throw error;

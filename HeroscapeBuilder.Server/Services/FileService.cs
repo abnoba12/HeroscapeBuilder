@@ -68,30 +68,35 @@ namespace HeroscapeBuilder.Server.Services
                 }
             }
 
+            var filePath = Path.Combine(fullPath, fileName);
             var acf = new ArmyCardFile
             {
                 ArmyCardId = armyCardId,
                 FilePurpose = filePurpose,
                 Parent = parentFileId,
-                FilePath = Path.Combine(fullPath, fileName)
+                FilePath = filePath
             };
 
-            if (!_fileRepository.FileExists(acf))
+            if (!(await _blobStorage.FileExistsAsync(filePath))) 
             {
+
                 //Upload the file to file storage
-                var r = await _blobStorage.UploadAsync(fileData, fullPath);
+                var r = await _blobStorage.UploadAsync(fileData, filePath);
                 if (string.IsNullOrEmpty(r))
                 {
                     throw new Exception("Unable to upload file.");
-                }           
+                }
 
-                //Save it in the DB
-                var id = await _fileRepository.AddArmyCardFileAsync(acf);
-
-                if(thumbImage != null)
+                if (!_fileRepository.FileRecordExists(acf))
                 {
-                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                    await AddFileToUnit(armyCardId, $"{filePurpose}_Thumb", $"pdf-thumbnail-{fileNameWithoutExtension}.png", thumbImage, id);
+                    //Save it in the DB
+                    var id = await _fileRepository.AddArmyCardFileAsync(acf);
+
+                    if (thumbImage != null)
+                    {
+                        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                        await AddFileToUnit(armyCardId, $"{filePurpose}_Thumb", $"pdf-thumbnail-{fileNameWithoutExtension}.png", thumbImage, id);
+                    }
                 }
             }
 
@@ -127,6 +132,18 @@ namespace HeroscapeBuilder.Server.Services
 
                     if (thumbImage != null && thumbImage.Length > 0)
                     {
+                        switch (filePurpose)
+                        {
+                            case "3x5_Army_Card_Thumb":
+                            case "Standard_Army_Card_Thumb":
+                                thumbImage = _imageService.OptimizeImage(thumbImage, "WEB", null, 300);
+                                break;
+                            case "4x6_Army_Card_Thumb":
+                                thumbImage = _imageService.OptimizeImage(thumbImage, "WEB", 350);
+                                break;
+                        }
+
+                        
                         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pdf.FilePath);
                         var filePath = Path.Combine(GetPathByFilePurpose(filePurpose), $"pdf-thumbnail-{fileNameWithoutExtension}.png");
                         if (await UpdateFileForUnitAsync(file.ArmyCardId, filePurpose, filePath, thumbImage))

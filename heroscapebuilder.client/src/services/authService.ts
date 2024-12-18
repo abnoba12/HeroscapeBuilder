@@ -1,39 +1,53 @@
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import AxiosSingletonService from "./AxiosSingletonService";
 
-// Define the shape of your JWT payload
 interface JwtPayload {
-    sub: string; // Subject (typically user ID or email)
-    exp: number; // Expiration time (epoch in seconds)
-    roles?: string[]; // Array of roles (optional)
-    [key: string]: any; // Any additional fields
+    sub: string;
+    exp: number;
+    roles?: string[];
+    [key: string]: any;
 }
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
-const API_AUTH_URL = `${API_BASE_URL}/auth`;
+const api = AxiosSingletonService.getInstance();
 
-// Register a new user
 export const register = async (email: string, password: string): Promise<void> => {
-    await axios.post(`${API_AUTH_URL}/register`, { email, password });
+    await api.post(`/auth/register`, { email, password });
 };
 
-// Log in and get a JWT token
 export const login = async (email: string, password: string): Promise<void> => {
-    const response = await axios.post<{ token: string }>(`${API_AUTH_URL}/login`, { email, password });
+    const response = await api.post<{ token: string }>(`/auth/login`, {
+        email,
+        password,
+    });
     saveToken(response.data.token);
 };
 
-// Save the JWT token in localStorage
+export const refreshToken = async (): Promise<void> => {
+    try {
+        const token = getToken();
+        if (!token) {
+            throw new Error("No token available to refresh.");
+        }
+
+        const response = await api.post<{ token: string }>(`/auth/refresh`, {
+            token,
+        });
+        saveToken(response.data.token);
+    } catch (error) {
+        console.error("Failed to refresh token", error);
+        logout();
+        throw error; // Ensure the error propagates
+    }
+};
+
 export const saveToken = (token: string): void => {
     localStorage.setItem("jwt", token);
 };
 
-// Retrieve the JWT token from localStorage
 export const getToken = (): string | null => {
     return localStorage.getItem("jwt");
 };
 
-// Decode the token to get user information
 export const getUser = (): JwtPayload | null => {
     const token = getToken();
     if (token) {
@@ -42,12 +56,10 @@ export const getUser = (): JwtPayload | null => {
     return null;
 };
 
-// Log out the user
 export const logout = (): void => {
     localStorage.removeItem("jwt");
 };
 
-// Check if the user is authenticated
 export const isAuthenticated = (): boolean => {
     const token = getToken();
     if (!token) return false;
@@ -58,7 +70,65 @@ export const isAuthenticated = (): boolean => {
 
 export const hasRole = (role: string): boolean => {
     const user = getUser();
-    if (!user || !user.roles) return false;
-
-    return user.roles.includes(role);
+    return user?.roles?.includes(role) ?? false;
 };
+
+let isRefreshing = false; // Prevent concurrent token refresh
+let subscribers: ((token: string) => void)[] = []; // Queue for requests waiting for token refresh
+
+const addSubscriber = (callback: (token: string) => void) => {
+    subscribers.push(callback);
+};
+
+const onAccessTokenRefreshed = (token: string) => {
+    subscribers.forEach((callback) => callback(token));
+    subscribers = [];
+};
+
+api.interceptors.request.use(async (config) => {
+    // Skip interceptor for login or refresh requests
+    if (
+        config.url?.includes(`/auth/login`) ||
+        config.url?.includes(`/auth/refresh`)
+    ) {
+        return config;
+    }
+
+    const token = getToken();
+    if (token) {
+        const { exp } = jwtDecode<JwtPayload>(token);
+
+        // Check if the token is about to expire
+        if (exp * 1000 - Date.now() < 60 * 1000) {
+            if (!isRefreshing) {
+                isRefreshing = true;
+                try {
+                    await refreshToken();
+                    isRefreshing = false;
+                    const newToken = getToken();
+                    onAccessTokenRefreshed(newToken!);
+                } catch (error) {
+                    console.error("Failed to refresh token:", error);
+                    isRefreshing = false;
+                    logout();
+                    throw error;
+                }
+            }
+
+            // Queue the request while the token is refreshing
+            return new Promise((resolve) => {
+                addSubscriber((newToken) => {
+                    config.headers.Authorization = `Bearer ${newToken}`;
+                    resolve(config);
+                });
+            });
+        }
+
+        // Add the token to the request headers
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});

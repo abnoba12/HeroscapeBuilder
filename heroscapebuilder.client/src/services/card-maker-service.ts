@@ -63,7 +63,7 @@ export async function generateIndexCard(doc: jsPDF, formData: UnitFormData, size
 }
 
 export function initializePDF(size = "4x6"): jsPDF {
-    var doc: jsPDF | undefined;
+    let doc: jsPDF | undefined;
     if (size == "4x6") {
         // Define custom page size
         const pageWidth = 6.25 * 72; // 1 inch = 72 points, 450
@@ -125,7 +125,7 @@ export function savePDF(doc: jsPDF, filename: string) {
             URL.revokeObjectURL(link.href);
             resolve();
         } catch (e) {
-            var message = `Error saving file ${filename}`;
+            const message = `Error saving file ${filename}`;
             console.error(message, e);
             reject(e);
         }

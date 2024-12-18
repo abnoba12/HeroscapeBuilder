@@ -1,8 +1,8 @@
-import axios from 'axios';
+import AxiosSingletonService from './AxiosSingletonService';
 import { base64ToBlob, blobToBase64 } from './image-service';
 
 // Create an instance of axios
-const api = axios.create();
+const api = AxiosSingletonService.getInstance();
 const defaultCacheDuration = 60;
 const debug = false;
 
@@ -13,7 +13,7 @@ export const GetAPIDataWithCache = async <T>(url: string, cacheKey: string, cach
             throw "Missing required parameters";
         }
 
-        var response = await getCache<T>(
+        const response = await getCache<T>(
             cacheKey,
             async () => (await api.get(url)).data,
             cacheDuration
@@ -27,13 +27,13 @@ export const GetAPIDataWithCache = async <T>(url: string, cacheKey: string, cach
 };
 
 export const blobCache = async (url: string, cacheKey: string, cacheDuration: number = defaultCacheDuration) => {
-    let blob: Blob = new Blob();
+    const blob: Blob = new Blob();
     try {
         if (!url || !cacheKey) {
             throw "Missing required parameters";
         }
 
-        var response = await getCache<string>(
+        const response = await getCache<string>(
             cacheKey,
             async () => blobToBase64((await api.get(url, { responseType: 'blob' })).data),
             cacheDuration
@@ -77,7 +77,7 @@ export const getCache = async <T>(
     cleanExpiredCache();
 
     // Check multiple storage options: SessionStorage, LocalStorage, CacheStorage, IndexedDB
-    let cachedData = await checkCache<T>(cacheKey, cacheDurationMs, now);
+    const cachedData = await checkCache<T>(cacheKey, cacheDurationMs, now);
 
     if (cachedData) {
         return cachedData;

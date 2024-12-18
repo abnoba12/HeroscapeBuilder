@@ -22,7 +22,7 @@ import PrivateRoute from "../components/Auth/PrivateRoute";
 import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
-import MyArmy from "./data/my-heroscape/my-heroscape";
+import MyArmy from "./data/my-heroscape/my-army";
 
 const App: React.FC = () => {
     return (

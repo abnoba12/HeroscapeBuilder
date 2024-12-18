@@ -46,9 +46,9 @@ namespace HeroscapeBuilder.Server.Services
             return optimized;
         }
 
-        public byte[] OptimizeImage(byte[] image)
+        public byte[] OptimizeImage(byte[] image, string purpose = "PRINT", int? maxWidth = null, int? maxHeight = null, bool maintainAspectRatio = true)
         {
-            return _imageOptimizer.OptimizeImage(image, "PRINT", null, null, true);
+            return _imageOptimizer.OptimizeImage(image, "PRINT", maxWidth, maxHeight, maintainAspectRatio);
         }
 
         // Helper method to check for JPG
