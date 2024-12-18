@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
-import { createHTMLImageElementFromBase64, DownloadImage, getSizeToMax, loadImage } from "../../image-service";
-import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
 import { base64Cache } from "../../cache-manager";
+import { DownloadImage, getSizeToMax, loadImage } from "../../image-service";
+import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
 
 export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
     const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;
