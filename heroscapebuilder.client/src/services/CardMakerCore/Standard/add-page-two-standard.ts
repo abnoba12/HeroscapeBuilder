@@ -1,8 +1,8 @@
-import { SizeAndCenterText, CenterTextInArea } from "../helpers/text-helper";
-import { loadImage, getSizeToMax, createHTMLImageElementFromBlob, DownloadImage } from "../../image-service";
-import { UnitFormData } from "../../../models/unit-form-data";
 import jsPDF from "jspdf";
+import { UnitFormData } from "../../../models/unit-form-data";
 import { base64Cache } from "../../cache-manager";
+import { DownloadImage, getSizeToMax, loadImage } from "../../image-service";
+import { CenterTextInArea, SizeAndCenterText } from "../helpers/text-helper";
 
 export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, GlobalAdjustX = 0, GlobalAdjustY = 0, GlobalYGapAdjust = 0) {
     const BASE_IMAGE_PATH = `${import.meta.env.VITE_BASE_IMAGE_PATH}`;

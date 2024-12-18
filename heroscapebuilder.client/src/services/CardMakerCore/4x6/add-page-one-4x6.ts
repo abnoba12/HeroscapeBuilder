@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import { UnitFormData } from "../../../models/unit-form-data";
+import { base64Cache } from "../../cache-manager";
 import { createHTMLImageElementFromBase64, getSizeToMax, loadImage } from "../../image-service";
 import { SizeAndCenterAbilities, SizeAndCenterText } from "../helpers/text-helper";
-import { base64Cache } from "../../cache-manager";
 
 export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
     try {
@@ -18,8 +18,8 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
             doc.setDrawColor(0, 0, 255);
         }
 
-        var whiteRGB: [number, number, number] = [255, 255, 255];
-        var blackRGB: [number, number, number] = [0, 0, 0];
+        const whiteRGB: [number, number, number] = [255, 255, 255];
+        const blackRGB: [number, number, number] = [0, 0, 0];
 
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
@@ -49,12 +49,12 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         SizeAndCenterText(doc, formData.planet?.toUpperCase() || '', 6.75, 98.5, 68.5, 46, 12, -1.5, 0, debug);
 
 
-        var statsX = 385;
-        var statsY = 136
-        var statsXGap = 27.5;
-        var statsYGap = 23.25;
-        var lifeYGap = 0
-        var pointsYGap = 0
+        const statsX = 385;
+        let statsY = 136
+        const statsXGap = 27.5;
+        let statsYGap = 23.25;
+        let lifeYGap = 0
+        let pointsYGap = 0
 
         if (formData.general == "Revna") {
             statsY = 146
@@ -82,7 +82,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         doc.text(formData.points?.toString() || '', statsX, statsY + (statsYGap * 5) + lifeYGap + pointsYGap, { align: 'center' });
 
         // Load the unit type image
-        var unitTypeImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.rarity}${formData.type}.png`;
+        const unitTypeImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.rarity}${formData.type}.png`;
         const unitTypeImg = await createHTMLImageElementFromBase64(await base64Cache(unitTypeImgSrc, `${formData.rarity}${formData.type}.png`));
 
         const unitTypeImgWidth = 48;
@@ -97,7 +97,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         doc.addImage(unitTypeImg, 'PNG', unitTypeImgX, unitTypeImgY, unitTypeImgWidth, unitTypeImgHeight);
 
         // Load the unit size image
-        var unitSizeImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.sizeCategory}.png`;
+        const unitSizeImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.sizeCategory}.png`;
         const unitSizeImg = await createHTMLImageElementFromBase64(await base64Cache(unitSizeImgSrc, `${formData.sizeCategory}.png`));
 
         const unitSizeImgWidth = 48;
@@ -117,12 +117,12 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         doc.text(formData.size?.toString() || '', 223, 35.25, { align: 'center' });
 
         // Load the hitbox image
-        var hitboxImgSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Hitbox_Image")?.data;
+        const hitboxImgSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Hitbox_Image")?.data;
         const hitboxImg = await loadImage(hitboxImgSrc);
 
         const hitboxImgMaxWidth = 70;
         const hitboxImgMaxHeight = 72;
-        var size = getSizeToMax(hitboxImgMaxWidth, hitboxImgMaxHeight, hitboxImg);
+        const size = getSizeToMax(hitboxImgMaxWidth, hitboxImgMaxHeight, hitboxImg);
 
         const hitboxX = 265;
         const hitboxY = 211;
@@ -139,12 +139,12 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         const textY = 87; // Y coordinate for the text area
         const textWidth = 221; // Width of the text area
         const textHeight = 200; // Height of the text area
-        let maxAbilityNameFontSize = 12;
-        let maxAbilityTextFontSize = 9.5;
-        let abilitySpacing = 1;
+        const maxAbilityNameFontSize = 12;
+        const maxAbilityTextFontSize = 9.5;
+        const abilitySpacing = 1;
         await SizeAndCenterAbilities(doc, formData, textX, textY, textWidth, textHeight, maxAbilityNameFontSize, maxAbilityTextFontSize, abilitySpacing, debug);
     } catch (e) {
-        var message = `Error building page one for ${formData.name}`;
+        const message = `Error building page one for ${formData.name}`;
         console.error(message, e);
         throw e;
     }
