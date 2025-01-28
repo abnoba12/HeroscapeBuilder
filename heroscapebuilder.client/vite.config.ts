@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import child_process from 'child_process';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = true;
 
 let httpsConfig: undefined | { key: Buffer; cert: Buffer } = undefined;
 
