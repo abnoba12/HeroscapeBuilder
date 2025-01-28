@@ -11,7 +11,7 @@ services:
       - "8012:80"
       - "8043:5173"
     environment:
-      - ASPNETCORE_URLS=https://+:5173;http://+
+      - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
     deploy:
       mode: replicated
