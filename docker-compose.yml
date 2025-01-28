@@ -1,6 +1,8 @@
+version: "3.8"
+
 services:
   heroscapebuilder:
-    pull_policy: build
+    image: heroscapebuilder:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,3 +12,19 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
+    deploy:
+      mode: replicated
+      replicas: 2  # Runs one instance on each node (or adjust as needed)
+      placement:
+        constraints: [node.role == worker] # Optional: Ensures deployment only on worker nodes
+      restart_policy:
+        condition: any
+      update_config:
+        parallelism: 1
+        delay: 10s
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: overlay
