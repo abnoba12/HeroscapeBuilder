@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+  ### Web App (React + .NET Core API)
   heroscapebuilder:
     image: heroscapebuilder:latest
     build:
@@ -14,15 +15,51 @@ services:
       - HeroscapeBuilder=${HeroscapeBuilder}
     deploy:
       mode: replicated
-      replicas: 2  # Runs one instance on each node (or adjust as needed)
-      restart_policy:
-        condition: any
-      update_config:
-        parallelism: 1
-        delay: 10s
+      replicas: 2
     networks:
       - webnet
+
+  ### MinIO Storage Service
+  minio:
+    image: minio/minio
+    command: server --certs-dir /certs --address ":9000" --console-address ":9081" /data
+    environment:
+      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$$
+      - MINIO_SECRET_KEY=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
+    volumes:
+      - /mnt/minio_storage/data:/data
+      - /mnt/minio_storage/certs:/certs
+    networks:
+      - internal_network
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      placement:
+        max_replicas_per_node: 1
+    ports:
+      - "2096:9000"  # MinIO API
+      - "9081:9081"  # MinIO Web UI
+
+  ### Nginx Reverse Proxy for MinIO
+  nginx:
+    image: nginx
+    volumes:
+      - /nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    deploy:
+      mode: replicated
+      replicas: 1
+    networks:
+      - webnet
+      - internal_network
 
 networks:
   webnet:
     driver: overlay
+  internal_network:
+    driver: overlay
+    attachable: true
