@@ -15,8 +15,6 @@ services:
     deploy:
       mode: replicated
       replicas: 2  # Runs one instance on each node (or adjust as needed)
-      placement:
-        constraints: [node.role == worker] # Optional: Ensures deployment only on worker nodes
       restart_policy:
         condition: any
       update_config:
