@@ -1,45 +1,21 @@
-import { fileURLToPath, URL } from 'node:url';
-
+﻿import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import plugin from '@vitejs/plugin-react';
 import fs from 'fs';
-import path from 'path';
-import child_process from 'child_process';
 
-const isDevelopment = true;
+const certFilePath = "/certs/origin.pem";
+const keyFilePath = "/certs/origin.key";
 
 let httpsConfig: undefined | { key: Buffer; cert: Buffer } = undefined;
 
-if (isDevelopment) {
-    const baseFolder =
-        process.env.APPDATA !== undefined && process.env.APPDATA !== ''
-            ? `${process.env.APPDATA}/ASP.NET/https`
-            : `${process.env.HOME}/.aspnet/https`;
-
-    const certificateArg = process.argv.map(arg => arg.match(/--name=(?<value>.+)/i)).filter(Boolean)[0];
-    const certificateName = certificateArg && certificateArg.groups && certificateArg.groups.value ? certificateArg.groups.value : "heroscapebuilder.client";
-
-    if (!certificateName) {
-        console.error('Invalid certificate name. Run this script in the context of an npm/yarn script or pass --name=<<app>> explicitly.')
-        process.exit(-1);
-    }
-
-    const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
-    const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
-
-    if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
-        if (0 !== child_process.spawnSync('dotnet', [
-            'dev-certs',
-            'https',
-            '--export-path',
-            certFilePath,
-            '--format',
-            'Pem',
-            '--no-password',
-        ], { stdio: 'inherit', }).status) {
-            throw new Error("Could not create certificate.");
-        }
-    }
+// Ensure the certificate files exist before enabling HTTPS
+if (fs.existsSync(certFilePath) && fs.existsSync(keyFilePath)) {
+    httpsConfig = {
+        key: fs.readFileSync(keyFilePath),
+        cert: fs.readFileSync(certFilePath),
+    };
+} else {
+    console.warn("⚠️  HTTPS Certificate files not found! Ensure ~/heroscapebuilder-certs is correctly mounted.");
 }
 
 // https://vitejs.dev/config/
@@ -47,21 +23,17 @@ export default defineConfig({
     plugins: [plugin()],
     resolve: {
         alias: {
-            '@': fileURLToPath(new URL('./src', import.meta.url))
-        }
+            '@': fileURLToPath(new URL('./src', import.meta.url)),
+        },
     },
     server: {
         proxy: {
             '^/weatherforecast': {
                 target: 'https://localhost:7194/',
-                secure: false
-            }
+                secure: false,
+            },
         },
         port: 5173,
-        //https: {
-        //    key: fs.readFileSync(keyFilePath),
-        //    cert: fs.readFileSync(certFilePath),
-        //}
-        https: isDevelopment ? httpsConfig : undefined, // Only use HTTPS in development
-    }
-})
+        https: httpsConfig, // Only enable HTTPS if certificates exist
+    },
+});

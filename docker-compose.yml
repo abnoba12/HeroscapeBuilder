@@ -13,6 +13,8 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
+    volumes:
+      - ~/heroscapebuilder-certs:/certs
     deploy:
       mode: replicated
       replicas: 2
