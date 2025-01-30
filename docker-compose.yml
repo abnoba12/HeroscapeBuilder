@@ -21,26 +21,43 @@ services:
       - webnet
 
   ### MinIO Storage Service
-  minio:
+  minio1:
     image: minio/minio
-    command: server --address ":9000" --console-address ":9081" /data
+    command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
     environment:
-      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$$
-      - MINIO_SECRET_KEY=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
+      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$
+      - MINIO_SECRET_KEY=K@VW7s$!r6bj&fC57rMtqy3v9sVA$3v^gNbbsh4R
     volumes:
       - /mnt/minio_storage/data:/data
     networks:
       - internal_network
     deploy:
-      mode: replicated
-      replicas: 2
-      restart_policy:
-        condition: on-failure
+      mode: global
       placement:
-        max_replicas_per_node: 1
+        constraints:
+          - node.hostname == projectmaster
     ports:
-      - "2096:9000"  # MinIO API
-      - "9081:9081"  # MinIO Web UI
+      - "2096:9000"
+      - "9081:9081"
+
+  minio2:
+    image: minio/minio
+    command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
+    environment:
+      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$
+      - MINIO_SECRET_KEY=K@VW7s$!r6bj&fC57rMtqy3v9sVA$3v^gNbbsh4R
+    volumes:
+      - /mnt/minio_storage/data:/data
+    networks:
+      - internal_network
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.hostname == elitedesk
+    ports:
+      - "2097:9000"
+      - "9082:9081"
 
   ### Nginx Reverse Proxy for MinIO
   nginx:
