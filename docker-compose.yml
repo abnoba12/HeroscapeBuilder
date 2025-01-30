@@ -20,15 +20,15 @@ services:
     networks:
       - webnet
 
-  ### MinIO Storage Service
+  ### MinIO Storage Service - Node 1
   minio1:
     image: minio/minio
-    command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
+    command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
     environment:
-      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$$
-      - MINIO_SECRET_KEY=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
+      - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
+      - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
     volumes:
-      - /mnt/minio_storage/data:/data
+      - /mnt/minio_storage/data1:/data1
     networks:
       - internal_network
     deploy:
@@ -40,14 +40,15 @@ services:
       - "2096:9000"
       - "9081:9081"
 
+  ### MinIO Storage Service - Node 2
   minio2:
     image: minio/minio
-    command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
+    command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
     environment:
-      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$$
-      - MINIO_SECRET_KEY=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
+      - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
+      - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
     volumes:
-      - /mnt/minio_storage/data:/data
+      - /mnt/minio_storage/data2:/data2
     networks:
       - internal_network
     deploy:
