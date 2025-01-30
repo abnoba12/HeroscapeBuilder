@@ -2,6 +2,7 @@ using EFCoreSecondLevelCacheInterceptor;
 using HeroscapeBuilder.Server.Common.Helpers;
 using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Program;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NLog;
@@ -67,6 +68,11 @@ try
 
     app.UseDefaultFiles();
     app.UseStaticFiles();
+
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
