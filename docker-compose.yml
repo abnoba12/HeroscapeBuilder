@@ -8,13 +8,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8012:80"
-      - "8043:5173"
+      - "5000:80"
     environment:
       - ASPNETCORE_URLS=http://+
       - HeroscapeBuilder=${HeroscapeBuilder}
-    volumes:
-      - ~/heroscapebuilder-certs:/certs
     deploy:
       mode: replicated
       replicas: 2
@@ -26,13 +23,12 @@ services:
   ### MinIO Storage Service
   minio:
     image: minio/minio
-    command: server --certs-dir /certs --address ":9000" --console-address ":9081" /data
+    command: server --address ":9000" --console-address ":9081" /data
     environment:
       - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$$
       - MINIO_SECRET_KEY=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
     volumes:
       - /mnt/minio_storage/data:/data
-      - /mnt/minio_storage/certs:/certs
     networks:
       - internal_network
     deploy:
@@ -51,9 +47,10 @@ services:
     image: nginx
     volumes:
       - /nginx.conf:/etc/nginx/nginx.conf:ro
+      - ~/heroscapebuilder-certs:/certs
     ports:
-      - "80:80"
-      - "443:443"
+      - "8012:80"
+      - "8043:443"
     deploy:
       mode: replicated
       replicas: 2
