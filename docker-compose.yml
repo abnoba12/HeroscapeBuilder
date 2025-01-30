@@ -47,7 +47,7 @@ services:
     image: nginx
     volumes:
       - /nginx.conf:/etc/nginx/nginx.conf:ro
-      - ~/heroscapebuilder-certs:/certs
+      - /heroscapebuilder-certs:/certs
     ports:
       - "8012:80"
       - "8043:443"
