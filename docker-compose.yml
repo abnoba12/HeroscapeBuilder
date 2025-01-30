@@ -23,10 +23,13 @@ services:
   ### MinIO Storage Service - Node 1
   minio1:
     image: minio/minio
+    hostname: minio1
     command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
     environment:
       - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
+      - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
+      - MINIO_DISTRIBUTED_NODES=minio1,minio2
     volumes:
       - /mnt/minio_storage/data1:/data1
     networks:
@@ -43,10 +46,13 @@ services:
   ### MinIO Storage Service - Node 2
   minio2:
     image: minio/minio
+    hostname: minio2
     command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
     environment:
       - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
+      - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
+      - MINIO_DISTRIBUTED_NODES=minio1,minio2
     volumes:
       - /mnt/minio_storage/data2:/data2
     networks:
@@ -71,9 +77,11 @@ services:
       - "8043:443"
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
       placement:
         max_replicas_per_node: 1
+        constraints:
+          - node.hostname == projectmaster
     networks:
       - webnet
       - internal_network
