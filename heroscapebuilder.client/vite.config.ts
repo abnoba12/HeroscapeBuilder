@@ -1,6 +1,7 @@
 ﻿import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import plugin from '@vitejs/plugin-react';
+import fs from 'fs';
 
 export default defineConfig({
     plugins: [plugin()],
@@ -11,6 +12,11 @@ export default defineConfig({
     },
     server: {
         port: 5173,
-        https: undefined, // Always use HTTP
+        https: {
+            key: fs.readFileSync('/app/certs/origin.key'),
+            cert: fs.readFileSync('/app/certs/origin.pem'),
+        },
+        host: '0.0.0.0',
+        strictPort: true,
     },
 });
