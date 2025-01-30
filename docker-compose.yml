@@ -25,8 +25,8 @@ services:
     image: minio/minio
     command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
     environment:
-      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$
-      - MINIO_SECRET_KEY=K@VW7s$!r6bj&fC57rMtqy3v9sVA$3v^gNbbsh4R
+      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$$
+      - MINIO_SECRET_KEY=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
     volumes:
       - /mnt/minio_storage/data:/data
     networks:
@@ -44,8 +44,8 @@ services:
     image: minio/minio
     command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
     environment:
-      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$
-      - MINIO_SECRET_KEY=K@VW7s$!r6bj&fC57rMtqy3v9sVA$3v^gNbbsh4R
+      - MINIO_ACCESS_KEY=5Y5aCgFi@SF7!dMeMlJ$$
+      - MINIO_SECRET_KEY=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
     volumes:
       - /mnt/minio_storage/data:/data
     networks:
