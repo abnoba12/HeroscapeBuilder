@@ -18,7 +18,7 @@ services:
       placement:
         max_replicas_per_node: 1
     networks:
-      - webnet
+      - internal_network
 
   ### MinIO Storage Service - Node 1
   minio1:
@@ -83,13 +83,10 @@ services:
         constraints:
           - node.hostname == projectmaster
     networks:
-      - webnet
       - internal_network
 
 
 networks:
-  webnet:
-    driver: overlay
   internal_network:
     driver: overlay
     attachable: true
