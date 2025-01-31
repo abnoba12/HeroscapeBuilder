@@ -26,16 +26,15 @@ services:
   minio1:
     image: minio/minio
     hostname: minio1
-    command: server --certs-dir /certs --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
+    command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
     environment:
       - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
       - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
       - MINIO_DISTRIBUTED_NODES=minio1,minio2
-      - MINIO_SERVER_URL=https://files.heroscapebuilder.com
+      - MINIO_SERVER_URL=http://files.heroscapebuilder.com
     volumes:
       - /mnt/minio_storage/data1:/data1
-      - /heroscapebuilder-certs:/certs
     networks:
       - internal_network
     deploy:
@@ -51,16 +50,15 @@ services:
   minio2:
     image: minio/minio
     hostname: minio2
-    command: server --certs-dir /certs --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
+    command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
     environment:
       - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
       - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
       - MINIO_DISTRIBUTED_NODES=minio1,minio2
-      - MINIO_SERVER_URL=https://files.heroscapebuilder.com
+      - MINIO_SERVER_URL=http://files.heroscapebuilder.com
     volumes:
       - /mnt/minio_storage/data2:/data2
-      - /heroscapebuilder-certs:/certs
     networks:
       - internal_network
     deploy:
