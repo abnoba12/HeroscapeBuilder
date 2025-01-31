@@ -32,6 +32,8 @@ services:
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
       - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
       - MINIO_DISTRIBUTED_NODES=minio1,minio2
+      - MINIO_SERVER_URL="https://HeroscapeBuilder.com"
+      - MINIO_BROWSER_REDIRECT_URL="https://HeroscapeBuilder.com/file"
     volumes:
       - /mnt/minio_storage/data1:/data1
     networks:
@@ -55,6 +57,8 @@ services:
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
       - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
       - MINIO_DISTRIBUTED_NODES=minio1,minio2
+      - MINIO_SERVER_URL="https://HeroscapeBuilder.com"
+      - MINIO_BROWSER_REDIRECT_URL="https://HeroscapeBuilder.com/file"
     volumes:
       - /mnt/minio_storage/data2:/data2
     networks:
