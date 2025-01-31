@@ -28,6 +28,7 @@ services:
       - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
       - MINIO_DISTRIBUTED_NODES=minio1,minio2
       - MINIO_SERVER_URL=http://files.heroscapebuilder.com
+      - MINIO_UPLOAD_PART_SIZE=1G
     volumes:
       - /mnt/minio_storage/data1:/data1
     networks:
@@ -52,6 +53,7 @@ services:
       - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
       - MINIO_DISTRIBUTED_NODES=minio1,minio2
       - MINIO_SERVER_URL=http://files.heroscapebuilder.com
+      - MINIO_UPLOAD_PART_SIZE=1G
     volumes:
       - /mnt/minio_storage/data2:/data2
     networks:
