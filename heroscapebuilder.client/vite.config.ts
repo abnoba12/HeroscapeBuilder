@@ -11,6 +11,6 @@ export default defineConfig({
     },
     server: {
         port: 5173,
-        https: undefined // Always use HTTP
+        https: undefined, // Always use HTTP
     },
 });
