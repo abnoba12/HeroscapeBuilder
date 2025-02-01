@@ -78,6 +78,7 @@ services:
     ports:
       - "8012:80"
       - "8043:443"
+      - "80:80"
     deploy:
       mode: replicated
       replicas: 1
