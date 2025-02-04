@@ -21,7 +21,7 @@ services:
   minio1:
     image: minio/minio
     hostname: minio1
-    command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
+    command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
     environment:
       - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
@@ -31,7 +31,7 @@ services:
       - MINIO_BROWSER_REDIRECT_URL=http://minio-console.local
       - MINIO_UPLOAD_PART_SIZE=1G
     volumes:
-      - /mnt/minio_storage/data1:/data1
+      - /mnt/minio_storage/data:/data
     networks:
       - internal_network
     deploy:
@@ -47,7 +47,7 @@ services:
   minio2:
     image: minio/minio
     hostname: minio2
-    command: server --address ":9000" --console-address ":9081" http://minio1/data1 http://minio2/data2
+    command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
     environment:
       - MINIO_ROOT_USER=5Y5aCgFi@SF7!dMeMlJ$$
       - MINIO_ROOT_PASSWORD=K@VW7s$$!r6bj&fC57rMtqy3v9sVA$$3v^gNbbsh4R
@@ -57,7 +57,7 @@ services:
       - MINIO_BROWSER_REDIRECT_URL=http://minio-console.local
       - MINIO_UPLOAD_PART_SIZE=1G
     volumes:
-      - /mnt/minio_storage/data2:/data2
+      - /mnt/minio_storage/data:/data
     networks:
       - internal_network
     deploy:
