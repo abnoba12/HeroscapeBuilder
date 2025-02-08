@@ -16,60 +16,6 @@ services:
         max_replicas_per_node: 1
     networks:
       - internal_network
-
-  ### MinIO Storage Service - Node 1
-  # minio1:
-    # image: minio/minio
-    # hostname: minio1
-    # command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
-    # environment:
-      # - MINIO_ROOT_USER=Hassle864
-      # - MINIO_ROOT_PASSWORD=6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
-      # - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
-      # - MINIO_DISTRIBUTED_NODES=minio1,minio2
-      # - MINIO_SERVER_URL=http://files.heroscapebuilder.com
-      # - MINIO_BROWSER_REDIRECT_URL=http://minio-console.local
-      # - MINIO_UPLOAD_PART_SIZE=1G
-      # - MINIO_MAX_OBJECT_SIZE=1G
-    # volumes:
-      # - /mnt/minio_storage/data:/data
-    # networks:
-      # - internal_network
-    # deploy:
-      # mode: global
-      # placement:
-        # constraints:
-          # - node.hostname == projectmaster
-    # ports:
-      # - "2096:9000"
-      # - "9081:9081"
-
-  ### MinIO Storage Service - Node 2
-  # minio2:
-    # image: minio/minio
-    # hostname: minio2
-    # command: server --address ":9000" --console-address ":9081" http://minio1/data http://minio2/data
-    # environment:
-      # - MINIO_ROOT_USER=Hassle864
-      # - MINIO_ROOT_PASSWORD=6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
-      # - MINIO_DISTRIBUTED_MODE_ENABLED="yes"
-      # - MINIO_DISTRIBUTED_NODES=minio1,minio2
-      # - MINIO_SERVER_URL=http://files.heroscapebuilder.com
-      # - MINIO_BROWSER_REDIRECT_URL=http://minio-console.local
-      # - MINIO_UPLOAD_PART_SIZE=1G
-      # - MINIO_MAX_OBJECT_SIZE=1G
-    # volumes:
-      # - /mnt/minio_storage/data:/data
-    # networks:
-      # - internal_network
-    # deploy:
-      # mode: global
-      # placement:
-        # constraints:
-          # - node.hostname == elitedesk
-    # ports:
-      # - "2097:9000"
-      # - "9082:9081"
       
   minio:
     image: minio/minio:latest
@@ -81,8 +27,8 @@ services:
       MINIO_ROOT_USER: Hassle864
       MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
       MINIO_DISTRIBUTED_MODE_ENABLED: "yes"
-      #MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
-      #MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
+      MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
+      MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
       MINIO_UPLOAD_PART_SIZE: 1G
       MINIO_MAX_OBJECT_SIZE: 1G
     volumes:
