@@ -78,13 +78,13 @@ services:
     # With two replicas, one will resolve to "minio1" and the other to "minio2".
     command: server --address ":9000" --console-address ":9081" http://minio{1...2}/data{1...2}
     environment:
-      - MINIO_ROOT_USER: Hassle864
-      - MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
-      - MINIO_DISTRIBUTED_MODE_ENABLED: "yes"
-      #- MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
-      #- MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
-      - MINIO_UPLOAD_PART_SIZE: 1G
-      - MINIO_MAX_OBJECT_SIZE: 1G
+      MINIO_ROOT_USER: Hassle864
+      MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
+      MINIO_DISTRIBUTED_MODE_ENABLED: "yes"
+      #MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
+      #MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
+      MINIO_UPLOAD_PART_SIZE: 1G
+      MINIO_MAX_OBJECT_SIZE: 1G
     volumes:
       - /mnt/minio_storage/data1:/data1
       - /mnt/minio_storage/data2:/data2
