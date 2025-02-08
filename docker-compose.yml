@@ -28,7 +28,6 @@ services:
       MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
       MINIO_DISTRIBUTED_MODE_ENABLED: "yes"
       MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
-      MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
       MINIO_UPLOAD_PART_SIZE: 1G
       MINIO_MAX_OBJECT_SIZE: 1G
     volumes:
