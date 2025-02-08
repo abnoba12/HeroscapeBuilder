@@ -21,7 +21,7 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
         public async Task<string> UploadAsync(byte[] fileData, string path)
         {
             var bucketName = GetBucketName(path);
-            path = path.Replace($"/{bucketName}", "");
+            path = path.Replace($"/{bucketName}/", "");
 
             using var stream = new MemoryStream(fileData);
             await _minioClient.PutObjectAsync(new PutObjectArgs()
@@ -38,7 +38,7 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
         public async Task<byte[]> DownloadAsync(string path)
         {
             var bucketName = GetBucketName(path);
-            path = path.Replace($"/{bucketName}", "");
+            path = path.Replace($"/{bucketName}/", "");
 
             using var memoryStream = new MemoryStream();
             await _minioClient.GetObjectAsync(new GetObjectArgs()
@@ -59,7 +59,7 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
             var bucketName = GetBucketName(oPath);
 
             // Remove the bucket name from the path
-            var path = oPath.Replace($"/{bucketName}", "").Trim('/');
+            var path = oPath.Replace($"/{bucketName}/", "");
 
             if (await FileExistsAsync(oPath))
             {
@@ -80,7 +80,7 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
         public async Task<bool> FileExistsAsync(string path)
         {
             var bucketName = GetBucketName(path);
-            path = path.Replace($"/{bucketName}", "");
+            path = path.Replace($"/{bucketName}/", "");
 
             try
             {
@@ -98,7 +98,7 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
         public async Task<IEnumerable<IFile>> ListFilesAsync(string path)
         {
             var bucketName = GetBucketName(path);
-            path = path.Replace($"/{bucketName}", "");
+            path = path.Replace($"/{bucketName}/", "");
 
             var files = new List<IFile>();
             var completionSource = new TaskCompletionSource<bool>();

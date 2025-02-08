@@ -79,6 +79,12 @@ namespace HeroscapeBuilder.Server.Controllers
             return StatusCode(500, "Failed to optimize images.");
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="armyCardIds">Regenerate thumbs for a specific file. Enter -1 for all files</param>
+        /// <param name="filePurpose">Standard_Army_Card_Thumb, 4x6_Army_Card_Thumb, 3x5_Army_Card_Thumb</param>
+        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<int> RegenerateThumbnailsAsync(List<int> armyCardIds, string filePurpose)
