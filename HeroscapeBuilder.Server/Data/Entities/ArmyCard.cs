@@ -58,8 +58,6 @@ public partial class ArmyCard
 
     public string? Note { get; set; }
 
-    public string? StlFile { get; set; }
-
     public virtual ICollection<ArmyCardAbility> ArmyCardAbilities { get; set; } = new List<ArmyCardAbility>();
 
     public virtual ICollection<ArmyCardFile> ArmyCardFiles { get; set; } = new List<ArmyCardFile>();

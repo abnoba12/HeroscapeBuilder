@@ -47,7 +47,6 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.Set, "IX_army_card_Set");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.StlFile).HasColumnName("STL_File");
 
             entity.HasOne(d => d.CreatorNavigation).WithMany(p => p.ArmyCards)
                 .HasPrincipalKey(p => p.Creator1)
