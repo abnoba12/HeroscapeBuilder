@@ -23,8 +23,6 @@ services:
     environment:
       MINIO_ROOT_USER: Hassle864
       MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
-      USER_ID: 1000
-      GROUP_ID: 1000
       MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
       MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
       MINIO_UPLOAD_PART_SIZE: 1G
