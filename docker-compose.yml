@@ -19,7 +19,7 @@ services:
       
   minio:
     image: minio/minio:latest
-    command: server --certs-dir /root/.minio/certs --address ":9000" --console-address ":9081" /data
+    command: server --address ":9000" --console-address ":9081" /data
     environment:
       MINIO_ROOT_USER: Hassle864
       MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
@@ -31,7 +31,6 @@ services:
       MINIO_MAX_OBJECT_SIZE: 1G
     volumes:
       - /home/abnoba12/Sync/minio_storage/data:/data
-      - /home/abnoba12/Sync/heroscapebuilder-certs:/root/.minio/certs
     deploy:
       mode: replicated
       replicas: 1
