@@ -19,16 +19,19 @@ services:
       
   minio:
     image: minio/minio:latest
-    command: server --address ":9000" --console-address ":9081" /data
+    command: server --certs-dir /root/.minio/certs --address ":9000" --console-address ":9081" /data
     environment:
       MINIO_ROOT_USER: Hassle864
       MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
+      USER_ID: 1000
+      GROUP_ID: 1000
       MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
       MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
       MINIO_UPLOAD_PART_SIZE: 1G
       MINIO_MAX_OBJECT_SIZE: 1G
     volumes:
       - /home/abnoba12/Sync/minio_storage/data:/data
+      - /home/abnoba12/Sync/heroscapebuilder-certs:/root/.minio/certs
     deploy:
       mode: replicated
       replicas: 1
@@ -46,8 +49,8 @@ services:
   nginx:
     image: nginx
     volumes:
-      - /nginx.conf:/etc/nginx/nginx.conf:ro
-      - /heroscapebuilder-certs:/certs
+      - /home/abnoba12/Sync/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/abnoba12/Sync/heroscapebuilder-certs:/certs
     ports:
       - "8012:80"
       - "8043:443"
