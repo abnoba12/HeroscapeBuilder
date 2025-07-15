@@ -18,30 +18,29 @@ services:
       - internal_network
       
   minio:
-  image: minio/minio:latest
-  hostname: "minio"
-  command: server --address ":9000" --console-address ":9081" /data
-  environment:
-    MINIO_ROOT_USER: Hassle864
-    MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
-    MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
-    MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
-    MINIO_UPLOAD_PART_SIZE: 1G
-    MINIO_MAX_OBJECT_SIZE: 1G
-  volumes:
-    - /home/abnoba12/Sync/minio_storage/data:/data
-  deploy:
-    mode: replicated
-    replicas: 1
-  ports:
-    - target: 9000
-      published: 2096
-      protocol: tcp
-    - target: 9081
-      published: 9081
-      protocol: tcp
-  networks:
-    - internal_network
+    image: minio/minio:latest
+    command: server --address ":9000" --console-address ":9081" /data
+    environment:
+      MINIO_ROOT_USER: Hassle864
+      MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
+      MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
+      MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
+      MINIO_UPLOAD_PART_SIZE: 1G
+      MINIO_MAX_OBJECT_SIZE: 1G
+    volumes:
+      - /home/abnoba12/Sync/minio_storage/data:/data
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - target: 9000
+        published: 2096
+        protocol: tcp
+      - target: 9081
+        published: 9081
+        protocol: tcp
+    networks:
+      - internal_network
 
   ### Nginx Reverse Proxy for MinIO
   nginx:
@@ -62,7 +61,6 @@ services:
           - node.hostname == projectmaster
     networks:
       - internal_network
-
 
 networks:
   internal_network:
