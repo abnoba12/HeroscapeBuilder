@@ -48,7 +48,12 @@ namespace HeroscapeBuilder.Server.Services
 
         public byte[] OptimizeImage(byte[] image, string purpose = "PRINT", int? maxWidth = null, int? maxHeight = null, bool maintainAspectRatio = true)
         {
-            return _imageOptimizer.OptimizeImage(image, "PRINT", maxWidth, maxHeight, maintainAspectRatio);
+            // Pass the provided purpose to ImageOptimizer. Previously this value
+            // was ignored which forced all optimizations to use the "PRINT"
+            // settings even when callers requested a different mode (e.g. "WEB").
+            // This resulted in unexpected image sizes when optimizing for web
+            // usage.
+            return _imageOptimizer.OptimizeImage(image, purpose, maxWidth, maxHeight, maintainAspectRatio);
         }
 
         // Helper method to check for JPG
