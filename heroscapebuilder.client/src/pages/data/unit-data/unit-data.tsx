@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ability } from '../../../models/ability';
 import { Unit } from '../../../models/unit';
@@ -12,8 +12,7 @@ const UnitData: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [dialogContent, setDialogContent] = useState<string>(''); // State to control dialog content
     const [open, setOpen] = useState(false); // State to control dialog open/close
-    const [searchQuery, setSearchQuery] = useState<string>(''); // State to store the search query
-    const [filteredUnits, setFilteredUnits] = useState<Unit[]>([]);
+    // Search and filtering is handled via the DataGrid toolbar
 
     const generateColumns = useMemo((): GridColDef[] => [
         { field: 'creator', headerName: 'Creator', width: 100 },
@@ -103,28 +102,6 @@ const UnitData: React.FC = () => {
         fetchData();
     }, []);
 
-    useEffect(() => {
-        // Generic filter logic: search through all fields of the unit
-        const filtered = units.filter(unit => {
-            // Loop through each key in the unit and check if the value matches the search query
-            return Object.keys(unit).some(key => {
-                const value = unit[key as keyof Unit]; // Access the value of each key
-
-                // Ensure the value is a string or can be converted to a string
-                if (value && typeof value === 'string') {
-                    return value.toLowerCase().includes(searchQuery.toLowerCase());
-                }
-
-                // For non-string types (e.g., numbers), convert them to strings before searching
-                if (value && typeof value === 'number') {
-                    return value.toString().includes(searchQuery.toLowerCase());
-                }
-
-                return false;
-            });
-        });
-        setFilteredUnits(filtered);
-    }, [searchQuery, units]);
 
     const handleOpenDialog = (content: string) => {
         setDialogContent(content);
@@ -141,20 +118,18 @@ const UnitData: React.FC = () => {
 
     return (
         <div style={{ height: '91vh', width: '100%' }}>
-            <div style={{ marginBottom: '1rem' }}>
-                <input
-                    type="text"
-                    placeholder="Search units..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ padding: '0.5rem', width: '100%' }}
-                />
-            </div>
 
             {/*checkboxSelection*/}
             <DataGrid
-                rows={filteredUnits}
+                rows={units}
                 columns={generateColumns}
+                slots={{ toolbar: GridToolbar }}
+                slotProps={{
+                    toolbar: {
+                        showQuickFilter: true,
+                        quickFilterProps: { debounceMs: 300, placeholder: 'Search...' },
+                    },
+                }}
                 initialState={{
                     columns: {
                         columnVisibilityModel: {
