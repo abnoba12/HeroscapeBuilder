@@ -8,6 +8,11 @@ services:
       - "5000:80"
     environment:
       - ASPNETCORE_URLS=http://+
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+      - DOTNET_gcServer=1
+      - DOTNET_ReadyToRun=1
+      - DOTNET_TieredPGO=1
       - HeroscapeBuilder=${HeroscapeBuilder}
     deploy:
       mode: replicated
@@ -21,8 +26,8 @@ services:
     image: minio/minio:latest
     command: server --address ":9000" --console-address ":9081" /data
     environment:
-      MINIO_ROOT_USER: Hassle864
-      MINIO_ROOT_PASSWORD: 6vMAidQ4RvYRSJJ5yg5FAgAJgi3Hi2
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_SERVER_URL: "http://files.heroscapebuilder.com"
       MINIO_BROWSER_REDIRECT_URL: "http://minio-console.local"
       MINIO_UPLOAD_PART_SIZE: 1G
@@ -49,9 +54,22 @@ services:
       - /home/abnoba12/Sync/nginx.conf:/etc/nginx/nginx.conf:ro
       - /home/abnoba12/Sync/heroscapebuilder-certs:/certs
     ports:
-      - "8012:80"
-      - "8043:443"
-      - "80:80"
+      - mode: host
+        target: 80
+        published: 80
+        protocol: tcp
+      - mode: host
+        target: 443
+        published: 443
+        protocol: tcp
+      - mode: host
+        target: 80
+        published: 8012
+        protocol: tcp
+      - mode: host
+        target: 443
+        published: 8043
+        protocol: tcp
     deploy:
       mode: replicated
       replicas: 1
