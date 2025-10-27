@@ -1,10 +1,7 @@
 ﻿using EFCoreSecondLevelCacheInterceptor;
 using HeroscapeBuilder.Server.Common.Helpers;
-using HeroscapeBuilder.Server.Data.Repositories;
-using HeroscapeBuilder.Server.Domain;
 using HeroscapeBuilder.Server.Integrations.Interfaces;
 using HeroscapeBuilder.Server.Integrations.MinioStorage;
-using HeroscapeBuilder.Server.Services;
 using System.Reflection;
 
 namespace HeroscapeBuilder.Server.Program
@@ -18,7 +15,7 @@ namespace HeroscapeBuilder.Server.Program
             .Where(a => a.FullName != null && a.FullName.StartsWith("HeroscapeBuilder"))
             .ToArray();
 
-            builder.Services.AddAutoMapper(assembliesToScan);
+            builder.Services.AddAutoMapper(cfg => { }, assembliesToScan);
 
             //builder.Services
             // Automatically register all services in the HeroscapeBuilder.Server.Services namespace
