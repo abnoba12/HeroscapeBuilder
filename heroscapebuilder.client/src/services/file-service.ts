@@ -94,28 +94,32 @@ export async function downloadAllAsZip(files: any, zipName: any) {
     saveAs(content, zipName);
 }
 
-export async function AddFileToUnit(file: Blob, armyCardId: string, filePurpose: string, fileName: string) {
-    if (hasRole("Admin")) {
-        const formData = new FormData();
-        formData.append("file", file);
+export async function AddFileToUnit(file: Blob, armyCardId: string, filePurpose: string, fileName: string): Promise<boolean> {
+    if (!hasRole("Admin")) {
+        throw new Error("User does not have permission to upload files.");
+    }
 
-        try {
-            const response = await api.put(`/File/AddFileToUnit`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                    "Authorization": `Bearer ${getToken()}`
-                },
-                params: {
-                    armyCardId,
-                    filePurpose,
-                    fileName
-                }
-            });
+    const formData = new FormData();
+    formData.append("file", file);
 
-            console.log(`Uploaded ${filePurpose} file successfully:`, response.data);
-        } catch (error) {
-            console.error("Error uploading file:", error);
-        }
+    try {
+        const response = await api.put(`/File/AddFileToUnit`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${getToken()}`
+            },
+            params: {
+                armyCardId,
+                filePurpose,
+                fileName
+            }
+        });
+
+        console.log(`Uploaded ${filePurpose} file successfully:`, response.data);
+        return true;
+    } catch (error) {
+        console.error("Error uploading file:", error);
+        throw error;
     }
 }
 

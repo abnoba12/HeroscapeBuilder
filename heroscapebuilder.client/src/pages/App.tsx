@@ -7,6 +7,7 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import FourbysixArmyCards from "../pages/army-cards/fourbysix/fourbysix_army_card";
 import MakeCardStandard from "../pages/army-cards/standard/make-card-standard";
 import ThreebyfiveArmyCards from "../pages/army-cards/threebyfive/threebyfive-army-cards";
+import UploadStandardCard from "../pages/army-cards/standard/upload-standard-card";
 import Home from "./Home/Home";
 import ArmyCards from "./army-cards/army-cards";
 import DownloadfourBySix from "./army-cards/fourbysix/download-fourbysix";
@@ -19,6 +20,7 @@ import MakeCard3x5 from "./army-cards/threebyfive/make-card-3x5";
 import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
 import UnitData from "./data/unit-data/unit-data";
 import PrivateRoute from "../components/Auth/PrivateRoute";
+import AdminRoute from "../components/Auth/AdminRoute";
 import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
@@ -37,6 +39,7 @@ const App: React.FC = () => {
                             <Route path="/army-cards/standard" element={<StandardArmyCards />} />
                             <Route path="/army-cards/standard/download" element={<DownloadStandard />} />
                             <Route path="/army-cards/standard/create" element={<MakeCardStandard />} />
+                            <Route path="/army-cards/standard/upload" element={<AdminRoute><UploadStandardCard /></AdminRoute>} />
                             <Route path="/army-cards/threebyfive" element={<ThreebyfiveArmyCards />} />
                             <Route path="/army-cards/threebyfive/download" element={<DownloadThreeByFive />} />
                             <Route path="/army-cards/threebyfive/create" element={<MakeCard3x5 />} />
