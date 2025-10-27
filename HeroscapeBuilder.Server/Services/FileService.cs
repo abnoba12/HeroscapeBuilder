@@ -25,7 +25,9 @@ namespace HeroscapeBuilder.Server.Services
 
         public async Task<List<UnitFileEntity>> GetFilesByPurpose(string purpose)
         {
-            var files = (await _fileRepository.GetFiles(purpose)).ToList()?.OrderBy(x => x.FilePath).ToList();            
+            var files = (await _fileRepository.GetFiles(purpose))
+                .OrderBy(x => x.UnitName ?? Path.GetFileName(x.FilePath), StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
             if (files == null)
                 throw new ArgumentException("No files found");

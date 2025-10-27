@@ -18,6 +18,8 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .Include(f => f.ArmyCard)
                 .Include(f => f.InverseParentNavigation)
                 .Where(x => x.FilePurpose == purpose)
+                .OrderBy(x => x.ArmyCard.Name)
+                .ThenBy(x => x.FilePath)
                 .ToListAsync();
         }
 
@@ -29,13 +31,19 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .Include(f => f.ParentNavigation);
             if(armyCardIds.Count == 1 && armyCardIds.First() == -1)
             {
-                return await find.Where(x => x.FilePurpose == purpose).ToListAsync();
+                return await find
+                    .Where(x => x.FilePurpose == purpose)
+                    .OrderBy(x => x.ArmyCard.Name)
+                    .ThenBy(x => x.FilePath)
+                    .ToListAsync();
             }
             else
             {
                 return await find
                     .Where(x => x.FilePurpose == purpose)
                     .Where(x => armyCardIds.Contains(x.ArmyCardId))
+                    .OrderBy(x => x.ArmyCard.Name)
+                    .ThenBy(x => x.FilePath)
                     .ToListAsync();
             }
 
