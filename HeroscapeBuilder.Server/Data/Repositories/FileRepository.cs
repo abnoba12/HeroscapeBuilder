@@ -14,12 +14,19 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 
         public async Task<IEnumerable<ArmyCardFile>> GetFiles(string purpose)
         {
-            return await _context.ArmyCardFiles.Include(f => f.InverseParentNavigation).Where(x => x.FilePurpose == purpose).ToListAsync();
+            return await _context.ArmyCardFiles
+                .Include(f => f.ArmyCard)
+                .Include(f => f.InverseParentNavigation)
+                .Where(x => x.FilePurpose == purpose)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<ArmyCardFile>> GetFiles(List<int> armyCardIds, string purpose)
         {
-            var find = _context.ArmyCardFiles.Include(f => f.InverseParentNavigation).Include(f => f.ParentNavigation);
+            var find = _context.ArmyCardFiles
+                .Include(f => f.ArmyCard)
+                .Include(f => f.InverseParentNavigation)
+                .Include(f => f.ParentNavigation);
             if(armyCardIds.Count == 1 && armyCardIds.First() == -1)
             {
                 return await find.Where(x => x.FilePurpose == purpose).ToListAsync();
