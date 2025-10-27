@@ -3,6 +3,7 @@ using HeroscapeBuilder.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics.Eventing.Reader;
+using System.Linq;
 
 namespace HeroscapeBuilder.Server.Controllers
 {
@@ -87,6 +88,11 @@ namespace HeroscapeBuilder.Server.Controllers
             {
                 await _fileService.RegenerateThumbnailAsync(armyCardId, armyCardType);
                 return Ok("Thumbnail regenerated successfully.");
+            }
+            catch (AggregateException aggEx)
+            {
+                var details = string.Join("; ", aggEx.InnerExceptions.Select(e => e.Message));
+                return BadRequest($"Failed to regenerate thumbnails for one or more army cards: {details}");
             }
             catch (Exception ex)
             {

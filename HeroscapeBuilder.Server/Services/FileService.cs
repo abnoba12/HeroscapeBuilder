@@ -3,6 +3,8 @@ using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Data.Repositories;
 using HeroscapeBuilder.Server.Domain.Entities;
 using HeroscapeBuilder.Server.Integrations.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HeroscapeBuilder.Server.Services
 {
@@ -129,12 +131,51 @@ namespace HeroscapeBuilder.Server.Services
         {
             var (pdfPurpose, thumbnailPurpose) = GetFilePurposesForArmyCardType(armyCardType);
 
+            if (armyCardId == -1)
+            {
+                var pdfFiles = (await _fileRepository.GetFiles(new List<int> { -1 }, pdfPurpose)).ToList();
+                if (pdfFiles.Count == 0)
+                {
+                    throw new InvalidOperationException($"No {armyCardType} PDFs found to regenerate thumbnails for.");
+                }
+
+                var errors = new List<Exception>();
+                foreach (var pdfFile in pdfFiles)
+                {
+                    try
+                    {
+                        await RegenerateThumbnailForPdfAsync(pdfFile, thumbnailPurpose);
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add(new InvalidOperationException($"ArmyCardId {pdfFile.ArmyCardId}: {ex.Message}", ex));
+                    }
+                }
+
+                if (errors.Count > 0)
+                {
+                    throw new AggregateException("Failed to regenerate one or more thumbnails.", errors);
+                }
+
+                return;
+            }
+
+            await RegenerateThumbnailForArmyCardAsync(armyCardId, armyCardType, pdfPurpose, thumbnailPurpose);
+        }
+
+        private async Task RegenerateThumbnailForArmyCardAsync(int armyCardId, string armyCardType, string pdfPurpose, string thumbnailPurpose)
+        {
             var pdfFile = await _fileRepository.GetArmyCardFileAsync(armyCardId, pdfPurpose);
             if (pdfFile == null)
             {
                 throw new InvalidOperationException($"Unable to find a {armyCardType} PDF for army card {armyCardId}.");
             }
 
+            await RegenerateThumbnailForPdfAsync(pdfFile, thumbnailPurpose);
+        }
+
+        private async Task RegenerateThumbnailForPdfAsync(ArmyCardFile pdfFile, string thumbnailPurpose)
+        {
             byte[] pdfData;
             try
             {
@@ -178,7 +219,7 @@ namespace HeroscapeBuilder.Server.Services
             var thumbnailFileName = $"pdf-thumbnail-{fileNameWithoutExtension}.png";
             var thumbnailFilePath = Path.Combine(thumbnailDirectory, thumbnailFileName);
 
-            var existingThumbnail = await _fileRepository.GetArmyCardFileAsync(armyCardId, thumbnailPurpose);
+            var existingThumbnail = await _fileRepository.GetArmyCardFileAsync(pdfFile.ArmyCardId, thumbnailPurpose);
             if (existingThumbnail != null)
             {
                 if (existingThumbnail.Parent.HasValue && existingThumbnail.Parent.Value != pdfFile.Id)
@@ -217,7 +258,7 @@ namespace HeroscapeBuilder.Server.Services
             {
                 var thumbnailRecord = new ArmyCardFile
                 {
-                    ArmyCardId = armyCardId,
+                    ArmyCardId = pdfFile.ArmyCardId,
                     FilePurpose = thumbnailPurpose,
                     FilePath = thumbnailFilePath,
                     Parent = pdfFile.Id,
