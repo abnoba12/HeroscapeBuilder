@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getUser, isAuthenticated } from "../../services/authService";
+import { getUser, hasRole, isAuthenticated } from "../../services/authService";
 
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
@@ -94,6 +94,9 @@ const Sidebar: React.FC = () => {
                                         <li><Link to="/army-cards/threebyfive" onClick={toggleSidebar}>3x5 Index Cards</Link></li>
                                         <li><Link to="/army-cards/fourbysix" onClick={toggleSidebar}>4x6 Index Cards</Link></li>
                                         <li><Link to="/army-cards/printing" onClick={toggleSidebar}>Printing Cards</Link></li>
+                                        {hasRole("Admin") && (
+                                            <li><Link to="/army-cards/standard/upload" onClick={toggleSidebar}>Upload Standard Card PDF</Link></li>
+                                        )}
                                     </ul>
                                 )}
                             </li>

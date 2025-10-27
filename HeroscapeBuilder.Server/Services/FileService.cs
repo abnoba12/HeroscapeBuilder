@@ -25,7 +25,9 @@ namespace HeroscapeBuilder.Server.Services
 
         public async Task<List<UnitFileEntity>> GetFilesByPurpose(string purpose)
         {
-            var files = (await _fileRepository.GetFiles(purpose)).ToList()?.OrderBy(x => x.FilePath).ToList();            
+            var files = (await _fileRepository.GetFiles(purpose))
+                .OrderBy(x => x.UnitName ?? Path.GetFileName(x.FilePath), StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
             if (files == null)
                 throw new ArgumentException("No files found");
@@ -69,35 +71,44 @@ namespace HeroscapeBuilder.Server.Services
             }
 
             var filePath = Path.Combine(fullPath, fileName);
-            var acf = new ArmyCardFile
+            var existingFile = await _fileRepository.GetArmyCardFileAsync(armyCardId, filePurpose);
+
+            if (existingFile != null && existingFile.FilePath != filePath)
             {
-                ArmyCardId = armyCardId,
-                FilePurpose = filePurpose,
-                Parent = parentFileId,
-                FilePath = filePath
-            };
+                await _blobStorage.DeleteAsync(existingFile.FilePath);
+            }
 
-            if (!(await _blobStorage.FileExistsAsync(filePath))) 
+            var uploadResult = await _blobStorage.UploadAsync(fileData, filePath);
+            if (string.IsNullOrEmpty(uploadResult))
             {
+                throw new Exception("Unable to upload file.");
+            }
 
-                //Upload the file to file storage
-                var r = await _blobStorage.UploadAsync(fileData, filePath);
-                if (string.IsNullOrEmpty(r))
+            long fileId;
+            if (existingFile != null)
+            {
+                existingFile.FilePath = filePath;
+                existingFile.Parent = parentFileId;
+                await _fileRepository.UpdateArmyCardFileAsync(existingFile);
+                fileId = existingFile.Id;
+            }
+            else
+            {
+                var acf = new ArmyCardFile
                 {
-                    throw new Exception("Unable to upload file.");
-                }
+                    ArmyCardId = armyCardId,
+                    FilePurpose = filePurpose,
+                    Parent = parentFileId,
+                    FilePath = filePath
+                };
 
-                if (!_fileRepository.FileRecordExists(acf))
-                {
-                    //Save it in the DB
-                    var id = await _fileRepository.AddArmyCardFileAsync(acf);
+                fileId = await _fileRepository.AddArmyCardFileAsync(acf);
+            }
 
-                    if (thumbImage != null)
-                    {
-                        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                        await AddFileToUnit(armyCardId, $"{filePurpose}_Thumb", $"pdf-thumbnail-{fileNameWithoutExtension}.png", thumbImage, id);
-                    }
-                }
+            if (thumbImage != null)
+            {
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                await AddFileToUnit(armyCardId, $"{filePurpose}_Thumb", $"pdf-thumbnail-{fileNameWithoutExtension}.png", thumbImage, fileId);
             }
 
             return true;

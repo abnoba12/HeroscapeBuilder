@@ -25,7 +25,12 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                     setGallerySize("thumbnail col-xxl-2 col-lg-3 col-lg-4");
                 }
 
-                const data = (await getFilesByPurpose(`${cardSize}_Army_Card`)).sort((a, b) => a.filePath.localeCompare(b.filePath));
+                const data = (await getFilesByPurpose(`${cardSize}_Army_Card`)).sort((a, b) => {
+                    const leftName = a.unitName ?? a.fileName ?? a.filePath;
+                    const rightName = b.unitName ?? b.fileName ?? b.filePath;
+
+                    return leftName.localeCompare(rightName, undefined, { sensitivity: "base" });
+                });
                 setFiles(data);
                 setLoading(false);
             } catch (err) {
@@ -276,6 +281,10 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
         });
     };
 
+    const getDisplayName = (card: UnitFile) => {
+        return card.unitName?.trim() || card.fileName || card.filePath.split('/').pop() || 'PDF Thumbnail';
+    };
+
     return (
         <div className="card-gallery">
             <div className="row">
@@ -293,31 +302,35 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                 </div>
             </div>
             <div className="row pdf-gallery">
-                {files.map((card, index) => (
-                    <div key={card.id || index} className={gallerySize} >
-                        <div className="checkbox-wrapper">
-                            <input
-                                type="checkbox"
-                                className="make-pdf"
-                                onChange={() => handleCheckboxChange(card.filePath)}
-                            />
-                            <label className="label-make-pdf">Add to PDF</label>
+                {files.map((card, index) => {
+                    const displayName = getDisplayName(card);
+                    return (
+                        <div key={card.id || index} className={gallerySize}>
+                            <div className="checkbox-wrapper">
+                                <input
+                                    type="checkbox"
+                                    className="make-pdf"
+                                    onChange={() => handleCheckboxChange(card.filePath)}
+                                />
+                                <label className="label-make-pdf">Add to PDF</label>
+                            </div>
+                            <a className="thumbnail-image-link" href={card.filePath} target="_blank" rel="noopener noreferrer">
+                                <ImageCache
+                                    className="img-fluid"
+                                    src={card.thumb}
+                                    alt={`${displayName} PDF Thumbnail`}
+                                    cacheKey={card.thumb}
+                                />
+                                {/*<img*/}
+                                {/*    className="img-fluid"*/}
+                                {/*    src={card.thumb}*/}
+                                {/*    alt="PDF Thumbnail"*/}
+                                {/*/>*/}
+                            </a>
+                            <div className="unit-name" title={displayName}>{displayName}</div>
                         </div>
-                        <a href={card.filePath} target="_blank">
-                            <ImageCache
-                                className="img-fluid"
-                                src={card.thumb}
-                                alt="PDF Thumbnail"
-                                cacheKey={card.thumb}
-                            />
-                            {/*<img*/}
-                            {/*    className="img-fluid"*/}
-                            {/*    src={card.thumb}*/}
-                            {/*    alt="PDF Thumbnail"*/}
-                            {/*/>*/}
-                        </a>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

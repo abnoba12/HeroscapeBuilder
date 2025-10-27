@@ -14,24 +14,45 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 
         public async Task<IEnumerable<ArmyCardFile>> GetFiles(string purpose)
         {
-            return await _context.ArmyCardFiles.Include(f => f.InverseParentNavigation).Where(x => x.FilePurpose == purpose).ToListAsync();
+            return await _context.ArmyCardFiles
+                .Include(f => f.ArmyCard)
+                .Include(f => f.InverseParentNavigation)
+                .Where(x => x.FilePurpose == purpose)
+                .OrderBy(x => x.ArmyCard.Name)
+                .ThenBy(x => x.FilePath)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<ArmyCardFile>> GetFiles(List<int> armyCardIds, string purpose)
         {
-            var find = _context.ArmyCardFiles.Include(f => f.InverseParentNavigation).Include(f => f.ParentNavigation);
+            var find = _context.ArmyCardFiles
+                .Include(f => f.ArmyCard)
+                .Include(f => f.InverseParentNavigation)
+                .Include(f => f.ParentNavigation);
             if(armyCardIds.Count == 1 && armyCardIds.First() == -1)
             {
-                return await find.Where(x => x.FilePurpose == purpose).ToListAsync();
+                return await find
+                    .Where(x => x.FilePurpose == purpose)
+                    .OrderBy(x => x.ArmyCard.Name)
+                    .ThenBy(x => x.FilePath)
+                    .ToListAsync();
             }
             else
             {
                 return await find
                     .Where(x => x.FilePurpose == purpose)
                     .Where(x => armyCardIds.Contains(x.ArmyCardId))
+                    .OrderBy(x => x.ArmyCard.Name)
+                    .ThenBy(x => x.FilePath)
                     .ToListAsync();
             }
-                
+
+        }
+
+        public async Task<ArmyCardFile?> GetArmyCardFileAsync(int armyCardId, string filePurpose)
+        {
+            return await _context.ArmyCardFiles
+                .FirstOrDefaultAsync(x => x.ArmyCardId == armyCardId && x.FilePurpose == filePurpose);
         }
 
         /// <summary>
@@ -74,11 +95,6 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             // Save changes
             await _context.SaveChangesAsync();
             return acfs;
-        }
-
-        public bool FileRecordExists(ArmyCardFile acf)
-        {
-            return _context.ArmyCardFiles.Any(x => x.ArmyCardId == acf.ArmyCardId && x.FilePurpose == acf.FilePurpose && x.FilePath == acf.FilePath);
         }
     }
 }

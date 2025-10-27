@@ -13,6 +13,9 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effects */
         /*width: calc(25% - 20px);*/ /* Adjusts width based on gap */
         box-sizing: border-box; /* Ensures padding is included in the width */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
 
         img {
             border-radius: 4px;
@@ -28,6 +31,7 @@
         .checkbox-wrapper {
             margin-top: 10px;
             text-align: left; /* Aligns checkbox and label to the left */
+            width: 100%;
 
             .label-make-pdf {
                 padding-left: 8px;
@@ -36,9 +40,53 @@
             }
         }
 
+        .thumbnail-image-link {
+            width: 100%;
+            display: block;
+        }
+
+        .unit-name {
+            margin-top: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.2;
+            word-break: break-word;
+            width: 100%;
+        }
+
         &:hover {
             transform: translateY(-5px); /* Lift effect on hover */
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .pdf-gallery {
+        gap: 16px;
+
+        .thumbnail {
+            padding: 8px;
+
+            .unit-name {
+                font-size: 0.85rem;
+            }
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .pdf-gallery {
+        gap: 12px;
+
+        .thumbnail {
+            padding: 6px;
+
+            .unit-name {
+                font-size: 0.8rem;
+            }
         }
     }
 }
