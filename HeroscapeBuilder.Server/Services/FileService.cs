@@ -3,6 +3,8 @@ using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Data.Repositories;
 using HeroscapeBuilder.Server.Domain.Entities;
 using HeroscapeBuilder.Server.Integrations.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HeroscapeBuilder.Server.Services
 {
@@ -125,54 +127,180 @@ namespace HeroscapeBuilder.Server.Services
             return true;
         }
 
-        public async Task<int> RegenerateThumbnailsAsync(List<int> armyCardIds, string filePurpose)
+        public async Task RegenerateThumbnailAsync(int armyCardId, string armyCardType)
         {
-            int updated = 0;
+            var (pdfPurpose, thumbnailPurpose) = GetFilePurposesForArmyCardType(armyCardType);
 
-            //Get a list of PDF files
-            var files = await _fileRepository.GetFiles(armyCardIds, filePurpose);
-            foreach (var file in files)
+            if (armyCardId == -1)
             {
-                //Download the PDF from file storage
-                var pdf = file.ParentNavigation;
-                var pdfData = await _blobStorage.DownloadAsync(pdf.FilePath);
-                if (pdfData != null)
+                var pdfFiles = (await _fileRepository.GetFiles(new List<int> { -1 }, pdfPurpose)).ToList();
+                if (pdfFiles.Count == 0)
                 {
-                    //make a new thumbnail from the PDF
-                    byte[] thumbImage = await _pdfService.CreateThumbnailFromPdf(pdfData);
+                    throw new InvalidOperationException($"No {armyCardType} PDFs found to regenerate thumbnails for.");
+                }
 
-                    if (thumbImage != null && thumbImage.Length > 0)
+                var errors = new List<Exception>();
+                foreach (var pdfFile in pdfFiles)
+                {
+                    try
                     {
-                        switch (filePurpose)
-                        {
-                            case "3x5_Army_Card_Thumb":
-                            case "Standard_Army_Card_Thumb":
-                                thumbImage = _imageService.OptimizeImage(thumbImage, "WEB", null, 300);
-                                break;
-                            case "4x6_Army_Card_Thumb":
-                                thumbImage = _imageService.OptimizeImage(thumbImage, "WEB", 350);
-                                break;
-                        }
-
-                        
-                        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pdf.FilePath);
-                        var filePath = Path.Combine(GetPathByFilePurpose(filePurpose), $"pdf-thumbnail-{fileNameWithoutExtension}.png");
-                        if (await UpdateFileForUnitAsync(file.ArmyCardId, filePurpose, filePath, thumbImage))
-                        {
-                            if (file.FilePath != filePath)
-                            {
-                                await _blobStorage.DeleteAsync(file.FilePath);
-                                file.FilePath = filePath;
-                                await _fileRepository.UpdateArmyCardFileAsync(file);
-                            }
-
-                            updated++;
-                        }
+                        await RegenerateThumbnailForPdfAsync(pdfFile, thumbnailPurpose);
                     }
+                    catch (Exception ex)
+                    {
+                        errors.Add(new InvalidOperationException($"ArmyCardId {pdfFile.ArmyCardId}: {ex.Message}", ex));
+                    }
+                }
+
+                if (errors.Count > 0)
+                {
+                    throw new AggregateException("Failed to regenerate one or more thumbnails.", errors);
+                }
+
+                return;
+            }
+
+            await RegenerateThumbnailForArmyCardAsync(armyCardId, armyCardType, pdfPurpose, thumbnailPurpose);
+        }
+
+        private async Task RegenerateThumbnailForArmyCardAsync(int armyCardId, string armyCardType, string pdfPurpose, string thumbnailPurpose)
+        {
+            var pdfFile = await _fileRepository.GetArmyCardFileAsync(armyCardId, pdfPurpose);
+            if (pdfFile == null)
+            {
+                throw new InvalidOperationException($"Unable to find a {armyCardType} PDF for army card {armyCardId}.");
+            }
+
+            await RegenerateThumbnailForPdfAsync(pdfFile, thumbnailPurpose);
+        }
+
+        private async Task RegenerateThumbnailForPdfAsync(ArmyCardFile pdfFile, string thumbnailPurpose)
+        {
+            byte[] pdfData;
+            try
+            {
+                pdfData = await _blobStorage.DownloadAsync(pdfFile.FilePath)
+                    ?? throw new InvalidOperationException($"Unable to download PDF from storage at '{pdfFile.FilePath}'.");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to download PDF from storage at '{pdfFile.FilePath}'.", ex);
+            }
+
+            if (pdfData.Length == 0)
+            {
+                throw new InvalidOperationException($"The PDF retrieved from '{pdfFile.FilePath}' is empty.");
+            }
+
+            byte[] thumbImage;
+            try
+            {
+                thumbImage = await _pdfService.CreateThumbnailFromPdf(pdfData);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to create thumbnail from PDF.", ex);
+            }
+
+            if (thumbImage == null || thumbImage.Length == 0)
+            {
+                throw new InvalidOperationException("Failed to create thumbnail from PDF.");
+            }
+
+            thumbImage = OptimizeThumbnailForType(thumbImage, thumbnailPurpose);
+
+            var thumbnailDirectory = GetPathByFilePurpose(thumbnailPurpose);
+            if (string.IsNullOrWhiteSpace(thumbnailDirectory))
+            {
+                throw new InvalidOperationException($"Unable to determine storage location for purpose '{thumbnailPurpose}'.");
+            }
+
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pdfFile.FilePath);
+            var thumbnailFileName = $"pdf-thumbnail-{fileNameWithoutExtension}.png";
+            var thumbnailFilePath = Path.Combine(thumbnailDirectory, thumbnailFileName);
+
+            var existingThumbnail = await _fileRepository.GetArmyCardFileAsync(pdfFile.ArmyCardId, thumbnailPurpose);
+            if (existingThumbnail != null)
+            {
+                if (existingThumbnail.Parent.HasValue && existingThumbnail.Parent.Value != pdfFile.Id)
+                {
+                    throw new InvalidOperationException("Existing thumbnail is associated with a different parent PDF.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(existingThumbnail.FilePath))
+                {
+                    await _blobStorage.DeleteAsync(existingThumbnail.FilePath);
                 }
             }
 
-            return updated;
+            string uploadResult;
+            try
+            {
+                uploadResult = await _blobStorage.UploadAsync(thumbImage, thumbnailFilePath);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to upload thumbnail to '{thumbnailFilePath}'.", ex);
+            }
+
+            if (string.IsNullOrEmpty(uploadResult))
+            {
+                throw new InvalidOperationException($"Failed to upload thumbnail to '{thumbnailFilePath}'.");
+            }
+
+            if (existingThumbnail != null)
+            {
+                existingThumbnail.FilePath = thumbnailFilePath;
+                existingThumbnail.Parent = pdfFile.Id;
+                await _fileRepository.UpdateArmyCardFileAsync(existingThumbnail);
+            }
+            else
+            {
+                var thumbnailRecord = new ArmyCardFile
+                {
+                    ArmyCardId = pdfFile.ArmyCardId,
+                    FilePurpose = thumbnailPurpose,
+                    FilePath = thumbnailFilePath,
+                    Parent = pdfFile.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _fileRepository.AddArmyCardFileAsync(thumbnailRecord);
+            }
+        }
+
+        private static (string pdfPurpose, string thumbnailPurpose) GetFilePurposesForArmyCardType(string armyCardType)
+        {
+            if (string.IsNullOrWhiteSpace(armyCardType))
+            {
+                throw new ArgumentException("Army card type must be provided.", nameof(armyCardType));
+            }
+
+            switch (armyCardType.Trim().ToLowerInvariant())
+            {
+                case "3x5":
+                    return ("3x5_Army_Card", "3x5_Army_Card_Thumb");
+                case "4x6":
+                    return ("4x6_Army_Card", "4x6_Army_Card_Thumb");
+                case "standard":
+                    return ("Standard_Army_Card", "Standard_Army_Card_Thumb");
+                default:
+                    throw new ArgumentException($"Unsupported army card type '{armyCardType}'.", nameof(armyCardType));
+            }
+        }
+
+        private byte[] OptimizeThumbnailForType(byte[] thumbnail, string thumbnailPurpose)
+        {
+            switch (thumbnailPurpose)
+            {
+                case "3x5_Army_Card_Thumb":
+                case "Standard_Army_Card_Thumb":
+                    return _imageService.OptimizeImage(thumbnail, "WEB", null, 300);
+                case "4x6_Army_Card_Thumb":
+                    return _imageService.OptimizeImage(thumbnail, "WEB", 350);
+                default:
+                    return thumbnail;
+            }
         }
 
         private string? GetPathByFilePurpose(string filePurpose)
