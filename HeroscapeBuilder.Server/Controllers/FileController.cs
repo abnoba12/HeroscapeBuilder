@@ -46,6 +46,8 @@ namespace HeroscapeBuilder.Server.Controllers
                     return BadRequest("Invalid file");
                 }
 
+                fileName = fileName.Replace(" ", "_");
+
                 // Example: Read file content into a memory stream
                 using (var stream = new MemoryStream())
                 {
