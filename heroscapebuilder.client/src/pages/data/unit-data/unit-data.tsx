@@ -1,6 +1,15 @@
 import { Button, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef, GetRowIdParams, GridApi, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
+import {
+    AllCommunityModule,
+    ColDef,
+    GetRowIdParams,
+    GridApi,
+    GridReadyEvent,
+    ICellRendererParams,
+    ModuleRegistry,
+    ValueGetterParams,
+} from 'ag-grid-community';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ability } from '../../../models/ability';
 import { Unit } from '../../../models/unit';
@@ -8,6 +17,8 @@ import { getUnits } from '../../../services/unit-service';
 import './unit-data.scss';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 const UnitData: React.FC = () => {
     const [units, setUnits] = useState<Unit[]>([]);
@@ -54,12 +65,12 @@ const UnitData: React.FC = () => {
             field: 'abilities',
             headerName: 'Abilities',
             minWidth: 220,
-            valueGetter: (params) =>
+            valueGetter: (params: ValueGetterParams<Unit, string>) =>
                 params.data?.abilities?.map((ability: Ability) => `${ability.abilityName}: ${ability.ability}`).join(' | ') ?? '',
             cellRenderer: (params: ICellRendererParams<Unit>) => {
                 const abilities = params.data?.abilities ?? [];
                 const renderedContent = abilities
-                    .map((ability) => `<strong>${ability.abilityName}</strong><br />${ability.ability}`)
+                    .map((ability: Ability) => `<strong>${ability.abilityName}</strong><br />${ability.ability}`)
                     .join('<br /><br />');
                 const textContent = params.value as string;
 
@@ -80,7 +91,7 @@ const UnitData: React.FC = () => {
             field: 'set',
             headerName: 'Set',
             minWidth: 170,
-            valueGetter: (params) => (params.data?.set?.name ? params.data.set.name : ''),
+            valueGetter: (params: ValueGetterParams<Unit, string>) => (params.data?.set?.name ? params.data.set.name : ''),
         },
         { field: 'planet', headerName: 'Planet', minWidth: 140, hide: true },
         {
