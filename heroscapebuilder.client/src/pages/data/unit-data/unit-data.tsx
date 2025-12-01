@@ -3,6 +3,7 @@ import {
     DataGrid,
     GridColDef,
     GridFilterModel,
+    useGridApiRef,
     GridToolbarColumnsButton,
     GridToolbarContainer,
     GridToolbarDensitySelector,
@@ -23,6 +24,7 @@ const UnitData: React.FC = () => {
     const [dialogContent, setDialogContent] = useState<string>(''); // State to control dialog content
     const [open, setOpen] = useState(false); // State to control dialog open/close
     const [filterModel, setFilterModel] = useState<GridFilterModel>({ items: [] });
+    const apiRef = useGridApiRef();
     const generateColumns = useMemo((): GridColDef[] => [
         { field: 'creator', headerName: 'Creator', width: 100 },
         { field: 'general', headerName: 'General', width: 70 },
@@ -92,7 +94,7 @@ const UnitData: React.FC = () => {
     );
 
     const clearFilters = () => {
-        setFilterModel({ items: [], quickFilterValues: [] });
+        apiRef.current.setFilterModel({ items: [], quickFilterValues: [] });
     };
 
     const CustomToolbar: React.FC = () => (
@@ -152,9 +154,9 @@ const UnitData: React.FC = () => {
 
             {/*checkboxSelection*/}
             <DataGrid
+                apiRef={apiRef}
                 rows={units}
                 columns={generateColumns}
-                filterModel={filterModel}
                 onFilterModelChange={setFilterModel}
                 slots={{ toolbar: CustomToolbar }}
                 initialState={{
