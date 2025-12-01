@@ -6,7 +6,9 @@ import {
     GridColumnMenuItemProps,
     GridColumnMenuProps,
     GridFilterModel,
+    GridFilterItem,
     gridFilterModelSelector,
+    GridCallbackDetails,
     useGridApiRef,
     useGridApiContext,
     useGridRootProps,
@@ -99,8 +101,33 @@ const UnitData: React.FC = () => {
         [filterModel.items, filterModel.quickFilterValues],
     );
 
+    const ensureItemHasId = (item: GridFilterItem): GridFilterItem => ({
+        ...item,
+        id: item.id ?? (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)),
+    });
+
+    const handleFilterModelChange = (newModel: GridFilterModel, details?: GridCallbackDetails) => {
+        setFilterModel((previousModel) => {
+            const incomingItems = (newModel.items ?? []).map(ensureItemHasId);
+            const previousItems = previousModel.items ?? [];
+
+            let mergedItems = incomingItems;
+
+            if (details?.reason === 'upsertFilterItem' && previousItems.length > 0 && incomingItems.length === 1) {
+                const [incomingItem] = incomingItems;
+                const otherItems = previousItems.filter((item) => item.field !== incomingItem.field);
+                mergedItems = [...otherItems, incomingItem];
+            }
+
+            return {
+                ...newModel,
+                items: mergedItems,
+            };
+        });
+    };
+
     const clearFilters = () => {
-        apiRef.current.setFilterModel({ items: [], quickFilterValues: [] });
+        setFilterModel({ items: [], quickFilterValues: [] });
     };
 
     const CustomToolbar: React.FC = () => (
@@ -210,7 +237,8 @@ const UnitData: React.FC = () => {
                 apiRef={apiRef}
                 rows={units}
                 columns={generateColumns}
-                onFilterModelChange={setFilterModel}
+                filterModel={filterModel}
+                onFilterModelChange={handleFilterModelChange}
                 slots={{ toolbar: CustomToolbar, columnMenu: CustomColumnMenu }}
                 initialState={{
                     columns: {
