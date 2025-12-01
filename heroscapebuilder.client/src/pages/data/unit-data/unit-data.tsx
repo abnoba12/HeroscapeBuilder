@@ -1,11 +1,13 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
 import {
     DataGrid,
     GridColDef,
+    GridFilterModel,
     GridToolbarColumnsButton,
     GridToolbarContainer,
     GridToolbarDensitySelector,
     GridToolbarExport,
+    GridToolbarFilterButton,
     GridToolbarQuickFilter,
 } from '@mui/x-data-grid';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -14,22 +16,13 @@ import { Unit } from '../../../models/unit';
 import { getUnits } from '../../../services/unit-service';
 import './unit-data.scss';
 
-type FilterOperator = 'contains' | 'equals' | 'startsWith' | 'greaterThan' | 'lessThan';
-
-type CustomFilter = {
-    id: number;
-    field: string;
-    operator: FilterOperator;
-    value: string;
-};
-
 const UnitData: React.FC = () => {
     const [units, setUnits] = useState<Unit[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [dialogContent, setDialogContent] = useState<string>(''); // State to control dialog content
     const [open, setOpen] = useState(false); // State to control dialog open/close
-    const [filters, setFilters] = useState<CustomFilter[]>([]);
+    const [filterModel, setFilterModel] = useState<GridFilterModel>({ items: [] });
     const generateColumns = useMemo((): GridColDef[] => [
         { field: 'creator', headerName: 'Creator', width: 100 },
         { field: 'general', headerName: 'General', width: 70 },
@@ -93,108 +86,25 @@ const UnitData: React.FC = () => {
         },
     ], []); // Memoize the columns to prevent unnecessary rerenders and hook issues
 
-    const filterableColumns = useMemo(() => generateColumns.filter((column) => !!column.field && column.field !== 'abilities'), [generateColumns]);
+    const hasActiveFilters = useMemo(
+        () => (filterModel.items?.length ?? 0) > 0 || (filterModel.quickFilterValues?.length ?? 0) > 0,
+        [filterModel.items, filterModel.quickFilterValues],
+    );
 
-    const addFilter = () => {
-        const firstField = filterableColumns[0]?.field ?? 'name';
-        setFilters((previous) => ([
-            ...previous,
-            {
-                id: Date.now() + Math.random(),
-                field: firstField,
-                operator: 'contains',
-                value: '',
-            },
-        ]));
+    const clearFilters = () => {
+        setFilterModel({ items: [], quickFilterValues: [] });
     };
 
-    const updateFilter = (id: number, key: keyof CustomFilter, value: string) => {
-        setFilters((previous) => previous.map((filter) => filter.id === id ? { ...filter, [key]: value } : filter));
-    };
-
-    const removeFilter = (id: number) => {
-        setFilters((previous) => previous.filter((filter) => filter.id !== id));
-    };
-
-    const columnTypeLookup = useMemo(() => filterableColumns.reduce<Record<string, string>>((lookup, column) => {
-        lookup[column.field] = column.type ?? 'string';
-        return lookup;
-    }, {}), [filterableColumns]);
-
-    const getFieldOperators = (field: string): FilterOperator[] => (columnTypeLookup[field] === 'number'
-        ? ['equals', 'greaterThan', 'lessThan']
-        : ['contains', 'equals', 'startsWith']);
-
-    const getComparableValue = (unit: Unit, field: string): string | number => {
-        if (field === 'set') {
-            return unit.set?.name ?? '';
-        }
-
-        const rawValue = (unit as Record<string, unknown>)[field];
-
-        if (rawValue === undefined || rawValue === null) {
-            return '';
-        }
-
-        if (typeof rawValue === 'number') {
-            return rawValue;
-        }
-
-        return String(rawValue);
-    };
-
-    const filteredUnits = useMemo(() => {
-        if (filters.length === 0) {
-            return units;
-        }
-
-        return units.filter((unit) => filters.every((filter) => {
-            if (!filter.value) {
-                return true;
-            }
-
-            const columnType = columnTypeLookup[filter.field];
-            const unitValue = getComparableValue(unit, filter.field);
-
-            if (columnType === 'number' || typeof unitValue === 'number') {
-                const numericFilter = Number(filter.value);
-
-                if (Number.isNaN(numericFilter)) {
-                    return false;
-                }
-
-                switch (filter.operator) {
-                    case 'equals':
-                        return unitValue === numericFilter;
-                    case 'greaterThan':
-                        return (unitValue as number) > numericFilter;
-                    case 'lessThan':
-                        return (unitValue as number) < numericFilter;
-                    default:
-                        return false;
-                }
-            }
-
-            const haystack = String(unitValue).toLowerCase();
-            const needle = filter.value.toLowerCase();
-
-            switch (filter.operator) {
-                case 'equals':
-                    return haystack === needle;
-                case 'startsWith':
-                    return haystack.startsWith(needle);
-                default:
-                    return haystack.includes(needle);
-            }
-        }));
-    }, [columnTypeLookup, filters, units]);
-
-    const renderToolbar = () => (
+    const CustomToolbar: React.FC = () => (
         <GridToolbarContainer>
             <GridToolbarColumnsButton />
+            <GridToolbarFilterButton />
             <GridToolbarDensitySelector />
             <GridToolbarExport />
             <GridToolbarQuickFilter debounceMs={300} placeholder="Search..." />
+            <Button onClick={clearFilters} disabled={!hasActiveFilters} variant="text">
+                Clear filters
+            </Button>
         </GridToolbarContainer>
     );
 
@@ -239,82 +149,28 @@ const UnitData: React.FC = () => {
 
     return (
         <div style={{ height: '91vh', width: '100%' }}>
-            <Stack spacing={2} sx={{ height: '100%' }}>
-                <Box padding={2} sx={{ backgroundColor: '#f5f5f5', borderRadius: 1 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" marginBottom={1}>
-                        <Typography variant="h6" component="div">
-                            Filters
-                        </Typography>
-                        <Button variant="contained" color="primary" onClick={addFilter}>
-                            Add filter
-                        </Button>
-                    </Stack>
-                    <Stack spacing={1}>
-                        {filters.length === 0 && (
-                            <Typography variant="body2" color="text.secondary">
-                                Add filters to narrow down the results. Filters are combined using AND logic so every condition must match.
-                            </Typography>
-                        )}
-                        {filters.map((filter) => (
-                            <Stack key={filter.id} direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems="center">
-                                <Select
-                                    value={filter.field}
-                                    onChange={(event) => updateFilter(filter.id, 'field', event.target.value)}
-                                    size="small"
-                                    sx={{ minWidth: 140 }}
-                                >
-                                    {filterableColumns.map((column) => (
-                                        <MenuItem key={column.field} value={column.field}>{column.headerName}</MenuItem>
-                                    ))}
-                                </Select>
-                                <Select
-                                    value={filter.operator}
-                                    onChange={(event) => updateFilter(filter.id, 'operator', event.target.value)}
-                                    size="small"
-                                    sx={{ minWidth: 140 }}
-                                >
-                                    {getFieldOperators(filter.field).map((operator) => (
-                                        <MenuItem key={operator} value={operator}>{operator}</MenuItem>
-                                    ))}
-                                </Select>
-                                <TextField
-                                    value={filter.value}
-                                    onChange={(event) => updateFilter(filter.id, 'value', event.target.value)}
-                                    size="small"
-                                    label="Value"
-                                    sx={{ flexGrow: 1, minWidth: 180 }}
-                                />
-                                <Button variant="outlined" color="secondary" onClick={() => removeFilter(filter.id)}>
-                                    Remove
-                                </Button>
-                            </Stack>
-                        ))}
-                    </Stack>
-                </Box>
 
-                <Box sx={{ flexGrow: 1 }}>
-                    {/*checkboxSelection*/}
-                    <DataGrid
-                        rows={filteredUnits}
-                        columns={generateColumns}
-                        slots={{ toolbar: renderToolbar }}
-                        disableColumnFilter
-                        initialState={{
-                            columns: {
-                                columnVisibilityModel: {
-                                    basicAttack: false,
-                                    basicDefense: false,
-                                    basicMove: false,
-                                    basicRange: false,
-                                    unitNumbers: false,
-                                    planet: false,
-                                    set: false,
-                                },
-                            },
-                        }}
-                    />
-                </Box>
-            </Stack>
+            {/*checkboxSelection*/}
+            <DataGrid
+                rows={units}
+                columns={generateColumns}
+                filterModel={filterModel}
+                onFilterModelChange={setFilterModel}
+                slots={{ toolbar: CustomToolbar }}
+                initialState={{
+                    columns: {
+                        columnVisibilityModel: {
+                            basicAttack: false,
+                            basicDefense: false,
+                            basicMove: false,
+                            basicRange: false,
+                            unitNumbers: false,
+                            planet: false,
+                            set: false,
+                        },
+                    },
+                }}
+            />
 
             {/* Dialog for displaying full content */}
             <Dialog open={open} onClose={handleCloseDialog}>
@@ -329,6 +185,6 @@ const UnitData: React.FC = () => {
             </Dialog>
         </div>
     );
-};
+}; 
 
 export default UnitData;
