@@ -1,9 +1,15 @@
-import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, ListItemIcon, ListItemText, MenuItem } from '@mui/material';
 import {
     DataGrid,
     GridColDef,
+    GridColumnMenu,
+    GridColumnMenuItemProps,
+    GridColumnMenuProps,
     GridFilterModel,
+    gridFilterModelSelector,
     useGridApiRef,
+    useGridApiContext,
+    useGridRootProps,
     GridToolbarColumnsButton,
     GridToolbarContainer,
     GridToolbarDensitySelector,
@@ -110,6 +116,53 @@ const UnitData: React.FC = () => {
         </GridToolbarContainer>
     );
 
+    const CustomColumnMenuFilterItem: React.FC<GridColumnMenuItemProps> = (props) => {
+        const { colDef, onClick } = props;
+        const apiContext = useGridApiContext();
+        const rootProps = useGridRootProps();
+
+        const handleClick = (event: React.MouseEvent) => {
+            onClick(event);
+            const currentModel = gridFilterModelSelector(apiContext);
+            const existingItems = currentModel.items ?? [];
+            const hasFilterForField = existingItems.some((item) => item.field === colDef.field);
+
+            if (!hasFilterForField) {
+                const defaultOperator = colDef.filterOperators?.[0]?.value ?? 'contains';
+                const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+                apiContext.current.setFilterModel({
+                    ...currentModel,
+                    items: [...existingItems, { id, field: colDef.field, operator: defaultOperator }],
+                });
+            }
+
+            apiContext.current.showFilterPanel(colDef.field);
+        };
+
+        if (rootProps.disableColumnFilter || !colDef.filterable) {
+            return null;
+        }
+
+        return (
+            <MenuItem onClick={handleClick}>
+                <ListItemIcon>
+                    <rootProps.slots.columnMenuFilterIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>{apiContext.current.getLocaleText('columnMenuFilter')}</ListItemText>
+            </MenuItem>
+        );
+    };
+
+    const CustomColumnMenu: React.FC<GridColumnMenuProps> = (props) => (
+        <GridColumnMenu
+            {...props}
+            slots={{
+                ...props.slots,
+                columnMenuFilterItem: CustomColumnMenuFilterItem,
+            }}
+        />
+    );
+
     useEffect(() => {
         // Add a class to the body or another global wrapper
         document.body.classList.add('unit-data-active');
@@ -158,7 +211,7 @@ const UnitData: React.FC = () => {
                 rows={units}
                 columns={generateColumns}
                 onFilterModelChange={setFilterModel}
-                slots={{ toolbar: CustomToolbar }}
+                slots={{ toolbar: CustomToolbar, columnMenu: CustomColumnMenu }}
                 initialState={{
                     columns: {
                         columnVisibilityModel: {
