@@ -1,10 +1,24 @@
-import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
-import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
+import { Button, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
+import { AgGridReact } from 'ag-grid-react';
+import {
+    AllCommunityModule,
+    ColDef,
+    GetRowIdParams,
+    GridApi,
+    GridReadyEvent,
+    ICellRendererParams,
+    ModuleRegistry,
+    ValueGetterParams,
+} from 'ag-grid-community';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ability } from '../../../models/ability';
 import { Unit } from '../../../models/unit';
 import { getUnits } from '../../../services/unit-service';
 import './unit-data.scss';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 const UnitData: React.FC = () => {
     const [units, setUnits] = useState<Unit[]>([]);
@@ -12,70 +26,98 @@ const UnitData: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [dialogContent, setDialogContent] = useState<string>(''); // State to control dialog content
     const [open, setOpen] = useState(false); // State to control dialog open/close
-    // Search and filtering is handled via the DataGrid toolbar
+    const [gridApi, setGridApi] = useState<GridApi | null>(null);
+    const [hasColumnFilters, setHasColumnFilters] = useState(false);
+    const [quickFilterText, setQuickFilterText] = useState('');
 
-    const generateColumns = useMemo((): GridColDef[] => [
-        { field: 'creator', headerName: 'Creator', width: 100 },
-        { field: 'general', headerName: 'General', width: 70 },
-        { field: 'name', headerName: 'Unit Name', width: 250 },
-        { field: 'rarity', headerName: 'Rarity', width: 100 },
-        { field: 'type', headerName: 'Unit Type', width: 70 },
-        { field: 'race', headerName: 'Species', width: 100 },
-        { field: 'role', headerName: 'Role', width: 140 },
-        { field: 'sizeCategory', headerName: 'Size Category', width: 80 },
-        { field: 'size', headerName: 'Size', type: 'number', width: 30 },
-        { field: 'personality', headerName: 'Personality', width: 92 },
-        { field: 'life', headerName: 'Life', type: 'number', width: 30 },
-        { field: 'advAttack', headerName: 'Adv Attack', type: 'number', width: 100 },
-        { field: 'advDefense', headerName: 'Adv Defence', type: 'number', width: 100 },
-        { field: 'advMove', headerName: 'Adv Move', type: 'number', width: 100 },
-        { field: 'advRange', headerName: 'Adv Range', type: 'number', width: 100 },
-        { field: 'basicAttack', headerName: 'Basic Attack', type: 'number', width: 100 },
-        { field: 'basicDefense', headerName: 'Basic Defence', type: 'number', width: 100 },
-        { field: 'basicMove', headerName: 'Basic Move', type: 'number', width: 100 },
-        { field: 'basicRange', headerName: 'Basic Range', type: 'number', width: 100 },
-        { field: 'points', headerName: 'Points', type: 'number', width: 60 },
+    const handleOpenDialog = (content: string) => {
+        setDialogContent(content);
+        setOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpen(false);
+        setDialogContent('');
+    };
+
+    const baseColumnDefs = useMemo((): ColDef[] => [
+        { field: 'creator', headerName: 'Creator', minWidth: 120 },
+        { field: 'general', headerName: 'General', minWidth: 110 },
+        { field: 'name', headerName: 'Unit Name', minWidth: 200 },
+        { field: 'rarity', headerName: 'Rarity', minWidth: 130 },
+        { field: 'type', headerName: 'Unit Type', minWidth: 120 },
+        { field: 'race', headerName: 'Species', minWidth: 140 },
+        { field: 'role', headerName: 'Role', minWidth: 160 },
+        { field: 'sizeCategory', headerName: 'Size Category', minWidth: 140 },
+        { field: 'size', headerName: 'Size', filter: 'agNumberColumnFilter', maxWidth: 110 },
+        { field: 'personality', headerName: 'Personality', minWidth: 150 },
+        { field: 'life', headerName: 'Life', filter: 'agNumberColumnFilter', maxWidth: 110 },
+        { field: 'advAttack', headerName: 'Adv Attack', filter: 'agNumberColumnFilter', minWidth: 130 },
+        { field: 'advDefense', headerName: 'Adv Defence', filter: 'agNumberColumnFilter', minWidth: 140 },
+        { field: 'advMove', headerName: 'Adv Move', filter: 'agNumberColumnFilter', minWidth: 120 },
+        { field: 'advRange', headerName: 'Adv Range', filter: 'agNumberColumnFilter', minWidth: 130 },
+        { field: 'basicAttack', headerName: 'Basic Attack', filter: 'agNumberColumnFilter', minWidth: 130, hide: true },
+        { field: 'basicDefense', headerName: 'Basic Defence', filter: 'agNumberColumnFilter', minWidth: 140, hide: true },
+        { field: 'basicMove', headerName: 'Basic Move', filter: 'agNumberColumnFilter', minWidth: 130, hide: true },
+        { field: 'basicRange', headerName: 'Basic Range', filter: 'agNumberColumnFilter', minWidth: 130, hide: true },
+        { field: 'points', headerName: 'Points', filter: 'agNumberColumnFilter', maxWidth: 120 },
         {
             field: 'abilities',
             headerName: 'Abilities',
-            width: 200,
-            renderCell: (params) =>
-            (
-                <span
-                    className="cell-content"
-                    onClick={() =>
-                        handleOpenDialog(params.value ? params.value.map((ability: Ability) => `<strong>${ability.abilityName}</strong><br />${ability.ability}`).join('<br /><br />') : '')
-                    }
-                    style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-                >
-                    {params.value ? params.value.map((ability: Ability) => `${ability.abilityName}: ${ability.ability}`).join('<br /><br />') : ''}
-                </span>
-            )
+            minWidth: 220,
+            valueGetter: (params: ValueGetterParams<Unit, string>) =>
+                params.data?.abilities?.map((ability: Ability) => `${ability.abilityName}: ${ability.ability}`).join(' | ') ?? '',
+            cellRenderer: (params: ICellRendererParams<Unit>) => {
+                const abilities = params.data?.abilities ?? [];
+                const renderedContent = abilities
+                    .map((ability: Ability) => `<strong>${ability.abilityName}</strong><br />${ability.ability}`)
+                    .join('<br /><br />');
+                const textContent = params.value as string;
+
+                return (
+                    <span
+                        className="cell-content"
+                        onClick={() => handleOpenDialog(renderedContent)}
+                        style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
+                    >
+                        {textContent}
+                    </span>
+                );
+            },
+            filter: 'agTextColumnFilter',
         },
-        { field: 'unitNumbers', headerName: 'unit Numbers', width: 100 },
+        { field: 'unitNumbers', headerName: 'Unit Numbers', minWidth: 140 },
         {
             field: 'set',
             headerName: 'Set',
-            width: 170,
-            renderCell: (params) => params.value && params.value.name ? params.value.name : '',
+            minWidth: 170,
+            valueGetter: (params: ValueGetterParams<Unit, string>) => (params.data?.set?.name ? params.data.set.name : ''),
         },
-        { field: 'planet', headerName: 'Planet', width: 100 },
+        { field: 'planet', headerName: 'Planet', minWidth: 140, hide: true },
         {
-            field: 'note', headerName: 'Notes', width: 200,
-            renderCell: (params) =>
-            (
+            field: 'note',
+            headerName: 'Notes',
+            minWidth: 220,
+            cellRenderer: (params: ICellRendererParams<Unit>) => (
                 <span
                     className="cell-content"
-                    onClick={() =>
-                        handleOpenDialog(params.value)
-                    }
+                    onClick={() => handleOpenDialog(params.value)}
                     style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
                 >
                     {params.value}
                 </span>
-            )
+            ),
         },
-    ], []); // Memoize the columns to prevent unnecessary rerenders and hook issues
+    ], []);
+
+    const defaultColDef = useMemo<ColDef>(() => ({
+        filter: true,
+        sortable: true,
+        resizable: true,
+        floatingFilter: true,
+        flex: 1,
+        minWidth: 120,
+    }), []);
 
     useEffect(() => {
         // Add a class to the body or another global wrapper
@@ -93,7 +135,7 @@ const UnitData: React.FC = () => {
                 const data = await getUnits();
                 setUnits(data);
                 setLoading(false);
-            } catch (err) {
+            } catch {
                 setError('Failed to fetch unit data');
                 setLoading(false);
             }
@@ -103,47 +145,73 @@ const UnitData: React.FC = () => {
     }, []);
 
 
-    const handleOpenDialog = (content: string) => {
-        setDialogContent(content);
-        setOpen(true);
+    const onGridReady = (params: GridReadyEvent) => {
+        setGridApi(params.api);
+        params.api.setGridOption('quickFilterText', quickFilterText);
     };
 
-    const handleCloseDialog = () => {
-        setOpen(false);
-        setDialogContent('');
+    const handleQuickFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        setQuickFilterText(value);
+        gridApi?.setGridOption('quickFilterText', value);
     };
+
+    const clearFilters = () => {
+        gridApi?.setFilterModel(null);
+        gridApi?.setGridOption('quickFilterText', '');
+        setQuickFilterText('');
+        setHasColumnFilters(false);
+    };
+
+    const getRowId = (params: GetRowIdParams<Unit>) => params.data.id?.toString();
+
+    const handleFilterChanged = () => {
+        const filterModel = gridApi?.getFilterModel();
+        setHasColumnFilters(filterModel ? Object.keys(filterModel).length > 0 : false);
+    };
+
+    const hasActiveFilters = useMemo(
+        () => hasColumnFilters || quickFilterText.length > 0,
+        [hasColumnFilters, quickFilterText],
+    );
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>{error}</p>;    
 
     return (
         <div style={{ height: '91vh', width: '100%' }}>
-
-            {/*checkboxSelection*/}
-            <DataGrid
-                rows={units}
-                columns={generateColumns}
-                slots={{ toolbar: GridToolbar }}
-                slotProps={{
-                    toolbar: {
-                        showQuickFilter: true,
-                        quickFilterProps: { debounceMs: 300, placeholder: 'Search...' },
-                    },
-                }}
-                initialState={{
-                    columns: {
-                        columnVisibilityModel: {
-                            basicAttack: false,
-                            basicDefense: false,
-                            basicMove: false,
-                            basicRange: false,
-                            unitNumbers: false,
-                            planet: false,
-                            set: false,
-                        },
-                    },
-                }}
-            />
+            <div className="unit-data-toolbar">
+                <TextField
+                    size="small"
+                    value={quickFilterText}
+                    onChange={handleQuickFilterChange}
+                    placeholder="Search all columns"
+                    variant="outlined"
+                    fullWidth
+                />
+                <Button onClick={clearFilters} disabled={!hasActiveFilters} variant="text">
+                    Clear filters
+                </Button>
+            </div>
+            <div className="ag-theme-alpine unit-data-grid">
+                <AgGridReact<Unit>
+                    rowData={units}
+                    columnDefs={baseColumnDefs}
+                    defaultColDef={defaultColDef}
+                    animateRows
+                    enableCellTextSelection
+                    pagination
+                    paginationAutoPageSize
+                    rowHeight={40}
+                    headerHeight={40}
+                    onGridReady={onGridReady}
+                    onFilterChanged={handleFilterChanged}
+                    getRowId={getRowId}
+                    suppressDragLeaveHidesColumns
+                    suppressCellFocus
+                    suppressRowVirtualisation={false}
+                />
+            </div>
 
             {/* Dialog for displaying full content */}
             <Dialog open={open} onClose={handleCloseDialog}>
