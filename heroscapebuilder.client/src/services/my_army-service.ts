@@ -46,3 +46,17 @@ export const addUnits = async (unitIds: Array<number>) => {
         throw error;
     }
 };
+
+export const setMyUnits = async (units: Array<{ unitId: number, quantity: number }>) => {
+    try {
+        return await api.post(`/MyArmy/SetMyUnits`, JSON.stringify(units), {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getToken()}`
+            }
+        });
+    } catch (error) {
+        console.error('Error saving units:', error);
+        throw error;
+    }
+};

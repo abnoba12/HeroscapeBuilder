@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HeroscapeBuilder.Server.Data.Repositories;
 using HeroscapeBuilder.Server.Domain.Entities;
+using HeroscapeBuilder.Server.Domain.Requests;
 
 namespace HeroscapeBuilder.Server.Services
 {
@@ -17,19 +18,27 @@ namespace HeroscapeBuilder.Server.Services
 
         public async Task<List<UnitEntity>> GetMyUnits(Guid userId)
         {
-            // Fetch the ArmyCard entity (EF Core model) from the repository
-            var armyCard = await _userCardRepository.GetMyArmyCards(userId);
+            var userCards = await _userCardRepository.GetMyArmyCards(userId);
 
-            if (armyCard == null)
+            if (userCards == null)
                 throw new ArgumentException("No Units found");
 
-            var unit = _mapper.Map<List<UnitEntity>>(armyCard);
-            return unit;
+            var units = userCards
+                .Select(card =>
+                {
+                    var unit = _mapper.Map<UnitEntity>(card.OwnedArmyCardNavigation);
+                    unit.Quantity = card.Quantity;
+                    return unit;
+                })
+                .OrderBy(unit => unit.Name)
+                .ToList();
+
+            return units;
         }
 
         public async Task<int> AddUnitsToMyArmy(Guid userId, List<int> unitIds)
         {
-            if(await _userCardRepository.AddUnitsToMyArmy(userId, unitIds) != unitIds.Count)
+            if (await _userCardRepository.AddUnitsToMyArmy(userId, unitIds) != unitIds.Count)
             {
                 throw new ArgumentException("Unable to add all units");
             }
@@ -43,6 +52,11 @@ namespace HeroscapeBuilder.Server.Services
                 throw new ArgumentException("Unable to remove units");
             }
             return unitIds.Count;
+        }
+
+        public async Task<int> SetMyUnits(Guid userId, List<MyArmyUpdateRequest> units)
+        {
+            return await _userCardRepository.SetMyArmy(userId, units);
         }
     }
 }

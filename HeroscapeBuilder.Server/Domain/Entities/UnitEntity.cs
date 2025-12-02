@@ -58,6 +58,8 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public string? UnitNumbers { get; set; }
 
+        public int Quantity { get; set; }
+
         public int Id { get; set; }
 
         public SetEntity? Set { get; set; }

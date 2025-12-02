@@ -1,4 +1,5 @@
 ﻿using HeroscapeBuilder.Server.Data.Entities;
+using HeroscapeBuilder.Server.Domain.Requests;
 using Microsoft.EntityFrameworkCore;
 
 namespace HeroscapeBuilder.Server.Data.Repositories
@@ -12,14 +13,55 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<ArmyCard>> GetMyArmyCards(Guid userId)
+        public async Task<IEnumerable<UserCard>> GetMyArmyCards(Guid userId)
         {
             return await _context.UserCards
                 .Where(x => x.UserId == userId.ToString())
-                .Include(x => x.OwnedArmyCardNavigation)
-                .Select(x => x.OwnedArmyCardNavigation)
-                .OrderBy(x => x.Name)
+                .Include(x => x.OwnedArmyCardNavigation)!
+                    .ThenInclude(card => card.SetNavigation)
+                .Include(x => x.OwnedArmyCardNavigation)!
+                    .ThenInclude(card => card.ArmyCardAbilities)
+                .Include(x => x.OwnedArmyCardNavigation)!
+                    .ThenInclude(card => card.ArmyCardFiles)
+                .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<int> SetMyArmy(Guid userId, List<MyArmyUpdateRequest> units)
+        {
+            var desiredUnits = units
+                .Where(x => x.Quantity > 0)
+                .GroupBy(x => x.UnitId)
+                .ToDictionary(group => group.Key, group => group.First().Quantity);
+
+            var existingCards = await _context.UserCards
+                .Where(x => x.UserId == userId.ToString())
+                .ToListAsync();
+
+            foreach (var userCard in existingCards)
+            {
+                if (desiredUnits.TryGetValue(userCard.OwnedArmyCard, out var quantity))
+                {
+                    userCard.Quantity = quantity;
+                    desiredUnits.Remove(userCard.OwnedArmyCard);
+                }
+                else
+                {
+                    _context.UserCards.Remove(userCard);
+                }
+            }
+
+            foreach (var unit in desiredUnits)
+            {
+                _context.UserCards.Add(new UserCard
+                {
+                    UserId = userId.ToString(),
+                    OwnedArmyCard = unit.Key,
+                    Quantity = unit.Value,
+                });
+            }
+
+            return await _context.SaveChangesAsync();
         }
 
         public async Task<int> AddUnitsToMyArmy(Guid userId, List<int> unitIds)
