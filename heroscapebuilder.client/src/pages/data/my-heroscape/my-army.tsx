@@ -7,12 +7,10 @@ import {
     GetRowIdParams,
     GridApi,
     GridReadyEvent,
-    ICellRendererParams,
     ModuleRegistry,
     ValueGetterParams,
 } from 'ag-grid-community';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Ability } from '../../../models/ability';
 import { Unit } from '../../../models/unit';
 import { getMyUnits, setMyUnits } from '../../../services/my_army-service';
 import '../unit-data/unit-data.scss';
@@ -26,7 +24,7 @@ type UnitWithQuantity = Unit & { quantity?: number };
 
 const normalizeQuantity = (value: unknown) => {
     const parsed = Number(value);
-    if (!Number.isFinite(parsed) || parsed < 1) return 1;
+    if (!Number.isFinite(parsed) || parsed < 0) return 0;
     return Math.floor(parsed);
 };
 
@@ -36,96 +34,40 @@ const MyArmy: React.FC = () => {
     const [availableUnits, setAvailableUnits] = useState<UnitWithQuantity[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [dialogContent, setDialogContent] = useState<string>('');
-    const [open, setOpen] = useState(false);
     const [quickFilterText, setQuickFilterText] = useState('');
     const [addQuickFilterText, setAddQuickFilterText] = useState('');
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     const [addGridApi, setAddGridApi] = useState<GridApi | null>(null);
-    const [selectedUnitIds, setSelectedUnitIds] = useState<number[]>([]);
     const [addSelection, setAddSelection] = useState<number[]>([]);
     const [isDirty, setIsDirty] = useState(false);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-    const handleOpenDialog = (content: string) => {
-        setDialogContent(content);
-        setOpen(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpen(false);
-        setDialogContent('');
-    };
-
     const baseColumnDefs = useMemo<ColDef<UnitWithQuantity>[]>(() => [
-        { headerName: '', checkboxSelection: true, maxWidth: 50, pinned: 'left' },
-        { field: 'name', headerName: 'Unit Name', minWidth: 200, pinned: 'left' },
-        { field: 'quantity', headerName: 'Copies', filter: 'agNumberColumnFilter', maxWidth: 120, editable: true, cellEditor: 'agNumberCellEditor' },
+        { field: 'name', headerName: 'Unit Name', minWidth: 220, pinned: 'left' },
+        { field: 'quantity', headerName: 'Quantity', filter: 'agNumberColumnFilter', maxWidth: 140, editable: true, cellEditor: 'agNumberCellEditor' },
         { field: 'general', headerName: 'General', minWidth: 110 },
-        { field: 'creator', headerName: 'Creator', minWidth: 120 },
-        { field: 'rarity', headerName: 'Rarity', minWidth: 130 },
-        { field: 'type', headerName: 'Unit Type', minWidth: 120 },
-        { field: 'race', headerName: 'Species', minWidth: 140 },
-        { field: 'role', headerName: 'Role', minWidth: 160 },
-        { field: 'points', headerName: 'Points', filter: 'agNumberColumnFilter', maxWidth: 120 },
-        {
-            field: 'abilities',
-            headerName: 'Abilities',
-            minWidth: 220,
-            valueGetter: (params: ValueGetterParams<Unit, string>) =>
-                params.data?.abilities?.map((ability: Ability) => `${ability.abilityName}: ${ability.ability}`).join(' | ') ?? '',
-            cellRenderer: (params: ICellRendererParams<Unit>) => {
-                const abilities = params.data?.abilities ?? [];
-                const renderedContent = abilities
-                    .map((ability: Ability) => `<strong>${ability.abilityName}</strong><br />${ability.ability}`)
-                    .join('<br /><br />');
-                const textContent = params.value as string;
-
-                return (
-                    <span
-                        className="cell-content"
-                        onClick={() => abilities.length && handleOpenDialog(renderedContent)}
-                        style={{ cursor: abilities.length ? 'pointer' : 'default', color: abilities.length ? 'blue' : undefined, textDecoration: abilities.length ? 'underline' : undefined }}
-                    >
-                        {textContent}
-                    </span>
-                );
-            },
-            filter: 'agTextColumnFilter',
-        },
-        { field: 'unitNumbers', headerName: 'Unit Numbers', minWidth: 140 },
+        { field: 'creator', headerName: 'Creator', minWidth: 140 },
+        { field: 'unitNumbers', headerName: 'Unit Numbers', minWidth: 160 },
         {
             field: 'set',
             headerName: 'Set',
-            minWidth: 170,
+            minWidth: 180,
             valueGetter: (params: ValueGetterParams<Unit, string>) => (params.data?.set?.name ? params.data.set.name : ''),
-        },
-        { field: 'planet', headerName: 'Planet', minWidth: 140, hide: true },
-        {
-            field: 'note',
-            headerName: 'Notes',
-            minWidth: 220,
-            cellRenderer: (params: ICellRendererParams<Unit>) => (
-                <span
-                    className="cell-content"
-                    onClick={() => params.value && handleOpenDialog(params.value)}
-                    style={{ cursor: params.value ? 'pointer' : 'default', color: params.value ? 'blue' : undefined, textDecoration: params.value ? 'underline' : undefined }}
-                >
-                    {params.value}
-                </span>
-            ),
         },
     ], []);
 
     const addColumnDefs = useMemo<ColDef<UnitWithQuantity>[]>(() => [
-        { headerName: '', checkboxSelection: true, maxWidth: 50, pinned: 'left' },
-        { field: 'name', headerName: 'Unit Name', minWidth: 200, pinned: 'left' },
-        { field: 'quantity', headerName: 'Copies', filter: 'agNumberColumnFilter', maxWidth: 120, editable: true, cellEditor: 'agNumberCellEditor' },
+        { field: 'name', headerName: 'Unit Name', minWidth: 220, pinned: 'left' },
+        { field: 'quantity', headerName: 'Quantity', filter: 'agNumberColumnFilter', maxWidth: 140, editable: true, cellEditor: 'agNumberCellEditor' },
         { field: 'general', headerName: 'General', minWidth: 110 },
-        { field: 'creator', headerName: 'Creator', minWidth: 120 },
-        { field: 'rarity', headerName: 'Rarity', minWidth: 130 },
-        { field: 'type', headerName: 'Unit Type', minWidth: 120 },
-        { field: 'points', headerName: 'Points', filter: 'agNumberColumnFilter', maxWidth: 120 },
+        { field: 'creator', headerName: 'Creator', minWidth: 140 },
+        { field: 'unitNumbers', headerName: 'Unit Numbers', minWidth: 160 },
+        {
+            field: 'set',
+            headerName: 'Set',
+            minWidth: 180,
+            valueGetter: (params: ValueGetterParams<Unit, string>) => (params.data?.set?.name ? params.data.set.name : ''),
+        },
     ], []);
 
     const defaultColDef = useMemo<ColDef>(() => ({
@@ -201,11 +143,6 @@ const MyArmy: React.FC = () => {
 
     const getRowId = (params: GetRowIdParams<UnitWithQuantity>) => params.data.id?.toString();
 
-    const handleSelectionChanged = () => {
-        const selectedIds = gridApi?.getSelectedRows().map(row => row.id) ?? [];
-        setSelectedUnitIds(selectedIds);
-    };
-
     const handleAddSelectionChanged = () => {
         const selectedIds = addGridApi?.getSelectedRows().map(row => row.id) ?? [];
         setAddSelection(selectedIds);
@@ -214,7 +151,11 @@ const MyArmy: React.FC = () => {
     const handleQuantityChange = (event: CellValueChangedEvent<UnitWithQuantity>) => {
         if (event.colDef.field !== 'quantity') return;
         const quantity = normalizeQuantity(event.newValue ?? event.data.quantity);
-        setMyUnitsState(prev => prev.map(unit => unit.id === event.data.id ? { ...unit, quantity } : unit));
+        setMyUnitsState(prev =>
+            quantity === 0
+                ? prev.filter(unit => unit.id !== event.data.id)
+                : prev.map(unit => unit.id === event.data.id ? { ...unit, quantity } : unit),
+        );
         setIsDirty(true);
     };
 
@@ -222,14 +163,6 @@ const MyArmy: React.FC = () => {
         if (event.colDef.field !== 'quantity') return;
         const quantity = normalizeQuantity(event.newValue ?? event.data.quantity);
         setAvailableUnits(prev => prev.map(unit => unit.id === event.data.id ? { ...unit, quantity } : unit));
-    };
-
-    const handleRemoveSelected = () => {
-        if (!selectedUnitIds.length) return;
-        setMyUnitsState(prev => prev.filter(unit => !selectedUnitIds.includes(unit.id)));
-        setSelectedUnitIds([]);
-        setIsDirty(true);
-        gridApi?.deselectAll();
     };
 
     const handleSave = async () => {
@@ -243,7 +176,6 @@ const MyArmy: React.FC = () => {
             const data = (await getMyUnits())?.data as UnitWithQuantity[];
             setMyUnitsState(data.map(unit => ({ ...unit, quantity: unit.quantity ?? 1 })));
             setIsDirty(false);
-            setSelectedUnitIds([]);
         } catch (err) {
             console.error('Error saving units:', err);
             setError('Failed to save your army.');
@@ -292,9 +224,6 @@ const MyArmy: React.FC = () => {
                 <Button variant="contained" color="secondary" onClick={openAddUnitsDialog}>
                     Add units
                 </Button>
-                <Button variant="outlined" color="secondary" onClick={handleRemoveSelected} disabled={!selectedUnitIds.length}>
-                    Remove selected
-                </Button>
                 <Button variant="contained" color="primary" onClick={handleSave} disabled={!isDirty || !myUnits.length}>
                     Save collection
                 </Button>
@@ -328,24 +257,10 @@ const MyArmy: React.FC = () => {
                     getRowId={getRowId}
                     onGridReady={onGridReady}
                     onCellValueChanged={handleQuantityChange}
-                    rowSelection="multiple"
-                    onSelectionChanged={handleSelectionChanged}
                     suppressDragLeaveHidesColumns
                     suppressCellFocus
                 />
             </div>
-
-            <Dialog open={open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogContent>
-                    <div dangerouslySetInnerHTML={{ __html: dialogContent }} />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog} color="primary">
-                        Close
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
             <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="lg" fullWidth>
                 <DialogTitle>Select units to add</DialogTitle>
                 <DialogContent>
