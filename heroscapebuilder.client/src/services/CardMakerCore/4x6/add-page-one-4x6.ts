@@ -56,7 +56,7 @@ export async function addPageOne4x6(formData: UnitFormData, doc: jsPDF) {
         let lifeYGap = 0
         let pointsYGap = 0
 
-        if (formData.general == "Revna") {
+        if (formData.general == "Revna" || formData.general == "Volarak") {
             statsY = 146
             statsYGap = 19.25;
             lifeYGap = 5;

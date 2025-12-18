@@ -111,15 +111,6 @@ const Sidebar: React.FC = () => {
                                     </ul>
                                 )}
                             </li>
-                            {/*<li className={`nav-item ${activeMenu === 'contact' ? 'active' : ''}`}>*/}
-                            {/*    <a href="#!" onClick={() => toggleSubmenu('contact')}><p>Terrain</p></a>*/}
-                            {/*    {activeMenu === 'contact' && (*/}
-                            {/*        <ul className="submenu">*/}
-                            {/*            <li><Link to="/contact/email" onClick={toggleSidebar}>Email Us</Link></li>*/}
-                            {/*            <li><Link to="/contact/call" onClick={toggleSidebar}>Call Us</Link></li>*/}
-                            {/*        </ul>*/}
-                            {/*    )}*/}
-                            {/*</li>*/}
                             <li className={`nav-item ${activeMenu === 'game-play' ? 'active' : ''}`}>
                                 <a href="#!" onClick={() => toggleSubmenu('game-play')}><p>Game Play</p></a>
                                 {activeMenu === 'game-play' && (

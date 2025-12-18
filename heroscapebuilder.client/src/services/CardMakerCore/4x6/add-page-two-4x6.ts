@@ -45,7 +45,7 @@ export async function addPageTwo4x6(formData: UnitFormData, doc: jsPDF) {
     const statsXGap = 27.5;
     let statsYGap = 23.25;
 
-    if (formData.general == "Revna") {
+    if (formData.general == "Revna" || formData.general == "Volarak") {
         statsY = 150
         statsYGap = 19.25;
     }
