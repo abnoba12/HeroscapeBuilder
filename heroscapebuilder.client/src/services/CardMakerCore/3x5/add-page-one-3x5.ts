@@ -79,7 +79,7 @@ export async function addPageOne3x5(formData: UnitFormData, doc: jsPDF) {
         var lifeYGap = 1.5
         var pointsYGap = -0.5
 
-        if (formData.general == "Revna") {
+        if (formData.general == "Revna" || formData.general == "Volarak") {
             statsY = 82;
             statsYGap = 13.1;
             lifeYGap = 7;

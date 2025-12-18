@@ -105,21 +105,12 @@ const Sidebar: React.FC = () => {
                                 {activeMenu === 'data' && (
                                     <ul className="submenu">
                                         <li><Link to="/data/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
-                                        {/*{isAuthenticated() && (*/}
-                                        {/*    <li><Link to="/data/myarmy" onClick={toggleSidebar}>My Army</Link></li>*/}
-                                        {/*)}*/}
+                                        {isAuthenticated() && (
+                                            <li><Link to="/data/myarmy" onClick={toggleSidebar}>My Army</Link></li>
+                                        )}
                                     </ul>
                                 )}
                             </li>
-                            {/*<li className={`nav-item ${activeMenu === 'contact' ? 'active' : ''}`}>*/}
-                            {/*    <a href="#!" onClick={() => toggleSubmenu('contact')}><p>Terrain</p></a>*/}
-                            {/*    {activeMenu === 'contact' && (*/}
-                            {/*        <ul className="submenu">*/}
-                            {/*            <li><Link to="/contact/email" onClick={toggleSidebar}>Email Us</Link></li>*/}
-                            {/*            <li><Link to="/contact/call" onClick={toggleSidebar}>Call Us</Link></li>*/}
-                            {/*        </ul>*/}
-                            {/*    )}*/}
-                            {/*</li>*/}
                             <li className={`nav-item ${activeMenu === 'game-play' ? 'active' : ''}`}>
                                 <a href="#!" onClick={() => toggleSubmenu('game-play')}><p>Game Play</p></a>
                                 {activeMenu === 'game-play' && (

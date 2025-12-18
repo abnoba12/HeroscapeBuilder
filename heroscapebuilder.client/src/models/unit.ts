@@ -25,6 +25,7 @@ export interface Unit {
     basicDefense?: number;
     planet?: string;
     unitNumbers?: string;
+    quantity?: number;
     id: number;
     set?: Set; // Assuming Set is another model you'll define
     note?: string;

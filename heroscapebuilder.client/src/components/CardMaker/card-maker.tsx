@@ -470,6 +470,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         <option value="Utgar">Utgar</option>
                         <option value="Revna">Revna</option>
                         <option value="Valkrill">Valkrill</option>
+                        <option value="Volarak">Volarak</option>
                         <option value="Vydar">Vydar</option>
                     </select>
                     {errors.general && <div className="invalid-feedback">{errors.general}</div>}
