@@ -213,8 +213,8 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         e.preventDefault();
 
         const newErrors: Record<string, string> = {};
+        const normalizedCreator = creator.trim() || 'Custom';
 
-        if (!creator.trim()) newErrors.creator = 'Creator is required';
         if (!general.trim()) newErrors.general = 'General is required';
         if (!unitName.trim()) newErrors.unitName = 'Unit name is required';
         if (!unitRace.trim()) newErrors.unitRace = 'Unit race is required';
@@ -246,7 +246,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             try {
                 setSubmitting(true); // Show spinner while submitting
                 const formData: UnitFormData = {
-                    creator, // Maps directly to creator
+                    creator: normalizedCreator, // Maps directly to creator
                     general, // Optional, so mapped directly to general
                     name: unitName, // unitName maps to name
                     race: unitRace, // unitRace maps to race
@@ -271,7 +271,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                     abilities, // Maps directly to abilities (Ability[])
                     set: { // setName and numberOfUnitsInSet map to the Set model
                         id: 0, // Set ID can be fetched or assigned later
-                        creator: creator, // Maps to the creator of the set
+                        creator: normalizedCreator, // Maps to the creator of the set
                         name: setName, // Maps to the setName
                         unitsInSet: numberOfUnitsInSet, // Maps to numberOfUnitsInSet
                         createdAt: new Date()
