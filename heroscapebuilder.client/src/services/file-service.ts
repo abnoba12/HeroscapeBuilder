@@ -4,12 +4,13 @@ import { blobCache } from './cache-manager';
 import { debounce } from './debounce';
 import { getToken, hasRole } from './authService';
 import AxiosSingletonService from './AxiosSingletonService';
+import { UnitFile } from '../models/unit-file';
 
 const api = AxiosSingletonService.getInstance();
 
-export const getFilesByPurpose = debounce(async (purpose:string) => {
+export const getFilesByPurpose = debounce(async (purpose: string): Promise<UnitFile[]> => {
     try {
-        return (await api.get(`/File/GetFilesByPurpose?purpose=${purpose}`)).data
+        return (await api.get<UnitFile[]>(`/File/GetFilesByPurpose?purpose=${purpose}`)).data;
     } catch (error) {
         console.error('Error fetching files:', error);
         throw error;
