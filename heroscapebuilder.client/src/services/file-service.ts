@@ -1,7 +1,6 @@
 import { saveAs } from 'file-saver';
 import JSZip from "jszip";
-import { UnitFile } from '../models/unit-file';
-import { blobCache, GetAPIDataWithCache } from './cache-manager';
+import { blobCache } from './cache-manager';
 import { debounce } from './debounce';
 import { getToken, hasRole } from './authService';
 import AxiosSingletonService from './AxiosSingletonService';
@@ -10,7 +9,7 @@ const api = AxiosSingletonService.getInstance();
 
 export const getFilesByPurpose = debounce(async (purpose:string) => {
     try {
-        return await GetAPIDataWithCache<UnitFile[]>(`/File/GetFilesByPurpose?purpose=${purpose}`, `/File?purpose=${purpose}`, 240);
+        return (await api.get(`/File/GetFilesByPurpose?purpose=${purpose}`)).data
     } catch (error) {
         console.error('Error fetching files:', error);
         throw error;

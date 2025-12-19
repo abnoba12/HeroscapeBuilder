@@ -6,26 +6,6 @@ const api = AxiosSingletonService.getInstance();
 const defaultCacheDuration = 60;
 const debug = false;
 
-// REST Function to fetch data with caching
-export const GetAPIDataWithCache = async <T>(url: string, cacheKey: string, cacheDuration: number = defaultCacheDuration): Promise<T> => {       
-    try {
-        if (!url || !cacheKey) {
-            throw "Missing required parameters";
-        }
-
-        const response = await getCache<T>(
-            cacheKey,
-            async () => (await api.get(url)).data,
-            cacheDuration
-        );        
-
-        return response;
-    } catch (apiError) {
-        console.error('Error making API call:', apiError);
-        throw apiError; // Rethrow the error so the caller knows it failed
-    }
-};
-
 export const blobCache = async (url: string, cacheKey: string, cacheDuration: number = defaultCacheDuration) => {
     const blob: Blob = new Blob();
     try {

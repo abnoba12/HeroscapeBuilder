@@ -16,6 +16,7 @@ namespace HeroscapeBuilder.Server.Controllers
             _logger = logger; 
         }
 
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         [HttpGet]
         public async Task<IActionResult> GetAllUnits()
         {

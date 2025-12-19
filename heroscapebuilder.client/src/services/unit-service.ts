@@ -1,10 +1,11 @@
-import { Unit } from '../models/unit';
-import { GetAPIDataWithCache } from './cache-manager';
+import AxiosSingletonService from './AxiosSingletonService';
 import { debounce } from './debounce';
+
+const api = AxiosSingletonService.getInstance();
 
 export const getUnits = debounce(async () => {
     try {
-        return GetAPIDataWithCache<Unit[]>(`/Unit/GetAllUnits`, "Unit");
+        return (await api.get(`/Unit/GetAllUnits`)).data
     } catch (error) {
         console.error('Error fetching cards:', error);
         throw error;

@@ -20,6 +20,7 @@ namespace HeroscapeBuilder.Server.Controllers
             _imageOptimizationService = imageOptimizationService;
         }
 
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         [HttpGet]
         public async Task<List<UnitFileEntity>> GetFilesByPurposeAsync(string purpose)
         {            
