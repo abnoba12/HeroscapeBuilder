@@ -169,6 +169,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     const handleAbilityChange = (id: number, key: keyof Ability, value: string) => {
         setAbilities(abilities.map((ability) => ability.id === id ? { ...ability, [key]: value } : ability));
     };
+    const handleNumberChange = (
+        setter: React.Dispatch<React.SetStateAction<number | undefined>>
+    ) => (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        setter(value === '' ? undefined : Number(value));
+    };
 
     //REGION: Images
     const hitboxImageRef = useRef<HTMLInputElement>(null);
@@ -207,7 +213,6 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         e.preventDefault();
 
         const newErrors: Record<string, string> = {};
-
         if (!creator.trim()) newErrors.creator = 'Creator is required';
         if (!general.trim()) newErrors.general = 'General is required';
         if (!unitName.trim()) newErrors.unitName = 'Unit name is required';
@@ -440,7 +445,8 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="creator" value={creator} className="form-select" onChange={(e) => setCreator(e.target.value)}>
-                        <option value="">Custom</option>
+                        <option value="">Select Card Creator</option>
+                        <option value="Custom">Custom</option>
                         <option value="HEROSCAPE">Heroscape - Hasbro / Wizards of the Coast</option>
                         <option value="RENEGADE">Heroscape - Renegade</option>
                         <option value="C3V">C3V - Classic Custom Creators of Valhalla</option>
@@ -463,6 +469,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitGeneral" value={general} className="form-select" onChange={(e) => setGeneral(e.target.value)}>
+                        <option value="">Select General</option>
                         <option value="Aquilla">Aquilla</option>
                         <option value="Einar">Einar</option>
                         <option value="Jandar">Jandar</option>
@@ -487,7 +494,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="text" id="unitName" value={unitName} className="form-control" maxLength={35} />
+                    <input type="text" id="unitName" value={unitName} className="form-control" maxLength={35} onChange={(e) => setUnitName(e.target.value)} />
                     {errors.unitName && <div className="invalid-feedback">{errors.unitName}</div>}
                 </div>
 
@@ -502,7 +509,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="text" id="unitRace" value={unitRace} className="form-control" maxLength={12} />
+                    <input type="text" id="unitRace" value={unitRace} className="form-control" maxLength={12} onChange={(e) => setUnitRace(e.target.value)} />
                     {errors.unitRace && <div className="invalid-feedback">{errors.unitRace}</div>}
                 </div>
 
@@ -517,7 +524,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="text" id="unitRole" value={unitRole} className="form-control" maxLength={12} />
+                    <input type="text" id="unitRole" value={unitRole} className="form-control" maxLength={12} onChange={(e) => setUnitRole(e.target.value)} />
                     {errors.unitRole && <div className="invalid-feedback">{errors.unitRole}</div>}
                 </div>
 
@@ -532,7 +539,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="text" id="unitPersonality" value={unitPersonality} className="form-control" maxLength={12} />
+                    <input type="text" id="unitPersonality" value={unitPersonality} className="form-control" maxLength={12} onChange={(e) => setUnitPersonality(e.target.value)} />
                     {errors.unitPersonality && <div className="invalid-feedback">{errors.unitPersonality}</div>}
                 </div>
 
@@ -547,7 +554,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="text" id="unitPlanet" value={unitPlanet} className="form-control" maxLength={12} />
+                    <input type="text" id="unitPlanet" value={unitPlanet} className="form-control" maxLength={12} onChange={(e) => setUnitPlanet(e.target.value)} />
                     {errors.unitPlanet && <div className="invalid-feedback">{errors.unitPlanet}</div>}
                 </div>
 
@@ -563,6 +570,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitRarity" value={unitRarity} className="form-select" onChange={(e) => setUnitRarity(e.target.value)}>
+                        <option value="">Select Unit Rarity</option>
                         <option value="Unique">Unique</option>
                         <option value="Uncommon">Uncommon</option>
                         <option value="Common">Common</option>
@@ -582,6 +590,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitType" value={unitType} className="form-select" onChange={(e) => setUnitType(e.target.value)}>
+                        <option value="">Select Unit Type</option>
                         <option value="Hero">Hero</option>
                         <option value="Squad">Squad</option>
                     </select>
@@ -600,6 +609,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitSizeCategory" value={unitSizeCategory} className="form-select" onChange={(e) => setUnitSizeCategory(e.target.value)}>
+                        <option value="">Select Size Category</option>
                         <option value="Huge">Huge</option>
                         <option value="Large">Large</option>
                         <option value="Medium">Medium</option>
@@ -619,7 +629,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="unitSize" value={unitSize} className="form-control" />
+                    <input type="number" id="unitSize" value={unitSize} className="form-control" onChange={handleNumberChange(setUnitSize)} />
                     {errors.unitSize && <div className="invalid-feedback">{errors.unitSize}</div>}
                 </div>
 
@@ -704,7 +714,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="life" value={life} className="form-control" />
+                    <input type="number" id="life" value={life} className="form-control" onChange={handleNumberChange(setLife)} />
                     {errors.life && <div className="invalid-feedback">{errors.life}</div>}
                 </div>
 
@@ -719,7 +729,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="advancedMove" value={advancedMove} className="form-control" />
+                    <input type="number" id="advancedMove" value={advancedMove} className="form-control" onChange={handleNumberChange(setAdvancedMove)} />
                     {errors.advancedMove && <div className="invalid-feedback">{errors.advancedMove}</div>}
                 </div>
 
@@ -734,7 +744,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="advancedRange" value={advancedRange} className="form-control" />
+                    <input type="number" id="advancedRange" value={advancedRange} className="form-control" onChange={handleNumberChange(setAdvancedRange)} />
                     {errors.advancedRange && <div className="invalid-feedback">{errors.advancedRange}</div>}
                 </div>
 
@@ -749,7 +759,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="advancedAttack" value={advancedAttack} className="form-control" />
+                    <input type="number" id="advancedAttack" value={advancedAttack} className="form-control" onChange={handleNumberChange(setAdvancedAttack)} />
                     {errors.advancedAttack && <div className="invalid-feedback">{errors.advancedAttack}</div>}
                 </div>
 
@@ -764,7 +774,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="advancedDefense" value={advancedDefense} className="form-control" />
+                    <input type="number" id="advancedDefense" value={advancedDefense} className="form-control" onChange={handleNumberChange(setAdvancedDefense)} />
                     {errors.advancedDefense && <div className="invalid-feedback">{errors.advancedDefense}</div>}
                 </div>
 
@@ -779,7 +789,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="points" value={points} className="form-control" />
+                    <input type="number" id="points" value={points} className="form-control" onChange={handleNumberChange(setPoints)} />
                     {errors.points && <div className="invalid-feedback">{errors.points}</div>}
                 </div>
 
@@ -794,7 +804,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="basicMove" value={basicMove} className="form-control" />
+                    <input type="number" id="basicMove" value={basicMove} className="form-control" onChange={handleNumberChange(setBasicMove)} />
                     {errors.basicMove && <div className="invalid-feedback">{errors.basicMove}</div>}
                 </div>
 
@@ -809,7 +819,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="basicRange" value={basicRange} className="form-control" />
+                    <input type="number" id="basicRange" value={basicRange} className="form-control" onChange={handleNumberChange(setBasicRange)} />
                     {errors.basicRange && <div className="invalid-feedback">{errors.basicRange}</div>}
                 </div>
 
@@ -824,7 +834,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="basicAttack" value={basicAttack} className="form-control" />
+                    <input type="number" id="basicAttack" value={basicAttack} className="form-control" onChange={handleNumberChange(setBasicAttack)} />
                     {errors.basicAttack && <div className="invalid-feedback">{errors.basicAttack}</div>}
                 </div>
 
@@ -839,7 +849,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="basicDefense" value={basicDefense} className="form-control" />
+                    <input type="number" id="basicDefense" value={basicDefense} className="form-control" onChange={handleNumberChange(setBasicDefense)} />
                     {errors.basicDefense && <div className="invalid-feedback">{errors.basicDefense}</div>}
                 </div>
 
@@ -901,7 +911,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="text" id="set" value={setName} className="form-control" />
+                    <input type="text" id="set" value={setName} className="form-control" onChange={(e) => setSetName(e.target.value)} />
                 </div>
 
                 <div className="col-md-6">
@@ -915,7 +925,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="text" id="unitNumbers" value={unitNumbers} className="form-control" />
+                    <input type="text" id="unitNumbers" value={unitNumbers} className="form-control" onChange={(e) => setUnitNumbers(e.target.value)} />
                 </div>
 
                 <div className="col-md-6">
@@ -929,7 +939,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             <span className="q">[?]</span>
                         </span>
                     </label>
-                    <input type="number" id="numberOfUnitsInSet" value={numberOfUnitsInSet} className="form-control" />
+                    <input type="number" id="numberOfUnitsInSet" value={numberOfUnitsInSet} className="form-control" onChange={handleNumberChange(setNumberOfUnitsInSet)} />
                 </div>
 
                 {/*Submit Button*/}
