@@ -302,17 +302,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                 let doc: jsPDF = initializePDF(cardSize);
                 doc = await generateIndexCard(doc, formData, cardSize);
 
-                var fileName = `Index_${cardSize}_${formData.name.replace(/\s+/g, "_")}.pdf`;
-                if (cardSize == "Standard") {
-                    fileName = `${formData.name.replace(/\s+/g, "_")}.pdf`;
-
-                    if (formData.creator == "Renegade") {
-                        fileName = `${formData.name.replace(/\s+/g, "_")}-OG.pdf`;
-                    }
-                }
+                let un = formData.name;
+                un = unitData.map(n => n.name).filter(n => n === formData.name).length > 1 ? `${un}-${formData.set?.name}` : un;
+                const fileName = `Index_${cardSize}_${un.replace(/\s+/g, "_")}.pdf`;
 
                 await savePDF(doc, fileName);
-                await saveToDB(formData, doc.output('blob'));
+                await saveToDB(formData, doc.output('blob'), fileName);
             } catch (e) {
                 throw e;
             } finally {
@@ -321,7 +316,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         }
     };
 
-    const saveToDB = async function (formData: UnitFormData, pdf: Blob) {
+    const saveToDB = async function (formData: UnitFormData, pdf: Blob, fileName: string) {
         if (hasRole("Admin") && selectedUnit) {
             const userConfirmed = confirm("Save the changes to the database?");
             if (!userConfirmed) {
@@ -376,7 +371,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         return;
                 }
 
-                await AddFileToUnit(pdf, selectedUnit, pdfPurpose, `Index_${cardSize}_${unitName}.pdf`.replace(" ", "_"));
+                await AddFileToUnit(pdf, selectedUnit, pdfPurpose, fileName);
             }
 
             removeCache("Unit");
