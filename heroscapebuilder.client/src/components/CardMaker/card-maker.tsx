@@ -213,8 +213,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         e.preventDefault();
 
         const newErrors: Record<string, string> = {};
-        const normalizedCreator = creator.trim() || 'Custom';
-
+        if (!creator.trim()) newErrors.creator = 'Creator is required';
         if (!general.trim()) newErrors.general = 'General is required';
         if (!unitName.trim()) newErrors.unitName = 'Unit name is required';
         if (!unitRace.trim()) newErrors.unitRace = 'Unit race is required';
@@ -246,7 +245,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             try {
                 setSubmitting(true); // Show spinner while submitting
                 const formData: UnitFormData = {
-                    creator: normalizedCreator, // Maps directly to creator
+                    creator, // Maps directly to creator
                     general, // Optional, so mapped directly to general
                     name: unitName, // unitName maps to name
                     race: unitRace, // unitRace maps to race
@@ -271,7 +270,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                     abilities, // Maps directly to abilities (Ability[])
                     set: { // setName and numberOfUnitsInSet map to the Set model
                         id: 0, // Set ID can be fetched or assigned later
-                        creator: normalizedCreator, // Maps to the creator of the set
+                        creator: creator, // Maps to the creator of the set
                         name: setName, // Maps to the setName
                         unitsInSet: numberOfUnitsInSet, // Maps to numberOfUnitsInSet
                         createdAt: new Date()
@@ -446,7 +445,8 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="creator" value={creator} className="form-select" onChange={(e) => setCreator(e.target.value)}>
-                        <option value="">Custom</option>
+                        <option value="">Select Card Creator</option>
+                        <option value="Custom">Custom</option>
                         <option value="HEROSCAPE">Heroscape - Hasbro / Wizards of the Coast</option>
                         <option value="RENEGADE">Heroscape - Renegade</option>
                         <option value="C3V">C3V - Classic Custom Creators of Valhalla</option>
@@ -469,6 +469,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitGeneral" value={general} className="form-select" onChange={(e) => setGeneral(e.target.value)}>
+                        <option value="">Select General</option>
                         <option value="Aquilla">Aquilla</option>
                         <option value="Einar">Einar</option>
                         <option value="Jandar">Jandar</option>
@@ -569,6 +570,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitRarity" value={unitRarity} className="form-select" onChange={(e) => setUnitRarity(e.target.value)}>
+                        <option value="">Select Unit Rarity</option>
                         <option value="Unique">Unique</option>
                         <option value="Uncommon">Uncommon</option>
                         <option value="Common">Common</option>
@@ -588,6 +590,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitType" value={unitType} className="form-select" onChange={(e) => setUnitType(e.target.value)}>
+                        <option value="">Select Unit Type</option>
                         <option value="Hero">Hero</option>
                         <option value="Squad">Squad</option>
                     </select>
@@ -606,6 +609,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                         </span>
                     </label>
                     <select id="unitSizeCategory" value={unitSizeCategory} className="form-select" onChange={(e) => setUnitSizeCategory(e.target.value)}>
+                        <option value="">Select Size Category</option>
                         <option value="Huge">Huge</option>
                         <option value="Large">Large</option>
                         <option value="Medium">Medium</option>
