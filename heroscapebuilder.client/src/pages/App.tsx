@@ -11,7 +11,7 @@ import UploadStandardCard from "../pages/army-cards/standard/upload-standard-car
 import Home from "./Home/Home";
 import ArmyCards from "./army-cards/army-cards";
 import DownloadPlayingCard from "./army-cards/playingcard/download-playingcard";
-import MakeCardPC from "./army-cards/playingcard/make-card-PC";
+import MakeCardPC from "./army-cards/playingcard/make-card-pc";
 import Printing from "./army-cards/printing/printing";
 import DownloadStandard from "./army-cards/standard/download-standard";
 import StandardArmyCards from "./army-cards/standard/standard-army-cards";

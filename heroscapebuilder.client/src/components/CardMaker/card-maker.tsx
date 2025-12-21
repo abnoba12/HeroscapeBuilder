@@ -117,12 +117,10 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             setNumberOfUnitsInSet(data.set?.unitsInSet);
 
             if (data.files && data.files.length) {
-                var hb = data.files.filter(x => x.filePurpose == "Card_Hitbox_Image");
-                var b = data.files.filter(x => x.filePurpose == "Card_Basic_Image");
-                var adv;
+                const hb = data.files.filter(x => x.filePurpose == "Card_Hitbox_Image");
+                let adv;
                 if (cardSize == "3x5") {
                     adv = data.files.filter(x => x.filePurpose == "Card_3x5_Advanced_Image");
-                    b = [];
                 } else if (cardSize == "PC") {
                     adv = data.files.filter(x => x.filePurpose == "Card_PC_Advanced_Image");
                 } else if (cardSize == "Standard") {
@@ -170,7 +168,6 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     //REGION: Images
     const hitboxImageRef = useRef<HTMLInputElement>(null);
     const AdvancedImageRef = useRef<HTMLInputElement>(null);
-    const BasicImageRef = useRef<HTMLInputElement>(null);
     const loadImage = (imageUrl: string, inputElement: HTMLInputElement | null) => {
         if (!inputElement) return;
 
@@ -308,16 +305,16 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                 return;
             }
 
-            var unitFormFiles: UnitFormFile[] = formData.uploadedFiles;
+            const unitFormFiles: UnitFormFile[] = formData.uploadedFiles;
 
             //Save Hitbox Image
-            var hb = unitFormFiles.find(x => x.filePurpose == "Card_Hitbox_Image");
+            const hb = unitFormFiles.find(x => x.filePurpose == "Card_Hitbox_Image");
             if (hb && hb.data != undefined) {
                 await AddFileToUnit(hb.data, selectedUnit, hb.filePurpose, hb.fileName);
             }
 
             //Save Adv Image
-            var ai = unitFormFiles.find(x => x.filePurpose == "Card_Advanced_Image");
+            const ai = unitFormFiles.find(x => x.filePurpose == "Card_Advanced_Image");
             if (ai && ai.data != undefined) {
                 switch (cardSize) {
                     case "3x5":
@@ -334,14 +331,14 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             }
 
             //Save Basic image
-            var bi = unitFormFiles.find(x => x.filePurpose == "Card_Basic_Image");
+            const bi = unitFormFiles.find(x => x.filePurpose == "Card_Basic_Image");
             if (bi && bi.data != undefined) {
                 await AddFileToUnit(bi.data, selectedUnit, bi.filePurpose, bi.fileName);
             }
 
             //Save PDF
             if (pdf) {
-                var pdfPurpose: string;
+                let pdfPurpose: string;
                 switch (cardSize) {
                     case "3x5":
                         pdfPurpose = "3x5_Army_Card";
