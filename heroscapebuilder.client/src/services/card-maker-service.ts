@@ -7,15 +7,15 @@ import { UnitFormData } from '../models/unit-form-data';
 import { addPageTwoStandard } from '../services/CardMakerCore/Standard/add-page-two-standard';
 import { addPageOne3x5 } from "./CardMakerCore/3x5/add-page-one-3x5";
 import { addPageTwo3x5 } from "./CardMakerCore/3x5/add-page-two-3x5";
-import { addPageOne4x6 } from "./CardMakerCore/4x6/add-page-one-4x6";
-import { addPageTwo4x6 } from "./CardMakerCore/4x6/add-page-two-4x6";
+import { addPageOnePC } from "./CardMakerCore/PC/add-page-one-PC";
+import { addPageTwoPC } from "./CardMakerCore/PC/add-page-two-PC";
 import { addPageOneStandard } from './CardMakerCore/Standard/add-page-one-standard';
 
-export async function generateIndexCard(doc: jsPDF, formData: UnitFormData, size = "4x6") {
+export async function generateIndexCard(doc: jsPDF, formData: UnitFormData, size = "PC") {
     try {
-        if (size == "4x6") {
-            await addPageOne4x6(formData, doc);
-            await addPageTwo4x6(formData, doc);
+        if (size == "PC") {
+            await addPageOnePC(formData, doc);
+            await addPageTwoPC(formData, doc);
         } else if (size == "3x5") {
             await addPageOne3x5(formData, doc);
             await addPageTwo3x5(formData, doc);
@@ -62,15 +62,15 @@ export async function generateIndexCard(doc: jsPDF, formData: UnitFormData, size
     }
 }
 
-export function initializePDF(size = "4x6"): jsPDF {
+export function initializePDF(size = "PC"): jsPDF {
     let doc: jsPDF | undefined;
-    if (size == "4x6") {
+    if (size == "PC") {
         // Define custom page size
-        const pageWidth = 6.25 * 72; // 1 inch = 72 points, 450
-        const pageHeight = 4.25 * 72; //306
+        const pageWidth = 2.75 * 72; // 1 inch = 72 points, 450
+        const pageHeight = 3.75 * 72; //306
 
         doc = new jsPDF({
-            orientation: 'landscape',
+            orientation: 'portrait',
             unit: 'pt',
             format: [pageWidth, pageHeight] // Set custom page size
         });

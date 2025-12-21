@@ -4,14 +4,14 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "../assets/scss/paper-dashboard.scss";
 import Footer from "../components/Footer/Footer";
 import Sidebar from "../components/Sidebar/Sidebar";
-import FourbysixArmyCards from "../pages/army-cards/fourbysix/fourbysix_army_card";
+import PlayingCardArmyCards from "../pages/army-cards/playingcard/playingcard_army_card";
 import MakeCardStandard from "../pages/army-cards/standard/make-card-standard";
 import ThreebyfiveArmyCards from "../pages/army-cards/threebyfive/threebyfive-army-cards";
 import UploadStandardCard from "../pages/army-cards/standard/upload-standard-card";
 import Home from "./Home/Home";
 import ArmyCards from "./army-cards/army-cards";
-import DownloadfourBySix from "./army-cards/fourbysix/download-fourbysix";
-import MakeCard4x6 from "./army-cards/fourbysix/make-card-4x6";
+import DownloadPlayingCard from "./army-cards/playingcard/download-playingcard";
+import MakeCardPC from "./army-cards/playingcard/make-card-PC";
 import Printing from "./army-cards/printing/printing";
 import DownloadStandard from "./army-cards/standard/download-standard";
 import StandardArmyCards from "./army-cards/standard/standard-army-cards";
@@ -43,9 +43,9 @@ const App: React.FC = () => {
                             <Route path="/army-cards/threebyfive" element={<ThreebyfiveArmyCards />} />
                             <Route path="/army-cards/threebyfive/download" element={<DownloadThreeByFive />} />
                             <Route path="/army-cards/threebyfive/create" element={<MakeCard3x5 />} />
-                            <Route path="/army-cards/fourbysix" element={<FourbysixArmyCards />} />
-                            <Route path="/army-cards/fourbysix/download" element={<DownloadfourBySix />} />
-                            <Route path="/army-cards/fourbysix/create" element={<MakeCard4x6 />} />
+                            <Route path="/army-cards/playingcard" element={<PlayingCardArmyCards />} />
+                            <Route path="/army-cards/playingcard/download" element={<DownloadPlayingCard />} />
+                            <Route path="/army-cards/playingcard/create" element={<MakeCardPC />} />
                             <Route path="/army-cards/printing" element={<Printing />} />
                             <Route path="/data" element={<UnitData />} />
                             <Route path="/data/unit-data" element={<UnitData/>} />

@@ -17,9 +17,9 @@ const ArmyCards: React.FC = () => {
                     </a>
                 </div>
                 <div className="col-md-4 card-option">
-                    <a href="/army-cards/fourbysix" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Index_4x6_Charos-SQ.png" alt="4x6 Heroscape Index Card" className="img-fluid" />
-                            <p className="text-center mt-2">4x6 Heroscape Index Cards</p>
+                    <a href="/army-cards/playingcard" className="text-decoration-none text-dark">
+                        <img src="/assets/img/cardThumbnails/Index_PC_Charos-SQ.png" alt="PC Heroscape Index Card" className="img-fluid" />
+                            <p className="text-center mt-2">Heroscape Playing Cards</p>
                     </a>
                 </div>
             </div>

@@ -123,8 +123,8 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                 if (cardSize == "3x5") {
                     adv = data.files.filter(x => x.filePurpose == "Card_3x5_Advanced_Image");
                     b = [];
-                } else if (cardSize == "4x6") {
-                    adv = data.files.filter(x => x.filePurpose == "Card_4x6_Advanced_Image");
+                } else if (cardSize == "PC") {
+                    adv = data.files.filter(x => x.filePurpose == "Card_PC_Advanced_Image");
                 } else if (cardSize == "Standard") {
                     adv = data.files.filter(x => x.filePurpose == "Card_Advanced_Image_Standard");
                 }
@@ -144,15 +144,6 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                 } else {
                     if (hitboxImageRef?.current) {
                         hitboxImageRef.current.value = '';
-                    }
-                }
-
-                if (b && b.length) {
-                    // Load and set the basic unit image
-                    handleLoadImage(b[0].filePath, BasicImageRef);
-                } else {
-                    if (BasicImageRef?.current) {
-                        BasicImageRef.current.value = '';
                     }
                 }
             }
@@ -235,8 +226,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         if (basicAttack === undefined || basicAttack <= 0) newErrors.basicAttack = 'Basic Attack is required and must be greater than 0';
         if (basicDefense === undefined || basicDefense <= 0) newErrors.basicDefense = 'Basic Defense is required and must be greater than 0';
         if (hitboxImageRef.current && hitboxImageRef.current.files?.length === 0) newErrors.hitboxImage = "Hitbox image is required";
-        if (AdvancedImageRef.current && AdvancedImageRef.current.files?.length === 0) newErrors.unitImageAdvanced = "Advanced image is required";
-        if (BasicImageRef.current && BasicImageRef.current.files?.length === 0 && cardSize != '3x5') newErrors.unitImageBasic = "Basic image is required";        
+        if (AdvancedImageRef.current && AdvancedImageRef.current.files?.length === 0) newErrors.unitImageAdvanced = "Advanced image is required";       
 
         setErrors(newErrors);
 
@@ -286,11 +276,6 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                             fileName: AdvancedImageRef.current?.files?.[0]?.name || '',
                             filePurpose: "Card_Advanced_Image",
                             data: AdvancedImageRef.current?.files?.[0],
-                        },
-                        {
-                            fileName: BasicImageRef.current?.files?.[0]?.name || '',
-                            filePurpose: "Card_Basic_Image",
-                            data: BasicImageRef.current?.files?.[0],
                         }
                     ],
                     condenseAbilities: condenseAbilitiesChecked, // Custom field for condensing abilities
@@ -338,8 +323,8 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                     case "3x5":
                         ai.filePurpose = "Card_3x5_Advanced_Image";
                         break;
-                    case "4x6":
-                        ai.filePurpose = "Card_4x6_Advanced_Image";
+                    case "PC":
+                        ai.filePurpose = "Card_PC_Advanced_Image";
                         break;
                     case "Standard":
                         ai.filePurpose = "Card_Advanced_Image_Standard";
@@ -361,8 +346,8 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                     case "3x5":
                         pdfPurpose = "3x5_Army_Card";
                         break;
-                    case "4x6":
-                        pdfPurpose = "4x6_Army_Card";
+                    case "PC":
+                        pdfPurpose = "PC_Army_Card";
                         break;
                     case "Standard":
                         pdfPurpose = "Standard_Army_Card";
@@ -386,7 +371,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             case "3x5":
                 tt = "To ensure your image looks its best when uploaded, please use a square image (aspect ratio 1:1). This will prevent any distortion, as the image will be scaled to fit the content area.";
                 break;
-            case "4x6":
+            case "PC":
                 tt = "To ensure the best quality, please upload a square image (aspect ratio 1:1) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom right of the image will be partially covered by unit statistics.";
                 break;
             case "Standard":
@@ -866,7 +851,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
 
                 <div className="col-md-6">
                     <label htmlFor="unitImageAdvanced" className="form-label">
-                        Unit Image Advanced <span className="text-danger">*</span>
+                        Unit Image <span className="text-danger">*</span>
                         <span
                             data-bs-toggle="tooltip"
                             data-bs-html="true"
@@ -877,21 +862,6 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                     </label>
                     <input ref={AdvancedImageRef} type="file" id="unitImageAdvanced" className="form-control" accept="image/*" />
                     {errors.unitImageAdvanced && <div className="invalid-feedback">{errors.unitImageAdvanced}</div>}
-                </div>
-
-                <div className={`${cardSize == '3x5' ? 'invisible d-none' : 'col-md-6'}`} >
-                    <label htmlFor="unitImageBasic" className="form-label">
-                        Unit Image Basic <span className="text-danger">*</span>
-                        <span
-                            data-bs-toggle="tooltip"
-                            data-bs-html="true"
-                            title="To ensure the best quality, please upload a wide rectangular image (aspect ratio 3:2) to avoid distortion, as the image will be scaled to fit the content area. Note that the bottom half of the image will be covered by unit statistics.<br/><img src='/assets/img/tooltips/basic_unit_image.png' alt='basic unit image' />"
-                        >
-                            <span className="q">[?]</span>
-                        </span>
-                    </label>
-                    <input ref={BasicImageRef} type="file" id="unitImageBasic" className="form-control" accept="image/*" />
-                    {errors.unitImageBasic && <div className="invalid-feedback">{errors.unitImageBasic}</div>}
                 </div>
 
                 {/*Set and Numbers*/}

@@ -280,8 +280,8 @@ namespace HeroscapeBuilder.Server.Services
             {
                 case "3x5":
                     return ("3x5_Army_Card", "3x5_Army_Card_Thumb");
-                case "4x6":
-                    return ("4x6_Army_Card", "4x6_Army_Card_Thumb");
+                case "PC":
+                    return ("PC_Army_Card", "PC_Army_Card_Thumb");
                 case "standard":
                     return ("Standard_Army_Card", "Standard_Army_Card_Thumb");
                 default:
@@ -296,7 +296,7 @@ namespace HeroscapeBuilder.Server.Services
                 case "3x5_Army_Card_Thumb":
                 case "Standard_Army_Card_Thumb":
                     return _imageService.OptimizeImage(thumbnail, "WEB", null, 300);
-                case "4x6_Army_Card_Thumb":
+                case "PC_Army_Card_Thumb":
                     return _imageService.OptimizeImage(thumbnail, "WEB", 350);
                 default:
                     return thumbnail;
@@ -313,22 +313,22 @@ namespace HeroscapeBuilder.Server.Services
                     return "/card-assets/3x5/";
                 case "Card_Advanced_Image_Standard":
                     return "/card-assets/Standard/";
-                case "Card_4x6_Advanced_Image":
-                    return "/card-assets/4x6/";
+                case "Card_PC_Advanced_Image":
+                    return "/card-assets/PC/";
                 case "Card_Basic_Image":
                     return "/card-assets/Basic/";
                 case "3x5_Army_Card":
                     return "/pdfs/3x5/";
-                case "4x6_Army_Card":
-                    return "/pdfs/4x6/";
+                case "PC_Army_Card":
+                    return "/pdfs/PC/";
                 case "Standard_Army_Card":
                     return "/pdfs/standard/";
                 case "Standard_Army_Card_Thumb":
                     return "/thumbs/pdf_thumbs/Standard/";
                 case "3x5_Army_Card_Thumb":
                     return "/thumbs/pdf_thumbs/3x5/";
-                case "4x6_Army_Card_Thumb":
-                    return "/thumbs/pdf_thumbs/4x6/";
+                case "PC_Army_Card_Thumb":
+                    return "/thumbs/pdf_thumbs/PC/";
                 default:
                     return null;
             }

@@ -189,7 +189,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                 }
             }
         } else {
-            // 4x6 or standard logic
+            // PC or standard logic
             for (let i = 0; i < urls.length; i += 2) {
                 if (debug) console.log(`Processing pair: ${urls[i]} and ${urls[i + 1] ? urls[i + 1] : 'N/A'}`);
                 const blob1 = await blobCache(urls[i], `pdf-cache_${urls[i]}`);

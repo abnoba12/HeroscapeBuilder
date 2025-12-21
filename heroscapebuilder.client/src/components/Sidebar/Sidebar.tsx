@@ -92,7 +92,7 @@ const Sidebar: React.FC = () => {
                                     <ul className="submenu">
                                         <li><Link to="/army-cards/standard" onClick={toggleSidebar}>Standard Cards</Link></li>
                                         <li><Link to="/army-cards/threebyfive" onClick={toggleSidebar}>3x5 Index Cards</Link></li>
-                                        <li><Link to="/army-cards/fourbysix" onClick={toggleSidebar}>4x6 Index Cards</Link></li>
+                                        <li><Link to="/army-cards/playingcard" onClick={toggleSidebar}>Playing Cards</Link></li>
                                         <li><Link to="/army-cards/printing" onClick={toggleSidebar}>Printing Cards</Link></li>
                                         {hasRole("Admin") && (
                                             <li><Link to="/army-cards/standard/upload" onClick={toggleSidebar}>Upload Standard Card PDF</Link></li>
@@ -105,7 +105,7 @@ const Sidebar: React.FC = () => {
                                 {activeMenu === 'data' && (
                                     <ul className="submenu">
                                         <li><Link to="/data/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
-                                        {isAuthenticated() && (
+                                        {isAuthenticated() && hasRole("Admin") &&(
                                             <li><Link to="/data/myarmy" onClick={toggleSidebar}>My Army</Link></li>
                                         )}
                                     </ul>

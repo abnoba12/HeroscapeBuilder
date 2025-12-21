@@ -1,12 +1,12 @@
 import CardMaker from '../../../components/CardMaker/card-maker';
 
 
-function MakeCard4x6() {
+function MakeCardPC() {
     return (
         <div>
-            <CardMaker cardSize="4x6" />
+            <CardMaker cardSize="PC" />
         </div>
     );
 }
 
-export default MakeCard4x6;
+export default MakeCardPC;

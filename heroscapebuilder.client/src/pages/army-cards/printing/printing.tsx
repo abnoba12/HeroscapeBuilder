@@ -35,7 +35,7 @@ const Printing: React.FC = () => {
                     {/*<ul>*/}
                     {/*    <li><a id="download-standard-assets" href="#">Download Standard Army Card Image Assets<span className="spinner"></span></a></li>*/}
                     {/*    <li><a id="download-3x5-assets" href="#">Download 3x5 Army Card Image Assets<span className="spinner"></span></a></li>*/}
-                    {/*    <li><a id="download-4x6-assets" href="#">Download 4x6 Army Card Image Assets<span className="spinner"></span></a></li>*/}
+                    {/*    <li><a id="download-PC-assets" href="#">Download PC Army Card Image Assets<span className="spinner"></span></a></li>*/}
                     {/*</ul>*/}
 
                     <h3 id="download-executables-for-formatting-and-compressing-pdfs"><a href="/files/PDFUils.zip">Download executables for formatting and compressing PDFs</a></h3>
@@ -48,7 +48,7 @@ const Printing: React.FC = () => {
                             <ul>
                                 <li><strong>Purpose:</strong> This script is designed to process PDFs formatted as standard army cards (each PDF should be exactly 2 pages).</li>
                                 <li><strong>Usage:</strong> Place this script in a folder containing ONLY the relevant PDFs. The script will combine all PDFs in the folder into a single <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file.</li>
-                                <li><strong>Output:</strong> The resulting PDF is formatted, compressed, and optimized for printing standard cards on letter-size paper, with two cards per page. Pages are laid out for double-sided printing and can be cut apart using a paper cutter following the provided cut lines. This script is also compatible with 4x6 index cards if two cards per page are desired.</li>
+                                <li><strong>Output:</strong> The resulting PDF is formatted, compressed, and optimized for printing standard cards on letter-size paper, with two cards per page. Pages are laid out for double-sided printing and can be cut apart using a paper cutter following the provided cut lines. This script is also compatible with PC index cards if two cards per page are desired.</li>
                                 <li><strong>Note:</strong> The original PDFs are not modified, but any existing <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file in the folder will be overwritten.</li>
                             </ul>
                         </li>
@@ -60,11 +60,11 @@ const Printing: React.FC = () => {
                                 <li><strong>Note:</strong> The original PDFs are not modified, but any existing <code className="language-plaintext highlighter-rouge">master.pdf</code> file in the folder will be overwritten.</li>
                             </ul>
                         </li>
-                        <li>CombineAndCompress_4x6.exe
+                        <li>CombineAndCompress_PC.exe
                             <ul>
-                                <li><strong>Purpose:</strong> This script is designed for PDFs formatted as 4x6 index cards (each PDF should be exactly 2 pages, each page measuring 4.25 x 6.25 inches to allow for bleed).</li>
+                                <li><strong>Purpose:</strong> This script is designed for PDFs formatted as PC index cards (each PDF should be exactly 2 pages, each page measuring 4.25 x 6.25 inches to allow for bleed).</li>
                                 <li><strong>Usage:</strong> Place this script in a folder containing ONLY the relevant PDFs. The script will combine all PDFs into a single <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file.</li>
-                                <li><strong>Output:</strong> The resulting PDF is formatted, compressed, and optimized for printing 4x6 index cards. This script only combines the PDFs into a single file without placing multiple cards on a single page, allowing direct printing on 4x6 paper without cutting.</li>
+                                <li><strong>Output:</strong> The resulting PDF is formatted, compressed, and optimized for printing PC index cards. This script only combines the PDFs into a single file without placing multiple cards on a single page, allowing direct printing on PC paper without cutting.</li>
                                 <li><strong>Note:</strong> The original PDFs are not modified, but any existing <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file in the folder will be overwritten.</li>
                             </ul>
                         </li>
