@@ -74,7 +74,7 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
         const metaHeight = 10;
         const metaYGap = 11;
 
-        doc.setTextColor(68, 39, 16); // Set text color to Brown
+        doc.setTextColor(...blackRGB);
         SizeAndCenterText(doc, formData.race?.toUpperCase() || '', metaFontSize, metaX, metaY, metaWidth, metaHeight, -1.5, 0, drawOutlines, "left");
         SizeAndCenterText(doc, `${formData.rarity?.toUpperCase()} ${formData.type?.toUpperCase()}`, metaFontSize, metaX, metaY + (metaYGap * 1), metaWidth, metaHeight, -1.5, 0, drawOutlines, "left");
         SizeAndCenterText(doc, formData.role?.toUpperCase() || '', metaFontSize, metaX, metaY + (metaYGap * 2), metaWidth, metaHeight, -1.5, 0, drawOutlines, "left");
