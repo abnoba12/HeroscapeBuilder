@@ -58,7 +58,7 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
         const size = getSizeToMax(hitboxImgMaxWidth, hitboxImgMaxHeight, hitboxImg);
 
         const hitboxX = 156;
-        const hitboxY = 108;
+        const hitboxY = 97;
         const padHitboxX = size?.wPadding ? hitboxX + size.wPadding : hitboxX;
         const padHitboxY = size?.hPadding ? hitboxY + size.hPadding : hitboxY;
 
