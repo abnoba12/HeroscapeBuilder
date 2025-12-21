@@ -286,7 +286,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
 
                 let un = formData.name;
                 un = unitData.map(n => n.name).filter(n => n === formData.name).length > 1 ? `${un}-${formData.set?.name}` : un;
-                const fileName = `Index_${cardSize}_${un.replace(/\s+/g, "_")}.pdf`;
+                const fileName = `HSB_${cardSize}_${un.replace(/\s+/g, "_")}.pdf`;
 
                 await savePDF(doc, fileName);
                 await saveToDB(formData, doc.output('blob'), fileName);
