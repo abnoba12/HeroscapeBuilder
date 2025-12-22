@@ -23,7 +23,7 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
 
         const unitImageAdvancedSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Advanced_Image")?.data;
         const unitAdvanceImg = await loadImage(unitImageAdvancedSrc);
-        doc.addImage(unitAdvanceImg, 'PNG', 18, 35, 83, 83);
+        doc.addImage(unitAdvanceImg, 'PNG', 18, 35, 60, 60);
 
         // Load the General's image
         const generalImgSrc = `${BASE_IMAGE_PATH}/card-blanks/${formData.general}/${formData.general}_Front_PC.png`
@@ -44,21 +44,21 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
             doc.setTextColor(...whiteRGB); // Set text color to white
         }       
 
-        SizeAndCenterText(doc, formData.name?.toUpperCase(), 12, 54, 18, 98, 15, -1, 2, drawOutlines);
+        SizeAndCenterText(doc, formData.name?.toUpperCase(), 12, 54, 17, 125, 16, -1, 2, drawOutlines);
 
-        doc.setFontSize(14);
-        doc.text(formData.points?.toString() || '', 169.5, 33, { align: 'center' });
+        doc.setFontSize(16);
+        doc.text(formData.points?.toString() || '', 164, 55, { align: 'center' });
 
         // Load the hitbox image
         const hitboxImgSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Hitbox_Image")?.data;
         const hitboxImg = await loadImage(hitboxImgSrc);
 
-        const hitboxImgMaxWidth = 24;
-        const hitboxImgMaxHeight = 24;
+        const hitboxImgMaxWidth = 30;
+        const hitboxImgMaxHeight = 30;
         const size = getSizeToMax(hitboxImgMaxWidth, hitboxImgMaxHeight, hitboxImg);
 
-        const hitboxX = 156;
-        const hitboxY = 97;
+        const hitboxX = 149;
+        const hitboxY = 63;
         const padHitboxX = size?.wPadding ? hitboxX + size.wPadding : hitboxX;
         const padHitboxY = size?.hPadding ? hitboxY + size.hPadding : hitboxY;
 
@@ -67,12 +67,12 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
         // Add the new image to the first page                    
         doc.addImage(hitboxImg, 'PNG', padHitboxX, padHitboxY, size?.width || 0, size?.height || 0);
 
-        const metaFontSize = 8;
-        const metaX = 110;
-        const metaY = 41;
-        const metaWidth = 61;
+        const metaFontSize = 6;
+        const metaX = 88;
+        const metaY = 38;
+        const metaWidth = 52;
         const metaHeight = 10;
-        const metaYGap = 11;
+        const metaYGap = 9;
 
         doc.setTextColor(...blackRGB);
         SizeAndCenterText(doc, formData.race?.toUpperCase() || '', metaFontSize, metaX, metaY, metaWidth, metaHeight, -1.5, 0, drawOutlines, "left");
@@ -84,7 +84,7 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
 
         const statsX = 35;
         const statsY = 249
-        const statsXGap = 36;
+        const statsXGap = 37;
         const lifeXGap = -8;
         const lifeYGap = 1;
 
@@ -105,9 +105,9 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
         const paddingX = 5;
         const paddingY = 3;
         const textX = 16 + paddingX; // X coordinate for the text area
-        const textY = 126 + paddingY; // Y coordinate for the text area
+        const textY = 98 + paddingY; // Y coordinate for the text area
         const textWidth = 166 - (paddingX * 2); // Width of the text area
-        const textHeight = 108 - (paddingY * 2); // Height of the text area
+        const textHeight = 137 - (paddingY * 2); // Height of the text area
         const maxAbilityNameFontSize = 12;
         const maxAbilityTextFontSize = 9.5;
         const abilitySpacing = 0.25;
