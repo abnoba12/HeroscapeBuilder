@@ -53,12 +53,12 @@ export async function addPageOnePC(formData: UnitFormData, doc: jsPDF) {
         const hitboxImgSrc = formData.uploadedFiles.find(x => x.filePurpose === "Card_Hitbox_Image")?.data;
         const hitboxImg = await loadImage(hitboxImgSrc);
 
-        const hitboxImgMaxWidth = 30;
-        const hitboxImgMaxHeight = 30;
+        const hitboxImgMaxWidth = 28;
+        const hitboxImgMaxHeight = 28;
         const size = getSizeToMax(hitboxImgMaxWidth, hitboxImgMaxHeight, hitboxImg);
 
         const hitboxX = 149;
-        const hitboxY = 63;
+        const hitboxY = 65;
         const padHitboxX = size?.wPadding ? hitboxX + size.wPadding : hitboxX;
         const padHitboxY = size?.hPadding ? hitboxY + size.hPadding : hitboxY;
 
