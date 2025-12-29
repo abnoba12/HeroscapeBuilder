@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, pushGraphicsState, popGraphicsState, clip, rectangle, endPath } from 'pdf-lib';
 import React, { useEffect, useState } from 'react';
 import { UnitFile } from '../../models/unit-file';
 import { blobCache } from '../../services/cache-manager';
@@ -188,8 +188,135 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                     }
                 }
             }
+        } else if (cardSize === "PC") {
+            // 9-up BUTTED layout of trimmed cards (2.5" x 3.5") on US Letter
+            // Each source page is center-cropped to 2.5x3.5 and placed with no gaps.
+            // Duplex: flip on long edge => mirror columns on back.
+            const TRIM_W_IN = 2.52;
+            const TRIM_H_IN = 3.52;
+            const PT_PER_IN = 72;
+
+            const cellW = TRIM_W_IN * PT_PER_IN; // 180
+            const cellH = TRIM_H_IN * PT_PER_IN; // 252
+
+            const letterW = letterSize[0];
+            const letterH = letterSize[1];
+
+            const COLS = 3;
+            const ROWS = 3;
+            const PER_SHEET = COLS * ROWS;
+
+            const gridW = COLS * cellW; // 540
+            const gridH = ROWS * cellH; // 756
+
+            const marginX = (letterW - gridW) / 2;
+            const marginY = (letterH - gridH) / 2;
+
+            for (let i = 0; i < urls.length; i += PER_SHEET) {
+                if (debug) console.log(`Processing nine PDFs: ${urls.slice(i, i + PER_SHEET).join(", ")}`);
+
+                const pdfs = [];
+                for (let j = 0; j < PER_SHEET; j++) {
+                    if (urls[i + j]) {
+                        const blob = await blobCache(urls[i + j], `pdf-cache_${urls[i + j]}`);
+                        const pdfArrayBuffer = await blobToArrayBuffer(blob);
+                        const pdf = await PDFDocument.load(pdfArrayBuffer);
+                        pdfs.push(pdf);
+                    } else {
+                        pdfs.push(null);
+                    }
+                }
+
+                const pages = [];
+                for (const pdf of pdfs) {
+                    pages.push(pdf ? await pdf.getPages() : []);
+                }
+
+                // ---------- FRONT SHEET ----------
+                const combinedFront = mergedPdf.addPage(letterSize);
+
+                for (let j = 0; j < PER_SHEET; j++) {
+                    if (!pages[j][0]) continue;
+
+                    const [embeddedPage] = await mergedPdf.embedPages([pages[j][0]]);
+
+                    const col = j % COLS;
+                    const row = Math.floor(j / COLS);
+
+                    // Cell position (butted grid), top row first
+                    const cellX = marginX + col * cellW;
+                    const cellY = letterH - marginY - (row + 1) * cellH;
+
+                    // Compute where to place the *embedded page* so that its centered 2.5x3.5 region
+                    // maps exactly into the cell.
+                    const cx = embeddedPage.width / 2;
+                    const cy = embeddedPage.height / 2;
+
+                    // The bottom-left of the crop region in source coords:
+                    const cropLeft = cx - cellW / 2;
+                    const cropBottom = cy - cellH / 2;
+
+                    // So we translate source so cropLeft/cropBottom lands at cellX/cellY:
+                    const drawX = cellX - cropLeft;
+                    const drawY = cellY - cropBottom;
+
+                    // HARD clip on destination page (prevents any overlap no matter what)
+                    combinedFront.pushOperators(
+                        pushGraphicsState(),
+                        rectangle(cellX, cellY, cellW, cellH),
+                        clip(),
+                        endPath()
+                    );
+
+                    combinedFront.drawPage(embeddedPage, { x: drawX, y: drawY });
+
+                    combinedFront.pushOperators(popGraphicsState());
+
+                    if (debug) console.log(`Drew FRONT for card ${j + 1} in slot ${j}.`);
+                }
+
+                // ---------- BACK SHEET ----------
+                const combinedBack = mergedPdf.addPage(letterSize);
+
+                for (let j = 0; j < PER_SHEET; j++) {
+                    if (!pages[j][1]) continue;
+
+                    const [embeddedPage] = await mergedPdf.embedPages([pages[j][1]]);
+
+                    const col = j % COLS;
+                    const row = Math.floor(j / COLS);
+
+                    // Mirror columns for duplex "flip on long edge"
+                    const mirroredCol = (COLS - 1) - col;
+
+                    const cellX = marginX + mirroredCol * cellW;
+                    const cellY = letterH - marginY - (row + 1) * cellH;
+
+                    const cx = embeddedPage.width / 2;
+                    const cy = embeddedPage.height / 2;
+
+                    const cropLeft = cx - cellW / 2;
+                    const cropBottom = cy - cellH / 2;
+
+                    const drawX = cellX - cropLeft;
+                    const drawY = cellY - cropBottom;
+
+                    combinedBack.pushOperators(
+                        pushGraphicsState(),
+                        rectangle(cellX, cellY, cellW, cellH),
+                        clip(),
+                        endPath(),
+                    );
+
+                    combinedBack.drawPage(embeddedPage, { x: drawX, y: drawY });
+
+                    combinedBack.pushOperators(popGraphicsState());
+
+                    if (debug) console.log(`Drew BACK for card ${j + 1} (mirrored) in slot ${j}.`);
+                }
+            }
         } else {
-            // PC or standard logic
+            // standard logic
             for (let i = 0; i < urls.length; i += 2) {
                 if (debug) console.log(`Processing pair: ${urls[i]} and ${urls[i + 1] ? urls[i + 1] : 'N/A'}`);
                 const blob1 = await blobCache(urls[i], `pdf-cache_${urls[i]}`);
