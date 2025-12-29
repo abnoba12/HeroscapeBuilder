@@ -211,17 +211,17 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         if (!unitRarity.trim()) newErrors.unitRarity = 'Unit rarity is required';
         if (!unitType.trim()) newErrors.unitType = 'Unit Type is required';
         if (!unitSizeCategory.trim()) newErrors.unitSizeCategory = 'Unit Size Category is required';
-        if (!unitSize || unitSize <= 0) newErrors.unitSize = 'Unit Size is required and must be greater than 0';
+        if (!unitSize || unitSize <= 0) newErrors.unitSize = 'Unit Size is required and must not be negative';
         if (life === undefined || life <= 0) newErrors.life = 'Life is required and must be greater than 0';
-        if (advancedMove === undefined || advancedMove <= 0) newErrors.advancedMove = 'Advanced Move is required and must be greater than 0';
+        if (advancedMove === undefined || advancedMove < 0) newErrors.advancedMove = 'Advanced Move is required';
         if (advancedRange === undefined || advancedRange <= 0) newErrors.advancedRange = 'Advanced Range is required and must be greater than 0';
-        if (advancedAttack === undefined || advancedAttack <= 0) newErrors.advancedAttack = 'Advanced Attack is required and must be greater than 0';
-        if (advancedDefense === undefined || advancedDefense <= 0) newErrors.advancedDefense = 'Advanced Defense is required and must be greater than 0';
+        if (advancedAttack === undefined || advancedAttack < 0) newErrors.advancedAttack = 'Advanced Attack is required';
+        if (advancedDefense === undefined || advancedDefense < 0) newErrors.advancedDefense = 'Advanced Defense is required';
         if (points === undefined || points <= 0) newErrors.points = 'Points are required and must be greater than 0';
-        if (basicMove === undefined || basicMove <= 0) newErrors.basicMove = 'Basic Move is required and must be greater than 0';
+        if (basicMove === undefined || basicMove < 0) newErrors.basicMove = 'Basic Move is required';
         if (basicRange === undefined || basicRange <= 0) newErrors.basicRange = 'Basic Range is required and must be greater than 0';
-        if (basicAttack === undefined || basicAttack <= 0) newErrors.basicAttack = 'Basic Attack is required and must be greater than 0';
-        if (basicDefense === undefined || basicDefense <= 0) newErrors.basicDefense = 'Basic Defense is required and must be greater than 0';
+        if (basicAttack === undefined || basicAttack < 0) newErrors.basicAttack = 'Basic Attack is required';
+        if (basicDefense === undefined || basicDefense < 0) newErrors.basicDefense = 'Basic Defense is required';
         if (hitboxImageRef.current && hitboxImageRef.current.files?.length === 0) newErrors.hitboxImage = "Hitbox image is required";
         if (AdvancedImageRef.current && AdvancedImageRef.current.files?.length === 0) newErrors.unitImageAdvanced = "Advanced image is required";       
 
