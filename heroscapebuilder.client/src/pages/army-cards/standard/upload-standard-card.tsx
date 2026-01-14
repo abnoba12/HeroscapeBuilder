@@ -79,9 +79,7 @@ const UploadStandardCard: React.FC = () => {
         }
     };
 
-    if (loading) {
-        return <p>Loading...</p>;
-    }
+    if (loading) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
     return (
         <div className="container-fluid">

@@ -28,7 +28,7 @@ export const ImageCache: React.FC<{ src?: string; alt: string; cacheKey?: string
     }, [src, cacheKey]);
 
     if (!imageSrc) {
-        return <p>Loading image...</p>;
+        return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
     }
 
     return <img src={imageSrc} alt={alt} className={className} />;

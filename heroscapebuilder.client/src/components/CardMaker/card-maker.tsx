@@ -381,7 +381,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
         return tt;
     };
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
     return (
         <div id="cardMaker" className="container-fluid">

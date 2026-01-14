@@ -175,7 +175,7 @@ const UnitData: React.FC = () => {
         [hasColumnFilters, quickFilterText],
     );
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
     if (error) return <p>{error}</p>;    
 
     return (

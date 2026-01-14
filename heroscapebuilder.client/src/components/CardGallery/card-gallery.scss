@@ -63,6 +63,13 @@
     }
 }
 
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
 @media (max-width: 768px) {
     .pdf-gallery {
         gap: 16px;

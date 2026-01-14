@@ -42,7 +42,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
         fetchFiles();
     }, [cardSize]);
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
     if (error) return <p>{error}</p>;
 
     const handleCheckboxChange = (filePath: string) => {
