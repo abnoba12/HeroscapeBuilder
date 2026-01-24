@@ -110,10 +110,10 @@ const UnitData: React.FC = () => {
         },
         {
             field: 'stlUrls',
-            headerName: 'STL Files',
-            minWidth: 220,
+            headerName: '3D Models',
+            minWidth: 260,
             autoHeight: true,
-            wrapText: true,
+            wrapText: false,
             valueGetter: (params: ValueGetterParams<Unit, string>) =>
                 params.data?.stlUrls?.join(' | ') ?? '',
             cellRenderer: (params: ICellRendererParams<Unit>) => {
@@ -127,7 +127,7 @@ const UnitData: React.FC = () => {
                     <div className="stl-links-cell">
                         {stlUrls.map((url, index) => (
                             <a key={`${url}-${index}`} href={url} target="_blank" rel="noopener noreferrer">
-                                STL {index + 1}
+                                &#9830;STL{index + 1}
                             </a>
                         ))}
                     </div>
