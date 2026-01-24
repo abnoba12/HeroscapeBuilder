@@ -13,6 +13,13 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 .ForMember(dest => dest.Set, opt => opt.MapFrom(src => src.SetNavigation))
                 .ForMember(dest => dest.Abilities, opt => opt.MapFrom(src => src.ArmyCardAbilities.ToList()))
                 .ForMember(dest => dest.Files, opt => opt.MapFrom(src => src.ArmyCardFiles.ToList()))
+                .ForMember(
+                    dest => dest.StlUrls,
+                    opt => opt.MapFrom(
+                        src => src.ArmyCardStls
+                            .OrderBy(stl => stl.StlUrl)
+                            .Select(stl => stl.StlUrl)
+                            .ToList()))
                 .AfterMap((src, dest) =>
                 {
                     TransformCaseHelper.ApplyTransformations(dest);

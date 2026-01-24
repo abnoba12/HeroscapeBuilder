@@ -31,4 +31,5 @@ export interface Unit {
     note?: string;
     abilities: Ability[]; // Assuming Ability is another model you'll define
     files: UnitFile[]; // Assuming UnitFile is another model you'll define
+    stlUrls?: string[];
 }

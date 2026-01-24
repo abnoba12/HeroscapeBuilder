@@ -16,6 +16,18 @@
             height: calc(91vh - 70px);
             width: 100%;
             padding: 0 8px 12px;
+
+            .stl-links-cell {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                padding: 4px 0;
+                line-height: 1.2;
+
+                a {
+                    width: fit-content;
+                }
+            }
         }
 
         @media (max-width: 768px) {
