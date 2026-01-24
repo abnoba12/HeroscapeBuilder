@@ -66,6 +66,8 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public string? Note { get; set; }
 
+        public List<string> StlUrls { get; set; } = new List<string>();
+
         public List<AbilityEntity> Abilities { get; set; } = new List<AbilityEntity>();
 
         public virtual ICollection<UnitFileEntity> Files { get; set; } = new List<UnitFileEntity>();

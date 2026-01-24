@@ -108,6 +108,33 @@ const UnitData: React.FC = () => {
                 </span>
             ),
         },
+        {
+            field: 'stlUrls',
+            headerName: '3D Models',
+            minWidth: 260,
+            autoHeight: true,
+            wrapText: false,
+            valueGetter: (params: ValueGetterParams<Unit, string>) =>
+                params.data?.stlUrls?.join(' | ') ?? '',
+            cellRenderer: (params: ICellRendererParams<Unit>) => {
+                const stlUrls = params.data?.stlUrls ?? [];
+
+                if (stlUrls.length === 0) {
+                    return <span>-</span>;
+                }
+
+                return (
+                    <div className="stl-links-cell">
+                        {stlUrls.map((url, index) => (
+                            <a key={`${url}-${index}`} href={url} target="_blank" rel="noopener noreferrer">
+                                &#9830;STL{index + 1}
+                            </a>
+                        ))}
+                    </div>
+                );
+            },
+            cellStyle: { display: 'flex', alignItems: 'center' },
+        },
     ], []);
 
     const defaultColDef = useMemo<ColDef>(() => ({
