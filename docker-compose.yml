@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-  ### Web App (React + .NET Core API)
   heroscapebuilder:
     image: abnoba12/heroscapebuilder
     ports:
@@ -14,14 +13,10 @@ services:
       - DOTNET_ReadyToRun=1
       - DOTNET_TieredPGO=1
       - HeroscapeBuilder=${HeroscapeBuilder}
-    deploy:
-      mode: replicated
-      replicas: 2
-      placement:
-        max_replicas_per_node: 1
     networks:
       - internal_network
-      
+    restart: unless-stopped
+
   minio:
     image: minio/minio:latest
     command: server --address ":9000" --console-address ":9081" /data
@@ -34,53 +29,27 @@ services:
       MINIO_MAX_OBJECT_SIZE: 1G
     volumes:
       - /home/abnoba12/Sync/minio_storage/data:/data
-    deploy:
-      mode: replicated
-      replicas: 1
     ports:
-      - target: 9000
-        published: 2096
-        protocol: tcp
-      - target: 9081
-        published: 9081
-        protocol: tcp
+      - "2096:9000"
+      - "9081:9081"
     networks:
       - internal_network
+    restart: unless-stopped
 
-  ### Nginx Reverse Proxy for MinIO
   nginx:
     image: nginx
     volumes:
       - /home/abnoba12/Sync/nginx.conf:/etc/nginx/nginx.conf:ro
       - /home/abnoba12/Sync/heroscapebuilder-certs:/certs
     ports:
-      - mode: host
-        target: 80
-        published: 80
-        protocol: tcp
-      - mode: host
-        target: 443
-        published: 443
-        protocol: tcp
-      - mode: host
-        target: 80
-        published: 8012
-        protocol: tcp
-      - mode: host
-        target: 443
-        published: 8043
-        protocol: tcp
-    deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        max_replicas_per_node: 1
-        constraints:
-          - node.hostname == projectmaster
+      - "80:80"
+      - "443:443"
+      - "8012:80"
+      - "8043:443"
     networks:
       - internal_network
+    restart: unless-stopped
 
 networks:
   internal_network:
-    driver: overlay
-    attachable: true
+    driver: bridge
