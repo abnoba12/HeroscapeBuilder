@@ -15,6 +15,7 @@ services:
       - HeroscapeBuilder=${HeroscapeBuilder}
     networks:
       - internal_network
+      - shared_network
     restart: unless-stopped
 
   minio:
@@ -53,3 +54,5 @@ services:
 networks:
   internal_network:
     driver: bridge
+  shared_network:
+    external: true
