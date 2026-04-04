@@ -16,6 +16,7 @@ services:
     networks:
       - internal_network
       - shared_network
+      - nginx_proxy
     restart: unless-stopped
 
   minio:
@@ -35,6 +36,7 @@ services:
       - "9081:9081"
     networks:
       - internal_network
+      - nginx_proxy
     restart: unless-stopped
 
 networks:
