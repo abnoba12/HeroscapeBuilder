@@ -37,22 +37,10 @@ services:
       - internal_network
     restart: unless-stopped
 
-  nginx:
-    image: nginx
-    volumes:
-      - /home/abnoba12/Sync/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /home/abnoba12/Sync/heroscapebuilder-certs:/certs
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8012:80"
-      - "8043:443"
-    networks:
-      - internal_network
-    restart: unless-stopped
-
 networks:
   internal_network:
     driver: bridge
   shared_network:
+    external: true
+  nginx_proxy:
     external: true
