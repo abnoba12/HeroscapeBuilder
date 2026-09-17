@@ -5,5 +5,6 @@ export interface UnitFile {
     filePath: string;
     thumb: string;
     unitName?: string | null;
+    creator?: string | null;
     createdAt: Date;
 }

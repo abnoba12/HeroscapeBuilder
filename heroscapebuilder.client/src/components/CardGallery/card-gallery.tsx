@@ -1,6 +1,7 @@
 import { PDFDocument, pushGraphicsState, popGraphicsState, clip, rectangle, endPath } from 'pdf-lib';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { UnitFile } from '../../models/unit-file';
+import { getCreatorInfo } from '../../models/creator';
 import { blobCache } from '../../services/cache-manager';
 import { getFilesByPurpose } from '../../services/file-service';
 import ImageCache from "../../services/image-cache-service";
@@ -17,6 +18,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
     const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
     const [gallerySize, setGallerySize] = useState<string>("thumbnail col-xl-2 col-lg-3 col-md-4");
     const [isDownloading, setIsDownloading] = useState<boolean>(false); // Track download state
+    const [selectedCreator, setSelectedCreator] = useState<string>("");
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -41,6 +43,16 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
 
         fetchFiles();
     }, [cardSize]);
+
+    const availableCreators = useMemo(() => {
+        return Array.from(new Set(files.map(f => f.creator).filter((c): c is string => !!c)))
+            .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    }, [files]);
+
+    const filteredFiles = useMemo(() => {
+        if (!selectedCreator) return files;
+        return files.filter(f => f.creator === selectedCreator);
+    }, [files, selectedCreator]);
 
     if (loading) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
     if (error) return <p>{error}</p>;
@@ -428,9 +440,28 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                     </button>
                 </div>
             </div>
+            <div className="row creator-filter-row">
+                <div className="col-12 col-sm-6 col-md-4 col-lg-3 mx-auto">
+                    <label htmlFor="creatorFilter" className="form-label">Filter by Creator</label>
+                    <select
+                        id="creatorFilter"
+                        className="form-select"
+                        value={selectedCreator}
+                        onChange={(e) => setSelectedCreator(e.target.value)}
+                    >
+                        <option value="">All Creators</option>
+                        {availableCreators.map(creator => (
+                            <option key={creator} value={creator}>
+                                {getCreatorInfo(creator)?.label ?? creator}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
             <div className="row pdf-gallery">
-                {files.map((card, index) => {
+                {filteredFiles.map((card, index) => {
                     const displayName = getDisplayName(card);
+                    const creatorInfo = getCreatorInfo(card.creator);
                     return (
                         <div key={card.id || index} className={gallerySize}>
                             <div className="checkbox-wrapper">
@@ -440,6 +471,14 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                                     onChange={() => handleCheckboxChange(card.filePath)}
                                 />
                                 <label className="label-make-pdf">Add to PDF</label>
+                                {creatorInfo && (
+                                    <img
+                                        className="creator-badge"
+                                        src={creatorInfo.logo}
+                                        alt={creatorInfo.label}
+                                        title={creatorInfo.label}
+                                    />
+                                )}
                             </div>
                             <a className="thumbnail-image-link" href={card.filePath} target="_blank" rel="noopener noreferrer">
                                 <ImageCache

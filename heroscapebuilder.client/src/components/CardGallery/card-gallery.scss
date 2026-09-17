@@ -1,3 +1,8 @@
+.creator-filter-row {
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
 .pdf-gallery {
     display: flex;
     flex-wrap: wrap;
@@ -32,11 +37,24 @@
             margin-top: 10px;
             text-align: left; /* Aligns checkbox and label to the left */
             width: 100%;
+            display: flex;
+            align-items: center;
 
             .label-make-pdf {
                 padding-left: 8px;
                 font-size: 1.5em;
                 font-weight: normal;
+                flex: 1 1 auto;
+            }
+
+            .creator-badge {
+                width: auto;
+                min-width: 0;
+                height: 22px;
+                margin-left: 8px;
+                flex: 0 0 auto;
+                border-radius: 0;
+                box-shadow: none;
             }
         }
 

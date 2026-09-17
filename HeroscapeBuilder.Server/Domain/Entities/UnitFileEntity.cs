@@ -10,6 +10,8 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public string? UnitName { get; set; }
 
+        public string? Creator { get; set; }
+
         public string FilePurpose { get; set; } = null!;
 
         public string RawFilePath { get; set; }

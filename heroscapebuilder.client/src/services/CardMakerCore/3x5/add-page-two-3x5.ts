@@ -71,6 +71,7 @@ export async function addPageTwo3x5(formData: UnitFormData, doc: jsPDF) {
     }
 
     doc.setFontSize(8);
-    const setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
+    const unitsInSetText = formData.set?.unitsInSet != null ? ` of ${formData.set.unitsInSet}` : '';
+    const setText = `${formData.set?.name}\r\n${formData.unitNumbers}${unitsInSetText}`;
     CenterTextInArea(doc, setText, 16, 98, 153, 34, 0, 6, drawOutlines, undefined);
 }

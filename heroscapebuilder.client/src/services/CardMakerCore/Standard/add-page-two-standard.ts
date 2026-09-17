@@ -70,6 +70,7 @@ export async function addPageTwoStandard(formData: UnitFormData, doc: jsPDF, Glo
     }
 
     doc.setFontSize(6);
-    const setText = `${formData.set?.name}\r\n${formData.unitNumbers} of ${formData.set?.unitsInSet}`;
+    const unitsInSetText = formData.set?.unitsInSet != null ? ` of ${formData.set.unitsInSet}` : '';
+    const setText = `${formData.set?.name}\r\n${formData.unitNumbers}${unitsInSetText}`;
     CenterTextInArea(doc, setText, 80, 240 + GlobalAdjustX, 80 + GlobalAdjustY, 65, 0, 6, drawOutlines, undefined);
 }
