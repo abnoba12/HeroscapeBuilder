@@ -6,12 +6,13 @@ const Home: React.FC = () => {
         <div className="container-fluid">
             <div className="row">
                 <div className="col-12 text-center">
-                    <h5>Welcome to our site, dedicated to the creative and custom aspects of Heroscape. Here, we aim to support
+                    <h1>Heroscape Builder</h1>
+                    <p>Welcome to our site, dedicated to the creative and custom aspects of Heroscape. Here, we aim to support
                         and inspire your creativity by providing resources for custom units, terrain, cards,
                         play styles, and even alternate games using Heroscape components. Our goal is to foster a community
                         where imagination and innovation thrive within this fantastic game platform. Explore and
                         enjoy the offerings we have available, including Heroscape cards in various formats tailored to your
-                        preferences.</h5>
+                        preferences.</p>
                 </div>
             </div>
             <div className="row">
@@ -24,10 +25,10 @@ const Home: React.FC = () => {
             </div>
             <div className="row">
                 <div className="col-6 text-center">
-                    <a href="https://github.com/abnoba12/HeroscapeBuilder/discussions" target="_blank" className="btn btn-outline-success btn-sm mb-2">Visit our Discussions Page</a>
+                    <a href="https://github.com/abnoba12/HeroscapeBuilder/discussions" target="_blank" rel="noopener noreferrer" className="btn btn-outline-success btn-sm mb-2">Visit our Discussions Page</a>
                 </div>
                 <div className="col-6 text-center">
-                    <a href="https://github.com/abnoba12/HeroscapeBuilder/issues" target="_blank" className="btn btn-outline-success btn-sm mb-2">Report Bugs and Issues</a>
+                    <a href="https://github.com/abnoba12/HeroscapeBuilder/issues" target="_blank" rel="noopener noreferrer" className="btn btn-outline-success btn-sm mb-2">Report Bugs and Issues</a>
                 </div>
                 <div className="col-12 text-center">
                     <hr />
@@ -48,7 +49,7 @@ const Home: React.FC = () => {
                 </div>
                 <div className="col-md-4 site-area">
                     <a href="/game-play" className="text-decoration-none text-dark">
-                        <img src="/assets/img/game-play.png" alt="Heroscape Data" className="img-fluid" />
+                        <img src="/assets/img/game-play.png" alt="Heroscape Game Play Calculator" className="img-fluid" />
                         <p className="text-center mt-2">Game Play</p>
                     </a>
                 </div>

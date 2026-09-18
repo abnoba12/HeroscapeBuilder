@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /user/login
+Disallow: /user/register
+Disallow: /user/logout
+Disallow: /data/myarmy
+Disallow: /army-cards/standard/upload
+
+Sitemap: https://heroscapebuilder.com/sitemap.xml
