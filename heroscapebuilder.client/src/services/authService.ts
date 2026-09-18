@@ -15,24 +15,26 @@ export const register = async (email: string, password: string): Promise<void> =
 };
 
 export const login = async (email: string, password: string): Promise<void> => {
-    const response = await api.post<{ token: string }>(`/auth/login`, {
+    const response = await api.post<{ token: string; refreshToken: string }>(`/auth/login`, {
         email,
         password,
     });
     saveToken(response.data.token);
+    saveRefreshToken(response.data.refreshToken);
 };
 
 export const refreshToken = async (): Promise<void> => {
     try {
-        const token = getToken();
-        if (!token) {
-            throw new Error("No token available to refresh.");
+        const storedRefreshToken = getRefreshToken();
+        if (!storedRefreshToken) {
+            throw new Error("No refresh token available to refresh.");
         }
 
-        const response = await api.post<{ token: string }>(`/auth/refresh`, {
-            token,
+        const response = await api.post<{ token: string; refreshToken: string }>(`/auth/refresh`, {
+            refreshToken: storedRefreshToken,
         });
         saveToken(response.data.token);
+        saveRefreshToken(response.data.refreshToken);
     } catch (error) {
         console.error("Failed to refresh token", error);
         logout();
@@ -48,6 +50,14 @@ export const getToken = (): string | null => {
     return localStorage.getItem("jwt");
 };
 
+export const saveRefreshToken = (token: string): void => {
+    localStorage.setItem("refreshToken", token);
+};
+
+export const getRefreshToken = (): string | null => {
+    return localStorage.getItem("refreshToken");
+};
+
 export const getUser = (): JwtPayload | null => {
     const token = getToken();
     if (token) {
@@ -58,6 +68,7 @@ export const getUser = (): JwtPayload | null => {
 
 export const logout = (): void => {
     localStorage.removeItem("jwt");
+    localStorage.removeItem("refreshToken");
 };
 
 export const isAuthenticated = (): boolean => {
@@ -132,3 +143,44 @@ api.interceptors.request.use(async (config) => {
 }, (error) => {
     return Promise.reject(error);
 });
+
+// Track user activity so an idle tab is allowed to expire, while an active one renews silently.
+const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
+const ACTIVE_WINDOW_MS = 5 * 60 * 1000; // user counts as "active" if they interacted in the last 5 minutes
+const RENEWAL_CHECK_INTERVAL_MS = 30 * 1000;
+const RENEWAL_THRESHOLD_MS = 2 * 60 * 1000; // start attempting renewal 2 minutes before expiry
+
+let lastActivityAt = Date.now();
+
+if (typeof window !== "undefined") {
+    ACTIVITY_EVENTS.forEach((eventName) => {
+        window.addEventListener(
+            eventName,
+            () => {
+                lastActivityAt = Date.now();
+            },
+            { passive: true }
+        );
+    });
+
+    setInterval(async () => {
+        const token = getToken();
+        if (!token || isRefreshing) return;
+
+        const { exp } = jwtDecode<JwtPayload>(token);
+        const msUntilExpiry = exp * 1000 - Date.now();
+        const isActive = Date.now() - lastActivityAt < ACTIVE_WINDOW_MS;
+
+        if (msUntilExpiry > 0 && msUntilExpiry < RENEWAL_THRESHOLD_MS && isActive) {
+            isRefreshing = true;
+            try {
+                await refreshToken();
+                onAccessTokenRefreshed(getToken()!);
+            } catch (error) {
+                console.error("Silent token renewal failed:", error);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+    }, RENEWAL_CHECK_INTERVAL_MS);
+}
