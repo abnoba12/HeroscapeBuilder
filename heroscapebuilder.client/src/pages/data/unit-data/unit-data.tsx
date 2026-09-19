@@ -12,6 +12,7 @@ import {
 } from 'ag-grid-community';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ability } from '../../../models/ability';
+import SelectFloatingFilter from '../../../components/SelectFloatingFilter/SelectFloatingFilter';
 import { Unit } from '../../../models/unit';
 import { getUnits } from '../../../services/unit-service';
 import './unit-data.scss';
@@ -19,6 +20,13 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const dropdownFilter = (options: string[]): ColDef => ({
+    filter: 'agTextColumnFilter',
+    floatingFilterComponent: SelectFloatingFilter,
+    floatingFilterComponentParams: { options },
+    suppressFloatingFilterButton: true,
+});
 
 const UnitData: React.FC = () => {
     const [units, setUnits] = useState<Unit[]>([]);
@@ -40,16 +48,29 @@ const UnitData: React.FC = () => {
         setDialogContent('');
     };
 
+    const dropdownFilterOptions = useMemo(() => {
+        const distinctValues = (getValue: (unit: Unit) => string | undefined) =>
+            Array.from(new Set(units.map(getValue).filter((value): value is string => !!value)))
+                .sort((a, b) => a.localeCompare(b));
+
+        return {
+            creator: distinctValues((unit) => unit.creator),
+            general: distinctValues((unit) => unit.general),
+            rarity: distinctValues((unit) => unit.rarity),
+            type: distinctValues((unit) => unit.type),
+        };
+    }, [units]);
+
     const baseColumnDefs = useMemo((): ColDef[] => [
-        { field: 'creator', headerName: 'Creator', minWidth: 120 },
-        { field: 'general', headerName: 'General', minWidth: 110 },
+        { field: 'creator', headerName: 'Creator', minWidth: 150, ...dropdownFilter(dropdownFilterOptions.creator) },
+        { field: 'general', headerName: 'General', minWidth: 160, ...dropdownFilter(dropdownFilterOptions.general) },
         { field: 'name', headerName: 'Unit Name', minWidth: 200 },
-        { field: 'rarity', headerName: 'Rarity', minWidth: 130 },
-        { field: 'type', headerName: 'Unit Type', minWidth: 120 },
+        { field: 'rarity', headerName: 'Rarity', minWidth: 150, ...dropdownFilter(dropdownFilterOptions.rarity) },
+        { field: 'type', headerName: 'Unit Type', minWidth: 140, ...dropdownFilter(dropdownFilterOptions.type) },
         { field: 'race', headerName: 'Species', minWidth: 140 },
         { field: 'role', headerName: 'Role', minWidth: 160 },
         { field: 'sizeCategory', headerName: 'Size Category', minWidth: 140 },
-        { field: 'size', headerName: 'Size', filter: 'agNumberColumnFilter', maxWidth: 110 },
+        { field: 'size', headerName: 'Height', filter: 'agNumberColumnFilter', maxWidth: 110 },
         { field: 'personality', headerName: 'Personality', minWidth: 150 },
         { field: 'life', headerName: 'Life', filter: 'agNumberColumnFilter', maxWidth: 110 },
         { field: 'advAttack', headerName: 'Adv Attack', filter: 'agNumberColumnFilter', minWidth: 130 },
@@ -135,7 +156,7 @@ const UnitData: React.FC = () => {
             },
             cellStyle: { display: 'flex', alignItems: 'center' },
         },
-    ], []);
+    ], [dropdownFilterOptions]);
 
     const defaultColDef = useMemo<ColDef>(() => ({
         filter: true,

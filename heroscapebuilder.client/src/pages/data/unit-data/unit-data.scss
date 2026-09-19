@@ -18,6 +18,27 @@
             width: 100%;
             padding: 0 8px 12px;
 
+            // Keep the dropdown and free-form floating filters the same height
+            $floating-filter-control-height: 28px;
+
+            .select-floating-filter {
+                width: 100%;
+                height: $floating-filter-control-height;
+                padding: 0 4px;
+                border: 1px solid #babfc7;
+                border-radius: 3px;
+                background-color: #fff;
+                color: inherit;
+                font: inherit;
+                box-sizing: border-box;
+            }
+
+            .ag-floating-filter-input .ag-input-field-input {
+                height: $floating-filter-control-height;
+                padding: 0 6px;
+                box-sizing: border-box;
+            }
+
             .stl-links-cell {
                 display: flex;
                 flex-direction: row;

@@ -25,57 +25,6 @@ const Printing: React.FC = () => {
                     <p>Details about formatting tips and recommendations.</p>
 
                     <p>Based on measurements of the Heroscape cards, they are approximately 300 GSM or 110 lb Cover Weight.</p>
-
-                    <h2 id="downloads">Downloads</h2>
-
-                    {/*<h3 id="image-assets">Image Assets</h3>*/}
-
-                    {/*<p>Image assets to assist you in creating your own custom Heroscape cards.</p>*/}
-
-                    {/*<ul>*/}
-                    {/*    <li><a id="download-standard-assets" href="#">Download Standard Army Card Image Assets<span className="spinner"></span></a></li>*/}
-                    {/*    <li><a id="download-3x5-assets" href="#">Download 3x5 Army Card Image Assets<span className="spinner"></span></a></li>*/}
-                    {/*    <li><a id="download-PC-assets" href="#">Download PC Army Card Image Assets<span className="spinner"></span></a></li>*/}
-                    {/*</ul>*/}
-
-                    <h3 id="download-executables-for-formatting-and-compressing-pdfs"><a href="/files/PDFUils.zip">Download executables for formatting and compressing PDFs</a></h3>
-
-                    <h4 id="note">Note:</h4>
-                    <p>All files are designed for use on Windows.</p>
-
-                    <ul>
-                        <li>BuildDoubleSidedPrints_Orig.exe
-                            <ul>
-                                <li><strong>Purpose:</strong> This script is designed to process PDFs formatted as standard army cards (each PDF should be exactly 2 pages).</li>
-                                <li><strong>Usage:</strong> Place this script in a folder containing ONLY the relevant PDFs. The script will combine all PDFs in the folder into a single <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file.</li>
-                                <li><strong>Output:</strong> The resulting PDF is formatted, compressed, and optimized for printing standard cards on letter-size paper, with two cards per page. Pages are laid out for double-sided printing and can be cut apart using a paper cutter following the provided cut lines. This script is also compatible with PC index cards if two cards per page are desired.</li>
-                                <li><strong>Note:</strong> The original PDFs are not modified, but any existing <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file in the folder will be overwritten.</li>
-                            </ul>
-                        </li>
-                        <li>BuildDoubleSidedPrints_3x5.exe
-                            <ul>
-                                <li><strong>Purpose:</strong> This script is intended for PDFs formatted as 3x5 index cards (each PDF should be exactly 2 pages, each page measuring 3.25 x 5.25 inches to allow for bleed).</li>
-                                <li><strong>Usage:</strong> Place this script in a folder containing ONLY the relevant PDFs. The script will combine all PDFs into a single <code className="language-plaintext highlighter-rouge">master.pdf</code> file.</li>
-                                <li><strong>Output:</strong> The resulting PDF is formatted, compressed, and optimized for printing 3x5 index cards on letter-size paper, with four cards per page. Pages are laid out for double-sided printing and can be cut apart using a paper cutter following the provided cut lines.</li>
-                                <li><strong>Note:</strong> The original PDFs are not modified, but any existing <code className="language-plaintext highlighter-rouge">master.pdf</code> file in the folder will be overwritten.</li>
-                            </ul>
-                        </li>
-                        <li>CombineAndCompress_PC.exe
-                            <ul>
-                                <li><strong>Purpose:</strong> This script is designed for PDFs formatted as PC index cards (each PDF should be exactly 2 pages, each page measuring 4.25 x 6.25 inches to allow for bleed).</li>
-                                <li><strong>Usage:</strong> Place this script in a folder containing ONLY the relevant PDFs. The script will combine all PDFs into a single <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file.</li>
-                                <li><strong>Output:</strong> The resulting PDF is formatted, compressed, and optimized for printing PC index cards. This script only combines the PDFs into a single file without placing multiple cards on a single page, allowing direct printing on PC paper without cutting.</li>
-                                <li><strong>Note:</strong> The original PDFs are not modified, but any existing <code className="language-plaintext highlighter-rouge">compressed_combined.pdf</code> file in the folder will be overwritten.</li>
-                            </ul>
-                        </li>
-                        <li>CompressPDFs.exe
-                            <ul>
-                                <li><strong>Purpose:</strong> This script is designed to compress and optimize PDFs for printing.</li>
-                                <li><strong>Usage:</strong> Place this script in a folder containing at least one PDF. The script will compress and optimize all PDFs in the folder.</li>
-                                <li><strong>Note:</strong> This process WILL modify all PDFs in the folder. If uncompressed versions are needed, ensure you save copies elsewhere.</li>
-                            </ul>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>
