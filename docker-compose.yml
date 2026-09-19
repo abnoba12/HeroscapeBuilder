@@ -8,7 +8,6 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+
       - ASPNETCORE_ENVIRONMENT=Production
-      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
       - DOTNET_gcServer=1
       - DOTNET_ReadyToRun=1
       - DOTNET_TieredPGO=1
