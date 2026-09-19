@@ -10,13 +10,6 @@ namespace HeroscapeBuilder.Server.Program
     {
         public static WebApplicationBuilder RegisterServices(this WebApplicationBuilder builder)
         {
-            //IMapper
-            var assembliesToScan = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => a.FullName != null && a.FullName.StartsWith("HeroscapeBuilder"))
-            .ToArray();
-
-            builder.Services.AddAutoMapper(cfg => { }, assembliesToScan);
-
             //builder.Services
             // Automatically register all services in the HeroscapeBuilder.Server.Services namespace
             RegisterAllServices(builder.Services, "HeroscapeBuilder.Server.Services");

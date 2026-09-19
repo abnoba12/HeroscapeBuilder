@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using HeroscapeBuilder.Server.Common.Mapping;
 using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Data.Repositories;
 using HeroscapeBuilder.Server.Domain.Entities;
@@ -11,15 +11,13 @@ namespace HeroscapeBuilder.Server.Services
     public class FileService
     {
         private readonly FileRepository _fileRepository;
-        private readonly IMapper _mapper;
         private readonly PdfService _pdfService;
         private readonly IFileStorage<byte[]> _blobStorage;
         private readonly ImageService _imageService;
 
-        public FileService(FileRepository fileRepository, IMapper mapper, IFileStorage<byte[]> blobStorage, PdfService pdfThumbnailService, ImageService imageService)
+        public FileService(FileRepository fileRepository, IFileStorage<byte[]> blobStorage, PdfService pdfThumbnailService, ImageService imageService)
         {
             _fileRepository = fileRepository;
-            _mapper = mapper;
             _pdfService = pdfThumbnailService;
             _blobStorage = blobStorage;
             _imageService = imageService;
@@ -34,7 +32,7 @@ namespace HeroscapeBuilder.Server.Services
             if (files == null)
                 throw new ArgumentException("No files found");
 
-            var unitFiles = _mapper.Map<List<UnitFileEntity>>(files);
+            var unitFiles = files.Select(file => file.ToUnitFileEntity()).ToList();
 
             return unitFiles;
         }

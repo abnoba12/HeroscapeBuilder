@@ -62,7 +62,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
         /// <returns></returns>
         public async Task<int> AddArmyCardFilesAsync(List<ArmyCardFile> acfs)
         {
-            _context.Database.AutoTransactionsEnabled = false;
+            _context.Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
             int saved = 0;
             foreach (var armyCardFile in acfs)
             {

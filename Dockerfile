@@ -1,5 +1,5 @@
 # Stage 1: Build React Client
-FROM node:18 AS client-build
+FROM node:22 AS client-build
 WORKDIR /app/heroscapebuilder.client
 
 # Copy React client dependencies and install
@@ -14,7 +14,7 @@ RUN npm run build
 RUN ls -la /app/heroscapebuilder.client/dist
 
 # Stage 2: Build .NET WebAPI
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS api-build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS api-build
 WORKDIR /app
 
 # Copy only the WebAPI project file to restore dependencies
@@ -30,7 +30,7 @@ RUN dotnet publish -c Release -o /publish
 RUN ls -la /publish
 
 # Stage 3: Combine into Final Runtime Image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
 # Copy WebAPI published files from api-build

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using HeroscapeBuilder.Server.Common.Mapping;
 using HeroscapeBuilder.Server.Data.Repositories;
 using HeroscapeBuilder.Server.Domain.Entities;
 using HeroscapeBuilder.Server.Domain.Requests;
@@ -8,12 +8,10 @@ namespace HeroscapeBuilder.Server.Services
     public class MyArmyService
     {
         private readonly UserCardRepository _userCardRepository;
-        private readonly IMapper _mapper;
 
-        public MyArmyService(UserCardRepository userCardRepository, IMapper mapper)
+        public MyArmyService(UserCardRepository userCardRepository)
         {
             _userCardRepository = userCardRepository;
-            _mapper = mapper;
         }
 
         public async Task<List<UnitEntity>> GetMyUnits(Guid userId)
@@ -26,7 +24,7 @@ namespace HeroscapeBuilder.Server.Services
             var units = userCards
                 .Select(card =>
                 {
-                    var unit = _mapper.Map<UnitEntity>(card.OwnedArmyCardNavigation);
+                    var unit = card.OwnedArmyCardNavigation.ToUnitEntity();
                     unit.Quantity = card.Quantity;
                     return unit;
                 })
