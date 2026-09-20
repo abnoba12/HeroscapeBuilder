@@ -108,6 +108,8 @@ const BattlegroupEditor: React.FC = () => {
     const [quickFilter, setQuickFilter] = useState('');
     const [onlyAffordable, setOnlyAffordable] = useState(true);
     const [abilityUnitId, setAbilityUnitId] = useState<number | null>(null);
+    const [reviewSelected, setReviewSelected] = useState(false);
+    const gridSectionRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const load = async () => {
@@ -156,6 +158,12 @@ const BattlegroupEditor: React.FC = () => {
         [selection, unitById],
     );
 
+    // "Review" mode: the table lists only the selected units so their stats can be compared.
+    const reviewingSelected = reviewSelected && selectedList.length > 0;
+    useEffect(() => {
+        if (reviewSelected && selectedList.length === 0) setReviewSelected(false);
+    }, [reviewSelected, selectedList.length]);
+
     const pointLimit = Number.parseInt(pointLimitText, 10) || 0;
     const totalPoints = selectedList.reduce((sum, item) => sum + (item.unit.points ?? 0) * item.quantity, 0);
     const overLimit = pointLimit > 0 && totalPoints > pointLimit;
@@ -173,10 +181,13 @@ const BattlegroupEditor: React.FC = () => {
         [ownedUnits, creator, selection],
     );
 
-    const availableRows = useMemo(
-        () => filterByPoints ? creatorRows.filter(unit => (unit.points ?? 0) <= remainingPoints) : creatorRows,
-        [creatorRows, filterByPoints, remainingPoints],
-    );
+    const availableRows = useMemo<AvailableRow[]>(() => {
+        if (reviewingSelected) {
+            // Built from the selection (not My Army) so a saved unit you no longer own still shows up.
+            return selectedList.map(({ unit, quantity }) => ({ ...unit, owned: ownedById.get(unit.id) ?? 0, used: quantity }));
+        }
+        return filterByPoints ? creatorRows.filter(unit => (unit.points ?? 0) <= remainingPoints) : creatorRows;
+    }, [reviewingSelected, selectedList, ownedById, creatorRows, filterByPoints, remainingPoints]);
 
     /** Returns why the unit can't be added, or null when it can. */
     const addBlockedReason = (unit: Unit): string | null => {
@@ -278,15 +289,31 @@ const BattlegroupEditor: React.FC = () => {
         }
     };
 
+    const toggleReview = () => {
+        if (selectedList.length === 0) return;
+        const next = !reviewingSelected;
+        setReviewSelected(next);
+        // When the table is stacked above the selection, bring it into view.
+        if (next) gridSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    // Clicking anywhere on the selected-units box toggles review mode, except on its own buttons/inputs.
+    const handleSelectedBoxClick = (event: React.MouseEvent) => {
+        if ((event.target as HTMLElement).closest('button, input, a')) return;
+        toggleReview();
+    };
+
     const columnDefs = useMemo<ColDef<AvailableRow>[]>(() => [
         { headerName: '', cellRenderer: AddCell, width: 90, flex: 0, pinned: 'left', sortable: false, filter: false, floatingFilter: false, resizable: false },
         { field: 'name', headerName: 'Unit', width: 165, flex: 0, pinned: 'left' },
         { field: 'rarity', headerName: 'Rarity', width: 95, flex: 0 },
         { field: 'points', headerName: 'Points', filter: 'agNumberColumnFilter', width: 85, flex: 0 },
+        { field: 'life', headerName: 'Life', filter: 'agNumberColumnFilter', width: 80, flex: 0 },
         { field: 'advMove', headerName: 'Adv Move', filter: 'agNumberColumnFilter', width: 100, flex: 0 },
         { field: 'advRange', headerName: 'Adv Range', filter: 'agNumberColumnFilter', width: 100, flex: 0 },
         { field: 'advAttack', headerName: 'Adv Attack', filter: 'agNumberColumnFilter', width: 105, flex: 0 },
         { field: 'advDefense', headerName: 'Adv Defense', filter: 'agNumberColumnFilter', width: 110, flex: 0 },
+        { field: 'sizeCategory', headerName: 'Size Category', width: 140, flex: 0 },
         {
             headerName: 'Abilities',
             minWidth: 260,
@@ -387,10 +414,10 @@ const BattlegroupEditor: React.FC = () => {
                 </Paper>
 
                 <div className="row gy-3">
-                    <div className="col-xxl-8">
+                    <div className="col-xxl-8" ref={gridSectionRef}>
                         <Stack spacing={1}>
                             <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>My Army</Typography>
+                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>{reviewingSelected ? 'Selected units' : 'My Army'}</Typography>
                                 <TextField
                                     size="small"
                                     fullWidth
@@ -399,6 +426,14 @@ const BattlegroupEditor: React.FC = () => {
                                     onChange={event => setQuickFilter(event.target.value)}
                                 />
                             </Stack>
+                            {reviewingSelected ? (
+                                <Alert
+                                    severity="info"
+                                    action={<Button color="inherit" size="small" onClick={() => setReviewSelected(false)}>Show all units</Button>}
+                                >
+                                    {`Reviewing your ${selectedList.length} selected unit${selectedList.length === 1 ? '' : 's'}.`}
+                                </Alert>
+                            ) : (
                             <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap">
                                 <FormControlLabel
                                     control={<Switch size="small" checked={onlyAffordable} onChange={event => setOnlyAffordable(event.target.checked)} />}
@@ -412,6 +447,7 @@ const BattlegroupEditor: React.FC = () => {
                                         : 'Set a point limit to filter by remaining points'}
                                 </Typography>
                             </Stack>
+                            )}
                             <div className="ag-theme-alpine" style={{ height: '55vh', width: '100%' }}>
                                 <AgGridReact<AvailableRow>
                                     rowData={availableRows}
@@ -431,8 +467,37 @@ const BattlegroupEditor: React.FC = () => {
 
                     <div className="col-xxl-4">
                         <Stack spacing={1}>
-                            <Typography variant="h6">{`Battlegroup (${selectedList.reduce((sum, item) => sum + item.quantity, 0)} units)`}</Typography>
-                            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: '55vh' }}>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                                <Typography variant="h6">{`Battlegroup (${selectedList.reduce((sum, item) => sum + item.quantity, 0)} units)`}</Typography>
+                                <Button
+                                    size="small"
+                                    variant={reviewingSelected ? 'contained' : 'outlined'}
+                                    disabled={selectedList.length === 0}
+                                    onClick={toggleReview}
+                                >
+                                    {reviewingSelected ? 'Show all units' : 'Review in table'}
+                                </Button>
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary">
+                                {selectedList.length === 0
+                                    ? 'Add units, then click this box to review their stats in the table.'
+                                    : reviewingSelected
+                                        ? 'Reviewing these units in the table. Click this box again to show all units.'
+                                        : 'Click this box to review these units in the table.'}
+                            </Typography>
+                            <TableContainer
+                                component={Paper}
+                                variant="outlined"
+                                onClick={handleSelectedBoxClick}
+                                sx={{
+                                    maxHeight: '55vh',
+                                    cursor: selectedList.length > 0 ? 'pointer' : 'default',
+                                    borderColor: reviewingSelected ? 'primary.main' : undefined,
+                                    borderWidth: reviewingSelected ? 2 : 1,
+                                    boxShadow: reviewingSelected ? 3 : 0,
+                                    '&:hover': selectedList.length > 0 ? { borderColor: 'primary.main' } : undefined,
+                                }}
+                            >
                                 <Table size="small" stickyHeader>
                                     <TableHead>
                                         <TableRow>
