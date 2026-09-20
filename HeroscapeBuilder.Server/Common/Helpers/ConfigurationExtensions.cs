@@ -155,7 +155,10 @@ namespace HeroscapeBuilder.Server.Common.Helpers
                     throw new InvalidDataException("The configuration file is not a valid JSON.", ex);
                 }
             }
-            
+
+            // Local runs use the dev database instead of the one in the environment variable
+            DevelopmentDatabase.Apply(jsonConfig);
+
             // Step 4: Replace placeholders in the input "config" string using keys from the JSON file
             foreach (var property in jsonConfig.Properties())
             {

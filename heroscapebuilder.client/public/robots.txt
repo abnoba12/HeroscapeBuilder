@@ -3,7 +3,8 @@ Allow: /
 Disallow: /user/login
 Disallow: /user/register
 Disallow: /user/logout
-Disallow: /data/myarmy
+Disallow: /my-heroscape
+Disallow: /battlegroup/
 Disallow: /army-cards/standard/upload
 
 Sitemap: https://heroscapebuilder.com/sitemap.xml

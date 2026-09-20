@@ -1,4 +1,5 @@
-﻿using HeroscapeBuilder.Server.Data.Entities;
+﻿using EFCoreSecondLevelCacheInterceptor;
+using HeroscapeBuilder.Server.Data.Entities;
 using HeroscapeBuilder.Server.Domain.Requests;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,6 +26,13 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                     .ThenInclude(card => card.ArmyCardFiles)
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<int> GetMyArmyCount(Guid userId)
+        {
+            return await _context.UserCards
+                .NotCacheable()
+                .CountAsync(x => x.UserId == userId.ToString());
         }
 
         public async Task<int> SetMyArmy(Guid userId, List<MyArmyUpdateRequest> units)

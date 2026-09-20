@@ -1,7 +1,11 @@
 import React from 'react';
 import "./Home.scss";
+import { isAuthenticated } from "../../services/authService";
 
 const Home: React.FC = () => {
+    const showMyHeroscape = isAuthenticated();
+    const areaClass = showMyHeroscape ? "col-md-3 site-area" : "col-md-4 site-area";
+
     return (
         <div className="container-fluid">
             <div className="row">
@@ -35,24 +39,32 @@ const Home: React.FC = () => {
                 </div>
             </div>
             <section className="cards row gy-4">
-                <div className="col-md-4 site-area">
+                <div className={areaClass}>
                     <a href="/army-cards" className="text-decoration-none text-dark">
                         <img src="/assets/img/cardThumbnails/Charos-SQ.png" alt="Heroscape Army Cards" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Army Cards</p>
                     </a>
                 </div>
-                <div className="col-md-4 site-area">
+                <div className={areaClass}>
                     <a href="/data" className="text-decoration-none text-dark">
                         <img src="/assets/img/DataBuilderLogo.png" alt="Heroscape Data" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Data</p>
                     </a>
                 </div>
-                <div className="col-md-4 site-area">
+                <div className={areaClass}>
                     <a href="/game-play" className="text-decoration-none text-dark">
                         <img src="/assets/img/game-play.png" alt="Heroscape Game Play Calculator" className="img-fluid" />
                         <p className="text-center mt-2">Game Play</p>
                     </a>
                 </div>
+                {showMyHeroscape && (
+                    <div className={areaClass}>
+                        <a href="/my-heroscape" className="text-decoration-none text-dark">
+                            <img src="/assets/img/my-heroscape.png" alt="My Heroscape" className="img-fluid" />
+                            <p className="text-center mt-2">My Heroscape</p>
+                        </a>
+                    </div>
+                )}
             </section>
         </div>
     );

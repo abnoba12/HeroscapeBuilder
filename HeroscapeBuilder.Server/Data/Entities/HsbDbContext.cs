@@ -16,6 +16,10 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<ArmyCard> ArmyCards { get; set; }
 
+    public virtual DbSet<Battlegroup> Battlegroups { get; set; }
+
+    public virtual DbSet<BattlegroupUnit> BattlegroupUnits { get; set; }
+
     public virtual DbSet<ArmyCardAbility> ArmyCardAbilities { get; set; }
 
     public virtual DbSet<ArmyCardFile> ArmyCardFiles { get; set; }
@@ -222,6 +226,46 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_user_cards_AspNetUsers");
+        });
+
+        modelBuilder.Entity<Battlegroup>(entity =>
+        {
+            entity.ToTable("battlegroup");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Creator).HasMaxLength(450);
+
+            entity.HasIndex(e => new { e.UserId, e.Name }, "UX_battlegroup_UserId_Name").IsUnique();
+            entity.HasIndex(e => e.ShareId, "UX_battlegroup_ShareId").IsUnique();
+
+            entity.HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_battlegroup_AspNetUsers");
+        });
+
+        modelBuilder.Entity<BattlegroupUnit>(entity =>
+        {
+            entity.ToTable("battlegroup_unit");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+
+            entity.HasIndex(e => new { e.BattlegroupId, e.ArmyCardId }, "UX_battlegroup_unit_Battlegroup_ArmyCard").IsUnique();
+
+            entity.HasOne(d => d.Battlegroup)
+                .WithMany(p => p.BattlegroupUnits)
+                .HasForeignKey(d => d.BattlegroupId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_battlegroup_unit_battlegroup");
+
+            entity.HasOne(d => d.ArmyCard)
+                .WithMany()
+                .HasForeignKey(d => d.ArmyCardId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_battlegroup_unit_army_card");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -34,6 +34,11 @@ namespace HeroscapeBuilder.Server.Services
             return units;
         }
 
+        public async Task<int> GetMyUnitCount(Guid userId)
+        {
+            return await _userCardRepository.GetMyArmyCount(userId);
+        }
+
         public async Task<int> AddUnitsToMyArmy(Guid userId, List<int> unitIds)
         {
             if (await _userCardRepository.AddUnitsToMyArmy(userId, unitIds) != unitIds.Count)

@@ -31,6 +31,19 @@ namespace HeroscapeBuilder.Server.Controllers
             return Ok(unit);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetMyUnitCount()
+        {
+            var userId = UserHelper.GetCurrentUserId(HttpContext);
+            if (userId == null)
+            {
+                return Unauthorized("User ID not found or invalid.");
+            }
+
+            var count = await _myArmyService.GetMyUnitCount(userId.Value);
+            return Ok(count);
+        }
+
         [HttpPost]
         public async Task<IActionResult> AddUnitsToMyArmy(List<int> unitIds)
         {

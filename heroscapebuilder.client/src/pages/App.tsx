@@ -24,8 +24,12 @@ import AdminRoute from "../components/Auth/AdminRoute";
 import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
-import MyArmy from "./data/my-heroscape/my-army";
+import MyArmy from "./my-heroscape/my-army";
 import PageMeta from "../components/Seo/PageMeta";
+import Battlegroups from "./my-heroscape/battlegroups/battlegroups";
+import BattlegroupDetail from "./my-heroscape/battlegroups/battlegroup-detail";
+import BattlegroupEditor from "./my-heroscape/battlegroups/battlegroup-editor";
+import BattlegroupShared from "./my-heroscape/battlegroups/battlegroup-shared";
 
 const App: React.FC = () => {
     return (
@@ -132,6 +136,12 @@ const App: React.FC = () => {
                                     <Register />
                                 </PageMeta>
                             } />
+                            {/*Public, read-only view of a shared Battlegroup*/}
+                            <Route path="/battlegroup/:shareId" element={
+                                <PageMeta title="Shared Battlegroup" description="A Heroscape Battlegroup shared from Heroscape Builder." noindex>
+                                    <BattlegroupShared />
+                                </PageMeta>
+                            } />
 
                             {/*Private routes*/}
                             <Route path="/user/logout" element={
@@ -141,10 +151,45 @@ const App: React.FC = () => {
                                     </PageMeta>
                                 </PrivateRoute>
                             } />
-                            <Route path="/data/myarmy" element={
+                            <Route path="/my-heroscape" element={
+                                <PrivateRoute>
+                                    <PageMeta title="My Heroscape" description="Manage your personal Heroscape unit collection." noindex>
+                                        <MyArmy />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/my-heroscape/my-army" element={
                                 <PrivateRoute>
                                     <PageMeta title="My Army" description="Manage your personal Heroscape unit collection." noindex>
                                         <MyArmy />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/my-heroscape/battlegroups" element={
+                                <PrivateRoute>
+                                    <PageMeta title="Battlegroups" description="Build Battlegroups from your Heroscape army within a point limit." noindex>
+                                        <Battlegroups />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/my-heroscape/battlegroups/new" element={
+                                <PrivateRoute>
+                                    <PageMeta title="New Battlegroup" description="Create a Heroscape Battlegroup." noindex>
+                                        <BattlegroupEditor />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/my-heroscape/battlegroups/:id" element={
+                                <PrivateRoute>
+                                    <PageMeta title="Battlegroup" description="View a Heroscape Battlegroup." noindex>
+                                        <BattlegroupDetail />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/my-heroscape/battlegroups/:id/edit" element={
+                                <PrivateRoute>
+                                    <PageMeta title="Edit Battlegroup" description="Edit a Heroscape Battlegroup." noindex>
+                                        <BattlegroupEditor />
                                     </PageMeta>
                                 </PrivateRoute>
                             } />

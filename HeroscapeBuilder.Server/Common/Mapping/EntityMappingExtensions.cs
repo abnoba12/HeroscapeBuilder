@@ -50,6 +50,62 @@ namespace HeroscapeBuilder.Server.Common.Mapping
             return dest;
         }
 
+        /// <summary>
+        /// Maps a battlegroup for the API. <paramref name="ownedQuantities"/> (army card id -> quantity in My Army)
+        /// is only supplied for the owner; it drives the "needs review" flags, which are never exposed publicly.
+        /// </summary>
+        public static BattlegroupEntity ToBattlegroupEntity(this Battlegroup source, Dictionary<int, int>? ownedQuantities)
+        {
+            var isOwner = ownedQuantities != null;
+
+            var units = source.BattlegroupUnits
+                .Select(bgUnit =>
+                {
+                    var owned = 0;
+                    ownedQuantities?.TryGetValue(bgUnit.ArmyCardId, out owned);
+
+                    return new BattlegroupUnitEntity
+                    {
+                        Unit = bgUnit.ArmyCard.ToUnitEntity(),
+                        Quantity = bgUnit.Quantity,
+                        OwnedQuantity = owned,
+                        OverAllocated = isOwner && bgUnit.Quantity > owned,
+                    };
+                })
+                .OrderBy(unit => unit.Unit.Name)
+                .ToList();
+
+            var totalPoints = source.BattlegroupUnits.Sum(unit => (int)(unit.ArmyCard.Points ?? 0) * unit.Quantity);
+
+            var reasons = new List<string>();
+            var overAllocated = units.Where(unit => unit.OverAllocated).ToList();
+            if (overAllocated.Count > 0)
+            {
+                reasons.Add($"My Army no longer has enough copies of: {string.Join(", ", overAllocated.Select(unit => unit.Unit.Name))}.");
+            }
+            if (isOwner && totalPoints > source.PointLimit)
+            {
+                reasons.Add($"Total points ({totalPoints}) exceed the limit ({source.PointLimit}).");
+            }
+
+            return new BattlegroupEntity
+            {
+                Id = source.Id,
+                Name = source.Name,
+                PointLimit = source.PointLimit,
+                Creator = source.Creator,
+                Notes = source.Notes,
+                IsShared = source.IsShared,
+                ShareId = isOwner ? source.ShareId : null,
+                TotalPoints = totalPoints,
+                IsOwner = isOwner,
+                NeedsReview = reasons.Count > 0,
+                ReviewReasons = reasons,
+                UpdatedAt = source.UpdatedAt,
+                Units = units,
+            };
+        }
+
         public static AbilityEntity ToAbilityEntity(this ArmyCardAbility source)
         {
             var dest = new AbilityEntity

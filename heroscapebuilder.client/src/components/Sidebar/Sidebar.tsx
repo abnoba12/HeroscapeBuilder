@@ -1,11 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getUser, hasRole, isAuthenticated } from "../../services/authService";
+import { MY_ARMY_CHANGED_EVENT, getMyUnitCount } from "../../services/my_army-service";
 
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
     const [activeMenu, setActiveMenu] = useState<string | null>(null); // Tracks which menu is expanded
     const location = useLocation(); // Get the current location
+    const [hasArmyUnits, setHasArmyUnits] = useState<boolean>(false); // Battlegroups need at least one unit in My Army
+    const [armyVersion, setArmyVersion] = useState<number>(0); // Bumped when My Army is saved
+
+    useEffect(() => {
+        const onArmyChanged = () => setArmyVersion(version => version + 1);
+        window.addEventListener(MY_ARMY_CHANGED_EVENT, onArmyChanged);
+        return () => window.removeEventListener(MY_ARMY_CHANGED_EVENT, onArmyChanged);
+    }, []);
+
+    // Re-checked on navigation (covers login/logout) and after My Army changes.
+    useEffect(() => {
+        let cancelled = false;
+        if (!isAuthenticated()) {
+            setHasArmyUnits(false);
+            return;
+        }
+        getMyUnitCount()
+            .then(count => { if (!cancelled) setHasArmyUnits(count > 0); })
+            .catch(() => { if (!cancelled) setHasArmyUnits(false); });
+        return () => { cancelled = true; };
+    }, [location.pathname, armyVersion]);
 
     const toggleSidebar = (): void => {
         setIsOpen(!isOpen);
@@ -21,6 +43,9 @@ const Sidebar: React.FC = () => {
         if (location.pathname.startsWith("/game-play")) {
             return "light-blue";
         }
+        if (location.pathname.startsWith("/my-heroscape")) {
+            return "orange";
+        }
         return "black";
     };
 
@@ -32,6 +57,8 @@ const Sidebar: React.FC = () => {
             setActiveMenu("data");
         } else if (location.pathname.startsWith("/game-play")) {
             setActiveMenu("game-play");
+        } else if (location.pathname.startsWith("/my-heroscape")) {
+            setActiveMenu("my-heroscape");
         }
     }, [location.pathname]);
 
@@ -105,12 +132,22 @@ const Sidebar: React.FC = () => {
                                 {activeMenu === 'data' && (
                                     <ul className="submenu">
                                         <li><Link to="/data/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
-                                        {isAuthenticated() && hasRole("Admin") &&(
-                                            <li><Link to="/data/myarmy" onClick={toggleSidebar}>My Army</Link></li>
-                                        )}
                                     </ul>
                                 )}
                             </li>
+                            {isAuthenticated() && (
+                                <li className={`nav-item ${activeMenu === 'my-heroscape' ? 'active' : ''}`}>
+                                    <a href="#!" onClick={() => toggleSubmenu('my-heroscape')}><p>My Heroscape</p></a>
+                                    {activeMenu === 'my-heroscape' && (
+                                        <ul className="submenu">
+                                            <li><Link to="/my-heroscape/my-army" onClick={toggleSidebar}>My Army</Link></li>
+                                            {hasArmyUnits && (
+                                                <li><Link to="/my-heroscape/battlegroups" onClick={toggleSidebar}>Battlegroups</Link></li>
+                                            )}
+                                        </ul>
+                                    )}
+                                </li>
+                            )}
                             <li className={`nav-item ${activeMenu === 'game-play' ? 'active' : ''}`}>
                                 <a href="#!" onClick={() => toggleSubmenu('game-play')}><p>Game Play</p></a>
                                 {activeMenu === 'game-play' && (

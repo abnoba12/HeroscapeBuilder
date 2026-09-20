@@ -17,6 +17,11 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    if (DevelopmentDatabase.IsActive)
+    {
+        Console.WriteLine($"Development environment: using database '{DevelopmentDatabase.DatabaseName}'.");
+    }
+
     // Use NLog for logging
     builder.Logging.ClearProviders();
     builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
