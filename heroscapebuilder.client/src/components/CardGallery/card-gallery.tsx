@@ -1,5 +1,6 @@
 import { PDFDocument, pushGraphicsState, popGraphicsState, clip, rectangle, endPath } from 'pdf-lib';
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { UnitFile } from '../../models/unit-file';
 import { getCreatorInfo } from '../../models/creator';
 import { blobCache } from '../../services/cache-manager';
@@ -426,6 +427,11 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
 
     return (
         <div className="card-gallery">
+            <div className="row">
+                <div className="col-12 text-center shop-callout">
+                    Rather not print them yourself? <Link to="/shop">Order printed cards from the Card Shop</Link>.
+                </div>
+            </div>
             <div className="row">
                 <div className="col-12 text-center">
                     <button id="download" className="btn btn-primary" onClick={handleDownloadClick} disabled={isDownloading}>

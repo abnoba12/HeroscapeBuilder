@@ -21,7 +21,6 @@ try
     {
         Console.WriteLine($"Development environment: using database '{DevelopmentDatabase.DatabaseName}'.");
     }
-
     // Use NLog for logging
     builder.Logging.ClearProviders();
     builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
@@ -68,6 +67,9 @@ try
     });
 
     var app = builder.Build();
+
+    // Load the shop settings now so the Stripe status line is printed at startup rather than on the first order.
+    app.Services.GetRequiredService<HeroscapeBuilder.Server.Domain.Shop.ShopSettings>();
 
     app.UseCors("AllowSpecificOrigins");
 

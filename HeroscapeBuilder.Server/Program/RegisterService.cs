@@ -2,6 +2,8 @@
 using HeroscapeBuilder.Server.Common.Helpers;
 using HeroscapeBuilder.Server.Integrations.Interfaces;
 using HeroscapeBuilder.Server.Integrations.MinioStorage;
+using HeroscapeBuilder.Server.Integrations.StripePayments;
+using HeroscapeBuilder.Server.Domain.Shop;
 using System.Reflection;
 
 namespace HeroscapeBuilder.Server.Program
@@ -25,6 +27,37 @@ namespace HeroscapeBuilder.Server.Program
                 var blobStorageConfig = builder.Configuration.GetSectionWithEnvVariables("HeroscapeBuilder", "BlobStorage");
                 return new MinioStorage(blobStorageConfig["API"], blobStorageConfig["User"], blobStorageConfig["Password"]);
             });
+
+            // Card shop: Stripe keys come from user-secrets locally and the HeroscapeBuilder environment config in production.
+            builder.Services.AddSingleton(provider =>
+            {
+                var stripeConfig = builder.Configuration.GetSectionWithEnvVariables("HeroscapeBuilder", "Stripe");
+                var shopConfig = builder.Configuration.GetSection("Shop");
+                var countries = shopConfig.GetSection("ShippingCountries").Get<List<string>>();
+                var settings = new ShopSettings
+                {
+                    // Trimmed: keys pasted into secrets/config often pick up a stray space or line break.
+                    StripeSecretKey = stripeConfig["SecretKey"]?.Trim(),
+                    StripeWebhookSecret = stripeConfig["WebhookSecret"]?.Trim(),
+                    SiteUrl = (shopConfig["SiteUrl"] ?? "https://heroscapebuilder.com").TrimEnd('/'),
+                    Currency = shopConfig["Currency"] ?? "usd",
+                    ShippingCountries = countries is { Count: > 0 } ? countries : new List<string> { "US" },
+                    AutomaticTax = shopConfig.GetValue<bool>("AutomaticTax"),
+                };
+
+                // Says where checkout stands without ever printing a key. Goes to the console and the ErrorLogs table.
+                var mode = settings.StripeSecretKey?.StartsWith("sk_live_") == true ? "LIVE" : "test";
+                var rawKey = builder.Configuration["Stripe:SecretKey"];
+                var keySource = (builder.Configuration as IConfigurationRoot)?.Providers
+                    .LastOrDefault(p => p.TryGet("Stripe:SecretKey", out _))?.ToString() ?? "none";
+                var status = settings.StripeConfigured
+                    ? $"Card shop: Stripe {mode} key loaded from {keySource}. Webhook secret {(settings.WebhookConfigured ? "loaded" : "not set")}. Checkout redirects to {settings.SiteUrl}."
+                    : $"Card shop: NO Stripe secret key found. Stripe:SecretKey is {(string.IsNullOrEmpty(rawKey) ? "empty" : rawKey.StartsWith('%') ? "an unresolved placeholder" : "unrecognized")} (last set by {keySource}) in environment '{builder.Environment.EnvironmentName}'. Checkout is disabled.";
+                Console.WriteLine(status);
+                NLog.LogManager.GetLogger("HeroscapeBuilder.Shop").Info(status);
+                return settings;
+            });
+            builder.Services.AddSingleton<StripeClientProvider>();
 
             //Repositories
             // Automatically register all Repositories in the HeroscapeBuilder.Server.Data.Repositories namespace

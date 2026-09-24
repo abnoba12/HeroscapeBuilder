@@ -30,6 +30,15 @@ import Battlegroups from "./my-heroscape/battlegroups/battlegroups";
 import BattlegroupDetail from "./my-heroscape/battlegroups/battlegroup-detail";
 import BattlegroupEditor from "./my-heroscape/battlegroups/battlegroup-editor";
 import BattlegroupShared from "./my-heroscape/battlegroups/battlegroup-shared";
+import ShopCatalogPage from "./shop/shop-catalog";
+import ShopCart from "./shop/shop-cart";
+import ShopAbout from "./shop/shop-about";
+import CheckoutSuccess from "./shop/checkout-success";
+import ShopOrderPage from "./shop/shop-order";
+import MyOrders from "./shop/my-orders";
+import ShopAdminOrders from "./shop/admin/shop-admin-orders";
+import ShopAdminOrder from "./shop/admin/shop-admin-order";
+import ShopAdminSettings from "./shop/admin/shop-admin-settings";
 
 const App: React.FC = () => {
     return (
@@ -141,6 +150,61 @@ const App: React.FC = () => {
                                 <PageMeta title="Shared Battlegroup" description="A Heroscape Battlegroup shared from Heroscape Builder." noindex>
                                     <BattlegroupShared />
                                 </PageMeta>
+                            } />
+
+                            {/*Card shop*/}
+                            <Route path="/shop" element={
+                                <PageMeta title="Heroscape Card Shop" description="Order made-to-order printed Heroscape army cards in Standard, 3x5 index, and playing card formats.">
+                                    <ShopCatalogPage />
+                                </PageMeta>
+                            } />
+                            <Route path="/shop/cart" element={
+                                <PageMeta title="Cart" description="Your Heroscape card shop cart." noindex>
+                                    <ShopCart />
+                                </PageMeta>
+                            } />
+                            <Route path="/shop/about" element={
+                                <PageMeta title="How Ordering Works" description="How made-to-order Heroscape cards are produced and shipped, plus our refund policy.">
+                                    <ShopAbout />
+                                </PageMeta>
+                            } />
+                            <Route path="/shop/checkout/success" element={
+                                <PageMeta title="Order Confirmed" description="Your Heroscape card order." noindex>
+                                    <CheckoutSuccess />
+                                </PageMeta>
+                            } />
+                            <Route path="/shop/order/:accessKey" element={
+                                <PageMeta title="Order Status" description="Status of your Heroscape card order." noindex>
+                                    <ShopOrderPage />
+                                </PageMeta>
+                            } />
+                            <Route path="/shop/my-orders" element={
+                                <PrivateRoute>
+                                    <PageMeta title="My Orders" description="Your Heroscape card orders." noindex>
+                                        <MyOrders />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/shop/admin/orders" element={
+                                <AdminRoute>
+                                    <PageMeta title="Shop Orders" description="Admin: card shop orders." noindex>
+                                        <ShopAdminOrders />
+                                    </PageMeta>
+                                </AdminRoute>
+                            } />
+                            <Route path="/shop/admin/orders/:id" element={
+                                <AdminRoute>
+                                    <PageMeta title="Shop Order" description="Admin: card shop order." noindex>
+                                        <ShopAdminOrder />
+                                    </PageMeta>
+                                </AdminRoute>
+                            } />
+                            <Route path="/shop/admin/settings" element={
+                                <AdminRoute>
+                                    <PageMeta title="Shop Settings" description="Admin: card shop prices and settings." noindex>
+                                        <ShopAdminSettings />
+                                    </PageMeta>
+                                </AdminRoute>
                             } />
 
                             {/*Private routes*/}

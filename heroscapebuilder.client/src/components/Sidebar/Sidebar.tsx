@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getUser, hasRole, isAuthenticated } from "../../services/authService";
 import { MY_ARMY_CHANGED_EVENT, getMyUnitCount } from "../../services/my_army-service";
+import { CART_CHANGED_EVENT, getCartCount } from "../../services/shop-service";
 
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
@@ -9,6 +10,13 @@ const Sidebar: React.FC = () => {
     const location = useLocation(); // Get the current location
     const [hasArmyUnits, setHasArmyUnits] = useState<boolean>(false); // Battlegroups need at least one unit in My Army
     const [armyVersion, setArmyVersion] = useState<number>(0); // Bumped when My Army is saved
+    const [cartCount, setCartCount] = useState<number>(getCartCount); // Cards in the shop cart
+
+    useEffect(() => {
+        const onCartChanged = () => setCartCount(getCartCount());
+        window.addEventListener(CART_CHANGED_EVENT, onCartChanged);
+        return () => window.removeEventListener(CART_CHANGED_EVENT, onCartChanged);
+    }, []);
 
     useEffect(() => {
         const onArmyChanged = () => setArmyVersion(version => version + 1);
@@ -46,6 +54,9 @@ const Sidebar: React.FC = () => {
         if (location.pathname.startsWith("/my-heroscape")) {
             return "orange";
         }
+        if (location.pathname.startsWith("/shop")) {
+            return "red";
+        }
         return "black";
     };
 
@@ -59,6 +70,8 @@ const Sidebar: React.FC = () => {
             setActiveMenu("game-play");
         } else if (location.pathname.startsWith("/my-heroscape")) {
             setActiveMenu("my-heroscape");
+        } else if (location.pathname.startsWith("/shop")) {
+            setActiveMenu("shop");
         }
     }, [location.pathname]);
 
@@ -123,6 +136,25 @@ const Sidebar: React.FC = () => {
                                         <li><Link to="/army-cards/printing" onClick={toggleSidebar}>Printing Cards</Link></li>
                                         {hasRole("Admin") && (
                                             <li><Link to="/army-cards/standard/upload" onClick={toggleSidebar}>Upload Standard Card PDF</Link></li>
+                                        )}
+                                    </ul>
+                                )}
+                            </li>
+                            <li className={`nav-item ${activeMenu === 'shop' ? 'active' : ''}`}>
+                                <a href="#!" onClick={() => toggleSubmenu('shop')}><p>Card Shop{cartCount > 0 ? ` (${cartCount})` : ''}</p></a>
+                                {activeMenu === 'shop' && (
+                                    <ul className="submenu">
+                                        <li><Link to="/shop" onClick={toggleSidebar}>Order Printed Cards</Link></li>
+                                        <li><Link to="/shop/cart" onClick={toggleSidebar}>Cart{cartCount > 0 ? ` (${cartCount})` : ''}</Link></li>
+                                        <li><Link to="/shop/about" onClick={toggleSidebar}>How Ordering Works</Link></li>
+                                        {isAuthenticated() && (
+                                            <li><Link to="/shop/my-orders" onClick={toggleSidebar}>My Orders</Link></li>
+                                        )}
+                                        {hasRole("Admin") && (
+                                            <>
+                                                <li><Link to="/shop/admin/orders" onClick={toggleSidebar}>Manage Orders</Link></li>
+                                                <li><Link to="/shop/admin/settings" onClick={toggleSidebar}>Shop Settings</Link></li>
+                                            </>
                                         )}
                                     </ul>
                                 )}
