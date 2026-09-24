@@ -106,4 +106,30 @@
             }
         }
     }
+
+    .success-container {
+        margin-top: 1rem;
+        background-color: lighten($success-color, 30%);
+        color: darken($success-color, 25%);
+        padding: 1rem;
+        border-radius: $border-radius-base;
+        border: $border-thin solid $success-color;
+    }
+
+    // Inline text button, e.g. "Resend verification email".
+    .link-button {
+        display: inline;
+        padding: 0;
+        margin-top: 0.5rem;
+        background: none;
+        border: none;
+        color: $primary-color;
+        text-decoration: underline;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+    }
 }

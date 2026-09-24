@@ -48,6 +48,17 @@ namespace HeroscapeBuilder.Server.Common.Mapping
             };
         }
 
+        public static ShopStoreStatusEntity ToShopStoreStatusEntity(this StoreStatus source)
+        {
+            return new ShopStoreStatusEntity
+            {
+                IsOpen = source.IsOpen,
+                ClosedMessage = source.ClosedMessage,
+                ReopensOn = source.ReopensOn,
+                UpdatedAt = AsUtc(source.UpdatedAt),
+            };
+        }
+
         public static ShopOrderSummaryEntity ToShopOrderSummaryEntity(this CustomerOrder source)
         {
             return new ShopOrderSummaryEntity
@@ -62,6 +73,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 TotalCents = source.TotalCents,
                 CustomerName = source.CustomerName ?? source.ShipName,
                 Email = source.Email,
+                OwnerNotified = source.OwnerNotifiedAt != null,
             };
         }
 
@@ -87,6 +99,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 StripePaymentIntentId = source.StripePaymentIntentId,
                 StripeCheckoutSessionId = source.StripeCheckoutSessionId,
                 UpdatedAt = AsUtc(source.UpdatedAt),
+                OwnerNotifiedAt = AsUtc(source.OwnerNotifiedAt),
                 Formats = source.OrderItems
                     .GroupBy(x => new { x.FormatCode, x.FormatName })
                     .Select(group => new ShopQuoteFormatEntity

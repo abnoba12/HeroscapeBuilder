@@ -68,8 +68,9 @@ try
 
     var app = builder.Build();
 
-    // Load the shop settings now so the Stripe status line is printed at startup rather than on the first order.
+    // Load the shop settings now so the Stripe and email status lines are printed at startup rather than on the first order.
     app.Services.GetRequiredService<HeroscapeBuilder.Server.Domain.Shop.ShopSettings>();
+    app.Services.GetRequiredService<HeroscapeBuilder.Server.Domain.Shop.EmailSettings>();
 
     app.UseCors("AllowSpecificOrigins");
 

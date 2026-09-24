@@ -2,8 +2,8 @@ namespace HeroscapeBuilder.Server.Domain.Shop
 {
     /// <summary>
     /// Shop and Stripe configuration, read from the "Shop" and "Stripe" config sections at startup.
-    /// Locally the Stripe keys come from user-secrets; in production they come from the HeroscapeBuilder
-    /// environment config (%StripeSecretKey% / %StripeWebhookSecret% placeholders in appsettings.json).
+    /// The Stripe keys come only from the HeroscapeBuilder environment config (keys StripeSecretKey and
+    /// StripeWebhookSecret), locally and in production alike.
     /// </summary>
     public class ShopSettings
     {

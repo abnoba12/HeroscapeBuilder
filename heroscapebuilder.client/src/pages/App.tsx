@@ -24,6 +24,7 @@ import AdminRoute from "../components/Auth/AdminRoute";
 import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
+import VerifyEmail from "../pages/user/VerifyEmail";
 import MyArmy from "./my-heroscape/my-army";
 import PageMeta from "../components/Seo/PageMeta";
 import Battlegroups from "./my-heroscape/battlegroups/battlegroups";
@@ -143,6 +144,11 @@ const App: React.FC = () => {
                             <Route path="/user/register" element={
                                 <PageMeta title="Register" description="Create a Heroscape Builder account." noindex>
                                     <Register />
+                                </PageMeta>
+                            } />
+                            <Route path="/user/verify-email" element={
+                                <PageMeta title="Verify Email" description="Verify your Heroscape Builder account email." noindex>
+                                    <VerifyEmail />
                                 </PageMeta>
                             } />
                             {/*Public, read-only view of a shared Battlegroup*/}

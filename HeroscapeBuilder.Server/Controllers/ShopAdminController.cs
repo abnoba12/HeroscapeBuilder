@@ -41,6 +41,18 @@ namespace HeroscapeBuilder.Server.Controllers
             return Run(() => _adminService.RefundOrder(id));
         }
 
+        [HttpPut]
+        public Task<IActionResult> SetStoreStatus(ShopStoreStatusRequest request)
+        {
+            return Run(() => _adminService.SetStoreStatus(request));
+        }
+
+        [HttpPost]
+        public Task<IActionResult> SendTestEmail()
+        {
+            return Run(() => _adminService.SendTestEmail());
+        }
+
         [HttpGet]
         public Task<IActionResult> GetSettings()
         {

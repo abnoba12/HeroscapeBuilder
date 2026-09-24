@@ -34,7 +34,7 @@ import {
     removeFromCart,
     setCartQuantity,
 } from '../../services/shop-service';
-import { Loading } from './shop-parts';
+import { Loading, ShopClosedBanner } from './shop-parts';
 import './shop.scss';
 
 const ShopCart: React.FC = () => {
@@ -97,7 +97,8 @@ const ShopCart: React.FC = () => {
     if (loading) return <Loading />;
 
     const quantityErrors = quote?.errors.filter(x => !notices.includes(x)) ?? [];
-    const canCheckout = !!quote && quote.cardCount > 0 && quote.errors.length === 0 && !checkingOut;
+    const storeOpen = quote?.store?.isOpen ?? true;
+    const canCheckout = !!quote && storeOpen && quote.cardCount > 0 && quote.errors.length === 0 && !checkingOut;
 
     return (
         <div className="container-fluid shop">
@@ -105,6 +106,8 @@ const ShopCart: React.FC = () => {
                 <Typography variant="h4">Your Cart</Typography>
                 <Button component={Link} to="/shop">Continue shopping</Button>
             </Stack>
+
+            <ShopClosedBanner store={quote?.store} />
 
             {notices.length > 0 && (
                 <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setNotices([])}>
@@ -215,7 +218,9 @@ const ShopCart: React.FC = () => {
                                 disabled={!canCheckout}
                                 onClick={handleCheckout}
                             >
-                                {checkingOut ? <CircularProgress size={24} color="inherit" /> : '🔒 Secure checkout with Stripe'}
+                                {checkingOut
+                                    ? <CircularProgress size={24} color="inherit" />
+                                    : storeOpen ? '🔒 Secure checkout with Stripe' : 'Checkout is closed'}
                             </Button>
                             <SecureCheckoutNotice />
                         </Paper>

@@ -67,6 +67,13 @@ public partial class CustomerOrder
 
     public DateTime? ShippedAt { get; set; }
 
+    /// <summary>
+    /// When the "new order" email reached the shop owner. Null means it still has to be sent (and is retried).
+    /// </summary>
+    public DateTime? OwnerNotifiedAt { get; set; }
+
+    public int NotifyAttempts { get; set; }
+
     public virtual ApplicationUser? User { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

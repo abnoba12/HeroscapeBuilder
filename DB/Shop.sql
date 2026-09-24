@@ -207,3 +207,33 @@ BEGIN
     );
 END;
 GO
+
+-- Open/closed switch for the whole shop (single row). New installs start CLOSED so nothing can be ordered until the
+-- owner opens the shop from the admin Shop Settings page.
+IF OBJECT_ID(N'shop.store_status', N'U') IS NULL
+BEGIN
+    CREATE TABLE shop.store_status
+    (
+        id             INT             NOT NULL CONSTRAINT DF_store_status_id DEFAULT (1),
+        IsOpen         BIT             NOT NULL,
+        -- Shown to customers while the shop is closed, e.g. "On vacation - back soon!"
+        ClosedMessage  NVARCHAR(500)   NULL,
+        -- Optional date shown to customers; the shop does not reopen by itself.
+        ReopensOn      DATE            NULL,
+        UpdatedAt      DATETIME2       NOT NULL CONSTRAINT DF_store_status_UpdatedAt DEFAULT (SYSUTCDATETIME()),
+
+        CONSTRAINT PK_store_status PRIMARY KEY (id),
+        CONSTRAINT CK_store_status_SingleRow CHECK (id = 1)
+    );
+
+    INSERT INTO shop.store_status (id, IsOpen, ClosedMessage) VALUES (1, 0, N'The card shop is opening soon.');
+END;
+GO
+
+-- Owner email notification tracking. OwnerNotifiedAt stays NULL until the "new order" email has actually been sent,
+-- so a failed send is retried by the background check instead of being lost.
+IF COL_LENGTH(N'shop.customer_order', N'OwnerNotifiedAt') IS NULL
+    ALTER TABLE shop.customer_order ADD
+        OwnerNotifiedAt  DATETIME2  NULL,
+        NotifyAttempts   INT        NOT NULL CONSTRAINT DF_customer_order_NotifyAttempts DEFAULT (0);
+GO

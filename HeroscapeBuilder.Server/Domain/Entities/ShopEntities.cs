@@ -45,9 +45,25 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public bool IsActive { get; set; }
     }
 
+    /// <summary>
+    /// Whether the shop is taking orders. Closed shops can still be browsed, but checkout is refused.
+    /// </summary>
+    public class ShopStoreStatusEntity
+    {
+        public bool IsOpen { get; set; }
+
+        public string? ClosedMessage { get; set; }
+
+        public DateOnly? ReopensOn { get; set; }
+
+        public DateTime UpdatedAt { get; set; }
+    }
+
     public class ShopCatalogEntity
     {
         public bool CheckoutEnabled { get; set; }
+
+        public ShopStoreStatusEntity Store { get; set; } = new ShopStoreStatusEntity();
 
         public List<ShopFormatEntity> Formats { get; set; } = new List<ShopFormatEntity>();
 
@@ -108,6 +124,8 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public int TotalCents { get; set; }
 
         public ShopNextTierEntity? NextTier { get; set; }
+
+        public ShopStoreStatusEntity Store { get; set; } = new ShopStoreStatusEntity();
 
         /// <summary>
         /// Every discount tier, so the cart can show progress toward each one.
@@ -206,6 +224,11 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public string? CustomerName { get; set; }
 
         public string? Email { get; set; }
+
+        /// <summary>
+        /// False while a paid order's "new order" email to the owner has not gone out yet.
+        /// </summary>
+        public bool OwnerNotified { get; set; }
     }
 
     /// <summary>
@@ -277,6 +300,8 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public DateTime UpdatedAt { get; set; }
 
+        public DateTime? OwnerNotifiedAt { get; set; }
+
         /// <summary>
         /// Card counts per format, for planning production.
         /// </summary>
@@ -330,6 +355,15 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public bool WebhookConfigured { get; set; }
 
         public bool StripeTestMode { get; set; }
+
+        public bool EmailConfigured { get; set; }
+
+        /// <summary>
+        /// Where new order emails go.
+        /// </summary>
+        public string? NotifyEmail { get; set; }
+
+        public ShopStoreStatusEntity Store { get; set; } = new ShopStoreStatusEntity();
 
         public List<ShopFormatEntity> Formats { get; set; } = new List<ShopFormatEntity>();
 

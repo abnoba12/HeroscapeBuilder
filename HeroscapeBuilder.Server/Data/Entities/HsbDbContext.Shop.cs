@@ -24,6 +24,8 @@ public partial class HsbDbContext
 
     public virtual DbSet<StripeEvent> StripeEvents { get; set; }
 
+    public virtual DbSet<StoreStatus> StoreStatuses { get; set; }
+
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CardFormat>(entity =>
@@ -95,6 +97,14 @@ public partial class HsbDbContext
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_order_item_customer_order");
+        });
+
+        modelBuilder.Entity<StoreStatus>(entity =>
+        {
+            entity.ToTable("store_status", ShopSchema);
+
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedNever();
+            entity.Property(e => e.ClosedMessage).HasMaxLength(500);
         });
 
         modelBuilder.Entity<StripeEvent>(entity =>

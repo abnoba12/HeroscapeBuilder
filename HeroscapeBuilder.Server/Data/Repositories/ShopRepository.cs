@@ -137,6 +137,50 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// The single store status row. A missing row (script not run) counts as closed.
+        /// </summary>
+        public async Task<StoreStatus> GetStoreStatus(bool track = false)
+        {
+            var query = _context.StoreStatuses.NotCacheable().Where(x => x.Id == 1);
+            var status = await (track ? query : query.AsNoTracking()).FirstOrDefaultAsync();
+            if (status == null)
+            {
+                status = new StoreStatus { Id = 1, IsOpen = false, ClosedMessage = "The card shop is not set up yet.", UpdatedAt = DateTime.UtcNow };
+                if (track)
+                {
+                    _context.StoreStatuses.Add(status);
+                }
+            }
+            return status;
+        }
+
+        /// <summary>
+        /// Unpaid checkouts started since <paramref name="since"/>, oldest first.
+        /// </summary>
+        public async Task<List<CustomerOrder>> GetPendingOrders(DateTime since)
+        {
+            return await _context.CustomerOrders
+                .NotCacheable()
+                .Where(x => x.Status == Domain.Shop.OrderStatus.Pending && x.CreatedAt >= since)
+                .OrderBy(x => x.CreatedAt)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Paid orders whose "new order" email has not reached the owner yet.
+        /// </summary>
+        public async Task<List<int>> GetOrderIdsAwaitingNotification()
+        {
+            return await _context.CustomerOrders
+                .NotCacheable()
+                .Where(x => x.OwnerNotifiedAt == null && x.PaidAt != null)
+                .OrderBy(x => x.PaidAt)
+                .Select(x => x.Id)
+                .ToListAsync();
+        }
+
         public async Task<bool> EventProcessed(string eventId)
         {
             return await _context.StripeEvents.NotCacheable().AnyAsync(x => x.EventId == eventId);

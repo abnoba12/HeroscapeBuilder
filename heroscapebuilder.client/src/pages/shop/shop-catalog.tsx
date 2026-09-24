@@ -30,7 +30,7 @@ import {
     getCatalog,
     getErrorMessages,
 } from '../../services/shop-service';
-import { Loading, MadeToOrderNotice } from './shop-parts';
+import { Loading, MadeToOrderNotice, ShopClosedBanner } from './shop-parts';
 import './shop.scss';
 
 const PAGE_SIZE = 48;
@@ -93,7 +93,8 @@ const ShopCatalogPage: React.FC = () => {
                 </Badge>
             </Stack>
 
-            {!catalog.checkoutEnabled && (
+            <ShopClosedBanner store={catalog.store} />
+            {catalog.store.isOpen && !catalog.checkoutEnabled && (
                 <Alert severity="warning" sx={{ mb: 2 }}>Online checkout is temporarily unavailable. You can still build your cart.</Alert>
             )}
 

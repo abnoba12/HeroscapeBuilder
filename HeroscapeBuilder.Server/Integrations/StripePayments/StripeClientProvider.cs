@@ -32,6 +32,11 @@ namespace HeroscapeBuilder.Server.Integrations.StripePayments
 
         public bool IsTestMode { get; }
 
+        /// <summary>
+        /// False when no valid key is configured; <see cref="Client"/> would throw.
+        /// </summary>
+        public bool IsAvailable => _client != null;
+
         public IStripeClient Client => _client
             ?? throw new ShopException(ShopErrorKind.Unavailable, "Online checkout is not available right now. Please try again later.");
     }

@@ -4,6 +4,7 @@ using HeroscapeBuilder.Server.Integrations.Interfaces;
 using HeroscapeBuilder.Server.Integrations.MinioStorage;
 using HeroscapeBuilder.Server.Integrations.StripePayments;
 using HeroscapeBuilder.Server.Domain.Shop;
+using HeroscapeBuilder.Server.Services.Background;
 using System.Reflection;
 
 namespace HeroscapeBuilder.Server.Program
@@ -28,17 +29,18 @@ namespace HeroscapeBuilder.Server.Program
                 return new MinioStorage(blobStorageConfig["API"], blobStorageConfig["User"], blobStorageConfig["Password"]);
             });
 
-            // Card shop: Stripe keys come from user-secrets locally and the HeroscapeBuilder environment config in production.
+            // Card shop. The Stripe keys are read ONLY from the HeroscapeBuilder environment config (the same JSON that
+            // holds the database and JWT secrets), keys StripeSecretKey and StripeWebhookSecret. They are deliberately
+            // not in appsettings (and the project no longer uses user-secrets), so nothing else can override them.
             builder.Services.AddSingleton(provider =>
             {
-                var stripeConfig = builder.Configuration.GetSectionWithEnvVariables("HeroscapeBuilder", "Stripe");
                 var shopConfig = builder.Configuration.GetSection("Shop");
                 var countries = shopConfig.GetSection("ShippingCountries").Get<List<string>>();
                 var settings = new ShopSettings
                 {
-                    // Trimmed: keys pasted into secrets/config often pick up a stray space or line break.
-                    StripeSecretKey = stripeConfig["SecretKey"]?.Trim(),
-                    StripeWebhookSecret = stripeConfig["WebhookSecret"]?.Trim(),
+                    // Trimmed: keys pasted into config often pick up a stray space or line break.
+                    StripeSecretKey = Common.Helpers.ConfigurationExtensions.GetConfigWithPlaceholders("%StripeSecretKey%", "HeroscapeBuilder")?.Trim(),
+                    StripeWebhookSecret = Common.Helpers.ConfigurationExtensions.GetConfigWithPlaceholders("%StripeWebhookSecret%", "HeroscapeBuilder")?.Trim(),
                     SiteUrl = (shopConfig["SiteUrl"] ?? "https://heroscapebuilder.com").TrimEnd('/'),
                     Currency = shopConfig["Currency"] ?? "usd",
                     ShippingCountries = countries is { Count: > 0 } ? countries : new List<string> { "US" },
@@ -47,17 +49,43 @@ namespace HeroscapeBuilder.Server.Program
 
                 // Says where checkout stands without ever printing a key. Goes to the console and the ErrorLogs table.
                 var mode = settings.StripeSecretKey?.StartsWith("sk_live_") == true ? "LIVE" : "test";
-                var rawKey = builder.Configuration["Stripe:SecretKey"];
-                var keySource = (builder.Configuration as IConfigurationRoot)?.Providers
-                    .LastOrDefault(p => p.TryGet("Stripe:SecretKey", out _))?.ToString() ?? "none";
                 var status = settings.StripeConfigured
-                    ? $"Card shop: Stripe {mode} key loaded from {keySource}. Webhook secret {(settings.WebhookConfigured ? "loaded" : "not set")}. Checkout redirects to {settings.SiteUrl}."
-                    : $"Card shop: NO Stripe secret key found. Stripe:SecretKey is {(string.IsNullOrEmpty(rawKey) ? "empty" : rawKey.StartsWith('%') ? "an unresolved placeholder" : "unrecognized")} (last set by {keySource}) in environment '{builder.Environment.EnvironmentName}'. Checkout is disabled.";
+                    ? $"Card shop: Stripe {mode} key loaded from the HeroscapeBuilder environment config. Webhook secret {(settings.WebhookConfigured ? "loaded" : "not set (StripeWebhookSecret)")}. Checkout redirects to {settings.SiteUrl}."
+                    : "Card shop: NO Stripe secret key found. Add \"StripeSecretKey\" to the HeroscapeBuilder environment config (then restart Visual Studio so it sees the change). Checkout is disabled.";
                 Console.WriteLine(status);
                 NLog.LogManager.GetLogger("HeroscapeBuilder.Shop").Info(status);
                 return settings;
             });
             builder.Services.AddSingleton<StripeClientProvider>();
+
+            // Shop emails (new order alerts to the owner).
+            builder.Services.AddSingleton(provider =>
+            {
+                // Host/port are not secret and live in appsettings.json; the account and addresses come only from the
+                // HeroscapeBuilder environment config, like the Stripe keys.
+                var emailConfig = builder.Configuration.GetSection("Email");
+                string? FromEnv(string key) => Common.Helpers.ConfigurationExtensions.GetConfigWithPlaceholders($"%{key}%", "HeroscapeBuilder")?.Trim();
+                var settings = new EmailSettings
+                {
+                    Host = emailConfig["Host"]?.Trim(),
+                    Port = int.TryParse(emailConfig["Port"], out var port) ? port : 587,
+                    Username = FromEnv("EmailUsername"),
+                    // App passwords are often shown with spaces between groups; SMTP needs them without.
+                    Password = FromEnv("EmailPassword")?.Replace(" ", string.Empty),
+                    From = FromEnv("EmailFrom"),
+                    NotifyTo = FromEnv("ShopNotifyEmail"),
+                };
+
+                var status = settings.IsConfigured
+                    ? $"Card shop: order emails go to {settings.NotifyTo} via {settings.Host}:{settings.Port}."
+                    : "Card shop: email is NOT configured. Add EmailUsername, EmailPassword and ShopNotifyEmail to the HeroscapeBuilder environment config. New orders will not be emailed.";
+                Console.WriteLine(status);
+                NLog.LogManager.GetLogger("HeroscapeBuilder.Shop").Info(status);
+                return settings;
+            });
+
+            // Checks Stripe every few minutes for payments the site missed and retries unsent order emails.
+            builder.Services.AddHostedService<ShopReconciliationWorker>();
 
             //Repositories
             // Automatically register all Repositories in the HeroscapeBuilder.Server.Data.Repositories namespace

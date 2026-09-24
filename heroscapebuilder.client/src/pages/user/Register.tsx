@@ -12,15 +12,15 @@ const Register: React.FC = () => {
     const [password, setPassword] = useState<string>("");
     const [errors, setErrors] = useState<ApiError[]>([]); // To store API errors
     const [loading, setLoading] = useState<boolean>(false); // Track loading state
+    const [registered, setRegistered] = useState<{ emailSent: boolean } | null>(null);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true); // Start loading
         setErrors([]); // Clear any previous errors
         try {
-            await register(email, password);
-            alert("Registration successful! Please log in.");
-            window.location.href = "/user/login"; // Redirect to login page
+            const emailSent = await register(email, password);
+            setRegistered({ emailSent });
         } catch (err: any) {
             if (err.response && err.response.data) {
                 setErrors(err.response.data); // Set API errors
@@ -31,6 +31,24 @@ const Register: React.FC = () => {
             setLoading(false); // Stop loading
         }
     };
+
+    if (registered) {
+        return (
+            <div className="user-container">
+                <h2>Check Your Email</h2>
+                {registered.emailSent ? (
+                    <div className="success-container">
+                        We sent a verification link to {email}. Open it to activate your account, then log in.
+                    </div>
+                ) : (
+                    <div className="error-container">
+                        Your account was created, but we couldn't send the verification email. Try logging in and
+                        choose "Resend verification email".
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="user-container">

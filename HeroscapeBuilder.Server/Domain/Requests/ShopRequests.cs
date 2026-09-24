@@ -29,6 +29,15 @@ namespace HeroscapeBuilder.Server.Domain.Requests
         public string? AdminNotes { get; set; }
     }
 
+    public class ShopStoreStatusRequest
+    {
+        public bool IsOpen { get; set; }
+
+        public string? ClosedMessage { get; set; }
+
+        public DateOnly? ReopensOn { get; set; }
+    }
+
     public class ShopSettingsSaveRequest
     {
         public List<ShopFormatSaveRequest> Formats { get; set; } = new List<ShopFormatSaveRequest>();

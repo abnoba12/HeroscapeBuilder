@@ -1,12 +1,25 @@
 import { Alert, Box, Chip, Divider, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { OrderStatus, ShopAddress, ShopDiscountTier, ShopFormat, ShopOrder } from '../../models/shop';
-import { STATUS_COLORS, STATUS_LABELS, formatDays, formatMoney, formatPercent } from '../../services/shop-service';
+import { OrderStatus, ShopAddress, ShopDiscountTier, ShopFormat, ShopOrder, ShopStoreStatus } from '../../models/shop';
+import { STATUS_COLORS, STATUS_LABELS, formatCalendarDate, formatDays, formatMoney, formatPercent } from '../../services/shop-service';
 
 export const Loading: React.FC = () => (
     <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>
 );
+
+/** Shown to customers while the shop isn't taking orders. */
+export const ShopClosedBanner: React.FC<{ store?: ShopStoreStatus | null }> = ({ store }) => {
+    if (!store || store.isOpen) return null;
+    return (
+        <Alert severity="warning" variant="filled" sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>The card shop is closed right now</Typography>
+            {store.closedMessage && <Typography variant="body2">{store.closedMessage}</Typography>}
+            {store.reopensOn && <Typography variant="body2">{`We expect to reopen on ${formatCalendarDate(store.reopensOn)}.`}</Typography>}
+            <Typography variant="body2">You can still browse and fill your cart; it will be saved until checkout reopens.</Typography>
+        </Alert>
+    );
+};
 
 export const StatusChip: React.FC<{ status: OrderStatus }> = ({ status }) => (
     <Chip label={STATUS_LABELS[status] ?? status} color={STATUS_COLORS[status] ?? 'default'} size="small" />

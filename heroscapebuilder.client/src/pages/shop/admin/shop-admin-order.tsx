@@ -102,6 +102,7 @@ const ShopAdminOrderPage: React.FC = () => {
                 <StatusChip status={order.status} />
                 <Typography variant="body2" color="text.secondary">
                     {`Paid ${formatDate(order.paidAt) || '-'} · Updated ${formatDate(order.updatedAt)}`}
+                    {order.paidAt && (order.ownerNotifiedAt ? ' · Emailed to you' : ' · New order email NOT sent yet (retrying)')}
                 </Typography>
             </Stack>
 

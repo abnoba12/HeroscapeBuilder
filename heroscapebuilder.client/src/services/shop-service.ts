@@ -1,6 +1,7 @@
 import AxiosSingletonService from './AxiosSingletonService';
 import {
     CartItem,
+    ShopStoreStatus,
     OrderStatus,
     ShopAdminOrder,
     ShopCatalog,
@@ -47,6 +48,17 @@ export const adminUpdateOrder = async (id: number, request: ShopOrderUpdateReque
 
 export const adminRefundOrder = async (id: number): Promise<ShopAdminOrder> =>
     (await api.post<ShopAdminOrder>(`/ShopAdmin/RefundOrder`, null, { params: { id } })).data;
+
+export const adminSetStoreStatus = async (status: ShopStoreStatus): Promise<ShopStoreStatus> =>
+    (await api.put<ShopStoreStatus>(`/ShopAdmin/SetStoreStatus`, {
+        isOpen: status.isOpen,
+        closedMessage: status.closedMessage || null,
+        reopensOn: status.reopensOn || null,
+    })).data;
+
+export const adminSendTestEmail = async (): Promise<void> => {
+    await api.post(`/ShopAdmin/SendTestEmail`);
+};
 
 export const adminGetSettings = async (): Promise<ShopSettings> =>
     (await api.get<ShopSettings>(`/ShopAdmin/GetSettings`)).data;
@@ -116,6 +128,13 @@ export const formatPercent = (percent: number): string => `${Number(percent.toFi
 
 export const formatDays = (min: number, max: number, unit = 'business days'): string =>
     min === max ? `${min} ${unit}` : `${min}-${max} ${unit}`;
+
+/** Formats a yyyy-MM-dd date without shifting it through time zones. */
+export const formatCalendarDate = (value?: string | null): string => {
+    if (!value) return '';
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+};
 
 export const formatDate = (value?: string | null): string =>
     value ? new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';

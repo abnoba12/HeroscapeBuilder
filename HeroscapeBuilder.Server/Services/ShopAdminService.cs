@@ -17,19 +17,76 @@ namespace HeroscapeBuilder.Server.Services
     {
         private const int MaxNotesLength = 10000;
 
+        private const int MaxClosedMessageLength = 500;
+
         private readonly ShopRepository _shopRepository;
         private readonly ShopService _shopService;
+        private readonly ShopCheckoutService _checkoutService;
+        private readonly ShopEmailService _emailService;
         private readonly StripeClientProvider _stripe;
         private readonly ShopSettings _settings;
+        private readonly EmailSettings _emailSettings;
         private readonly ILogger<ShopAdminService> _logger;
 
-        public ShopAdminService(ShopRepository shopRepository, ShopService shopService, StripeClientProvider stripe, ShopSettings settings, ILogger<ShopAdminService> logger)
+        public ShopAdminService(ShopRepository shopRepository, ShopService shopService, ShopCheckoutService checkoutService, ShopEmailService emailService, StripeClientProvider stripe, ShopSettings settings, EmailSettings emailSettings, ILogger<ShopAdminService> logger)
         {
             _shopRepository = shopRepository;
             _shopService = shopService;
+            _checkoutService = checkoutService;
+            _emailService = emailService;
             _stripe = stripe;
             _settings = settings;
+            _emailSettings = emailSettings;
             _logger = logger;
+        }
+
+        /// <summary>
+        /// Opens or closes the shop. Closing also expires every checkout still open on Stripe, so nobody can finish
+        /// paying after the shop closes.
+        /// </summary>
+        public async Task<ShopStoreStatusEntity> SetStoreStatus(ShopStoreStatusRequest request)
+        {
+            var message = string.IsNullOrWhiteSpace(request.ClosedMessage) ? null : request.ClosedMessage.Trim();
+            if (message?.Length > MaxClosedMessageLength)
+            {
+                throw new ShopException(ShopErrorKind.Validation, $"The closed message can be at most {MaxClosedMessageLength} characters.");
+            }
+
+            var status = await _shopRepository.GetStoreStatus(track: true);
+            var closing = status.IsOpen && !request.IsOpen;
+
+            status.IsOpen = request.IsOpen;
+            status.ClosedMessage = message;
+            status.ReopensOn = request.ReopensOn;
+            status.UpdatedAt = DateTime.UtcNow;
+            await _shopRepository.SaveChanges();
+
+            if (closing)
+            {
+                var expired = await _checkoutService.ExpireOpenCheckouts();
+                _logger.LogInformation("Card shop closed; {Count} open Stripe checkouts were expired.", expired);
+            }
+
+            return status.ToShopStoreStatusEntity();
+        }
+
+        public async Task<bool> SendTestEmail()
+        {
+            if (!_emailService.IsConfigured)
+            {
+                throw new ShopException(ShopErrorKind.Unavailable, "Email is not configured. Add EmailUsername, EmailPassword and ShopNotifyEmail to the HeroscapeBuilder environment config.");
+            }
+
+            try
+            {
+                await _emailService.SendTest();
+                return true;
+            }
+            catch (Exception ex) when (ex is not ShopException)
+            {
+                _logger.LogError(ex, "Test email failed.");
+                throw new ShopException(ShopErrorKind.Unavailable, $"The test email failed: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -149,6 +206,9 @@ namespace HeroscapeBuilder.Server.Services
                 StripeConfigured = _settings.StripeConfigured,
                 WebhookConfigured = _settings.WebhookConfigured,
                 StripeTestMode = _stripe.IsTestMode,
+                EmailConfigured = _emailSettings.IsConfigured,
+                NotifyEmail = EmailSettings.IsSet(_emailSettings.NotifyTo) ? _emailSettings.NotifyTo : null,
+                Store = (await _shopRepository.GetStoreStatus()).ToShopStoreStatusEntity(),
                 Formats = formats.Select(x => x.ToShopFormatEntity()).ToList(),
                 DiscountTiers = (await _shopRepository.GetDiscountTiers()).Select(x => x.ToShopDiscountTierEntity()).ToList(),
                 ShippingOptions = (await _shopRepository.GetShippingOptions(activeOnly: false)).Select(x => x.ToShopShippingOptionEntity()).ToList(),

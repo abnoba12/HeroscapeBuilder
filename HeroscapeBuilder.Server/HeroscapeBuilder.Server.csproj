@@ -8,7 +8,7 @@
     <SpaRoot>..\heroscapebuilder.client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
-    <UserSecretsId>a1051c05-ea6f-4330-a67f-4448e6a176e4</UserSecretsId>
+    <UserSecretsId>89022150-15d9-4042-8af6-8fac83307f65</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +27,7 @@
     <PackageReference Include="EFCoreSecondLevelCacheInterceptor.MemoryCache" Version="5.5.1" />
     <PackageReference Include="itext7" Version="9.3.0" />
     <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.3.0" />
+    <PackageReference Include="MailKit" Version="4.18.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.12">

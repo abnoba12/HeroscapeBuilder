@@ -1,8 +1,8 @@
-import { Alert, Button, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Typography } from '@mui/material';
+import { Alert, Button, Chip, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ShopOrderSummary } from '../../../models/shop';
-import { adminGetOrders, formatDate, formatMoney, getErrorMessages } from '../../../services/shop-service';
+import { ShopOrderSummary, ShopSettings } from '../../../models/shop';
+import { adminGetOrders, adminGetSettings, formatDate, formatMoney, getErrorMessages } from '../../../services/shop-service';
 import { Loading, StatusChip } from '../shop-parts';
 
 // "" = every placed order; "Abandoned" = checkouts that were never paid.
@@ -21,6 +21,11 @@ const ShopAdminOrders: React.FC = () => {
     const status = params.get('status') ?? 'Paid';
     const [orders, setOrders] = useState<ShopOrderSummary[] | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [settings, setSettings] = useState<ShopSettings | null>(null);
+
+    useEffect(() => {
+        adminGetSettings().then(setSettings).catch(() => setSettings(null));
+    }, []);
 
     useEffect(() => {
         setOrders(null);
@@ -42,6 +47,14 @@ const ShopAdminOrders: React.FC = () => {
                 {FILTERS.map(x => <Tab key={x.value || 'all'} value={x.value} label={x.label} />)}
             </Tabs>
 
+            {settings && !settings.store.isOpen && (
+                <Alert severity="warning" sx={{ mb: 2 }} action={<Button color="inherit" size="small" component={Link} to="/shop/admin/settings">Open it</Button>}>
+                    The shop is closed. Customers can&apos;t check out.
+                </Alert>
+            )}
+            {settings && !settings.emailConfigured && (
+                <Alert severity="error" sx={{ mb: 2 }}>Email is not configured, so new orders are not being emailed to you.</Alert>
+            )}
             {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
 
             {!orders ? <Loading /> : orders.length === 0 ? (
@@ -72,7 +85,12 @@ const ShopAdminOrders: React.FC = () => {
                                             {order.customerName ?? '-'}
                                             {order.email && <Typography variant="caption" color="text.secondary" component="div">{order.email}</Typography>}
                                         </TableCell>
-                                        <TableCell><StatusChip status={order.status} /></TableCell>
+                                        <TableCell>
+                                            <StatusChip status={order.status} />
+                                            {order.paidAt && !order.ownerNotified && (
+                                                <Chip size="small" color="error" variant="outlined" label="email not sent" sx={{ ml: 0.5 }} />
+                                            )}
+                                        </TableCell>
                                         <TableCell align="right">{order.cardCount}</TableCell>
                                         <TableCell align="right">{formatMoney(order.totalCents)}</TableCell>
                                     </TableRow>

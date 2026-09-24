@@ -36,6 +36,7 @@ namespace HeroscapeBuilder.Server.Services
             var tiers = await _shopRepository.GetDiscountTiers();
             var shipping = await _shopRepository.GetShippingOptions(activeOnly: true);
             var unsellable = await GetUnsellableCreators();
+            var store = await _shopRepository.GetStoreStatus();
 
             var formatByPurpose = formats.ToDictionary(x => x.FilePurpose, StringComparer.OrdinalIgnoreCase);
             // Some cards have the same PDF registered more than once; list each file once (the oldest row).
@@ -81,7 +82,8 @@ namespace HeroscapeBuilder.Server.Services
 
             return new ShopCatalogEntity
             {
-                CheckoutEnabled = _settings.StripeConfigured,
+                CheckoutEnabled = _settings.StripeConfigured && store.IsOpen,
+                Store = store.ToShopStoreStatusEntity(),
                 Formats = formats.Select(x => x.ToShopFormatEntity()).ToList(),
                 DiscountTiers = tiers.Select(x => x.ToShopDiscountTierEntity()).ToList(),
                 ShippingOptions = shipping.Select(x => x.ToShopShippingOptionEntity()).ToList(),
@@ -202,6 +204,7 @@ namespace HeroscapeBuilder.Server.Services
             };
 
             quote.DiscountTiers = tiers.Select(x => x.ToShopDiscountTierEntity()).ToList();
+            quote.Store = (await _shopRepository.GetStoreStatus()).ToShopStoreStatusEntity();
 
             quote.TurnaroundMinDays = usedFormats.Count > 0 ? usedFormats.Max(x => x.TurnaroundMinDays) : 0;
             quote.TurnaroundMaxDays = usedFormats.Count > 0 ? usedFormats.Max(x => x.TurnaroundMaxDays) : 0;
@@ -238,6 +241,17 @@ namespace HeroscapeBuilder.Server.Services
                 .Where(x => !x.IsSellable)
                 .Select(x => x.Creator)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// What customers are told when they try to check out while the shop is closed.
+        /// </summary>
+        public static string ClosedMessage(StoreStatus status)
+        {
+            var message = string.IsNullOrWhiteSpace(status.ClosedMessage) ? "The card shop is closed right now." : status.ClosedMessage.Trim();
+            return status.ReopensOn.HasValue
+                ? $"{message} We expect to reopen on {status.ReopensOn.Value:MMMM d, yyyy}. Your cart will be saved."
+                : $"{message} Your cart will be saved.";
         }
 
         public static string UnitName(ArmyCard card)

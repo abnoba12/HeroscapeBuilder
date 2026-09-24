@@ -10,8 +10,18 @@ interface JwtPayload {
 
 const api = AxiosSingletonService.getInstance();
 
-export const register = async (email: string, password: string): Promise<void> => {
-    await api.post(`/auth/register`, { email, password });
+/** Creates the account and emails a verification link. Resolves to whether that email went out. */
+export const register = async (email: string, password: string): Promise<boolean> => {
+    const response = await api.post<{ emailSent: boolean }>(`/auth/register`, { email, password });
+    return response.data.emailSent;
+};
+
+export const confirmEmail = async (userId: string, token: string): Promise<void> => {
+    await api.post(`/auth/confirmEmail`, { userId, token });
+};
+
+export const resendVerification = async (email: string): Promise<void> => {
+    await api.post(`/auth/resendVerification`, { email });
 };
 
 export const login = async (email: string, password: string): Promise<void> => {

@@ -12,24 +12,37 @@ using Stripe.Checkout;
 namespace HeroscapeBuilder.Server.Services
 {
     /// <summary>
-    /// Payment flow. The cart is priced on the server, saved as a Pending order, and the customer is sent to a
-    /// Stripe-hosted checkout page, so card details never touch this site. The order becomes Paid when Stripe
-    /// confirms it, through the webhook or the checkout success page (whichever arrives first).
+    /// Payment flow. The cart is priced on the server and saved as a Pending order (with every card on it) BEFORE the
+    /// customer is sent to the Stripe-hosted checkout page, so card details never touch this site and there is never a
+    /// payment without an order row. The order becomes Paid when Stripe confirms it, through whichever arrives first:
+    /// the webhook, the checkout success page, or the background reconciliation that polls Stripe every few minutes.
     /// </summary>
     public class ShopCheckoutService
     {
         private const string OrderIdMetadataKey = "order_id";
 
+        /// <summary>
+        /// How far back reconciliation looks for checkouts. Stripe sessions expire long before this.
+        /// </summary>
+        private static readonly TimeSpan ReconcileWindow = TimeSpan.FromDays(3);
+
+        /// <summary>
+        /// How long a customer has to finish paying on Stripe (Stripe allows 30 minutes to 24 hours).
+        /// </summary>
+        private static readonly TimeSpan CheckoutLifetime = TimeSpan.FromHours(2);
+
         private readonly ShopRepository _shopRepository;
         private readonly ShopService _shopService;
+        private readonly ShopEmailService _emailService;
         private readonly StripeClientProvider _stripe;
         private readonly ShopSettings _settings;
         private readonly ILogger<ShopCheckoutService> _logger;
 
-        public ShopCheckoutService(ShopRepository shopRepository, ShopService shopService, StripeClientProvider stripe, ShopSettings settings, ILogger<ShopCheckoutService> logger)
+        public ShopCheckoutService(ShopRepository shopRepository, ShopService shopService, ShopEmailService emailService, StripeClientProvider stripe, ShopSettings settings, ILogger<ShopCheckoutService> logger)
         {
             _shopRepository = shopRepository;
             _shopService = shopService;
+            _emailService = emailService;
             _stripe = stripe;
             _settings = settings;
             _logger = logger;
@@ -37,6 +50,12 @@ namespace HeroscapeBuilder.Server.Services
 
         public async Task<ShopCheckoutEntity> CreateCheckout(ShopCartRequest request, Guid? userId, string? userEmail)
         {
+            var status = await _shopRepository.GetStoreStatus();
+            if (!status.IsOpen)
+            {
+                throw new ShopException(ShopErrorKind.Conflict, ShopService.ClosedMessage(status));
+            }
+
             var client = _stripe.Client;
             var priced = await _shopService.PriceCart(request);
             var quote = priced.Quote;
@@ -87,29 +106,35 @@ namespace HeroscapeBuilder.Server.Services
                     .ToList(),
             };
 
+            // The order and its cards are committed before Stripe is involved. If anything later fails, the order id
+            // travels to Stripe in the session metadata, so a payment can always be matched back to this row.
             _shopRepository.AddOrder(order);
             await _shopRepository.SaveChanges();
 
+            Session session;
             try
             {
-                var session = await CreateStripeSession(client, order, quote, shippingOptions, userEmail);
-
-                order.StripeCheckoutSessionId = session.Id;
-                order.UpdatedAt = DateTime.UtcNow;
-                await _shopRepository.SaveChanges();
-
-                return new ShopCheckoutEntity { Url = session.Url };
+                session = await CreateStripeSession(client, order, quote, shippingOptions, userEmail);
             }
             catch (StripeException ex)
             {
                 _logger.LogError(ex, "Stripe checkout session could not be created for order {OrderId}.", order.Id);
 
-                // Nothing was charged, so the unpaid order is simply discarded.
-                _shopRepository.RemoveOrder(order);
+                // The customer never reached a payment page, so nothing was charged. The row is kept (not deleted) as a record.
+                order.Status = OrderStatus.Expired;
+                order.AdminNotes = $"Checkout could not be started: {ex.StripeError?.Message ?? ex.Message}";
+                order.UpdatedAt = DateTime.UtcNow;
                 await _shopRepository.SaveChanges();
 
                 throw new ShopException(ShopErrorKind.Unavailable, "We couldn't start checkout. Please try again in a few minutes.");
             }
+
+            // If this save fails the customer can still pay: reconciliation finds the session by its order_id metadata.
+            order.StripeCheckoutSessionId = session.Id;
+            order.UpdatedAt = DateTime.UtcNow;
+            await _shopRepository.SaveChanges();
+
+            return new ShopCheckoutEntity { Url = session.Url };
         }
 
         private async Task<Session> CreateStripeSession(IStripeClient client, CustomerOrder order, ShopQuoteEntity quote, List<ShippingOption> shippingOptions, string? userEmail)
@@ -126,6 +151,7 @@ namespace HeroscapeBuilder.Server.Services
                 CustomerEmail = string.IsNullOrWhiteSpace(userEmail) ? null : userEmail,
                 SuccessUrl = $"{_settings.SiteUrl}/shop/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
                 CancelUrl = $"{_settings.SiteUrl}/shop/cart",
+                ExpiresAt = DateTime.UtcNow.Add(CheckoutLifetime),
                 Metadata = metadata,
                 PaymentIntentData = new SessionPaymentIntentDataOptions
                 {
@@ -209,21 +235,58 @@ namespace HeroscapeBuilder.Server.Services
         /// </summary>
         public async Task<ShopOrderEntity> CompleteCheckout(string sessionId)
         {
-            var order = await _shopRepository.GetOrderByCheckoutSession(sessionId)
-                ?? throw new ShopException(ShopErrorKind.NotFound, "Order not found.");
+            var order = await _shopRepository.GetOrderByCheckoutSession(sessionId);
 
-            if (order.Status == OrderStatus.Pending)
+            // Pending, or not found because the session id never got saved: ask Stripe, which also links the session.
+            if (order == null || order.Status == OrderStatus.Pending)
             {
-                await FulfillCheckoutSession(sessionId);
-                order = (await _shopRepository.GetOrderByCheckoutSession(sessionId))!;
+                try
+                {
+                    await FulfillCheckoutSession(sessionId);
+                }
+                catch (StripeException ex)
+                {
+                    _logger.LogError(ex, "Could not confirm checkout session {SessionId} with Stripe.", sessionId);
+                }
+                order = await _shopRepository.GetOrderByCheckoutSession(sessionId);
+            }
+
+            if (order == null)
+            {
+                throw new ShopException(ShopErrorKind.NotFound, "Order not found.");
             }
 
             return order.ToShopOrderEntity(await _shopService.GetAllFormats());
         }
 
         /// <summary>
+        /// The order a checkout session belongs to: by the saved session id, or failing that by the order id Stripe
+        /// carries in the session metadata (covers a session id that was never saved to the order).
+        /// </summary>
+        private async Task<CustomerOrder?> FindOrderForSession(Session session, bool track)
+        {
+            var order = await _shopRepository.GetOrderByCheckoutSession(session.Id, track);
+            if (order != null)
+            {
+                return order;
+            }
+
+            var metadataId = session.Metadata != null && session.Metadata.TryGetValue(OrderIdMetadataKey, out var value) ? value : session.ClientReferenceId;
+            if (int.TryParse(metadataId, out var orderId))
+            {
+                order = await _shopRepository.GetOrder(orderId, track);
+                if (order != null && (order.StripeCheckoutSessionId == null || order.StripeCheckoutSessionId == session.Id))
+                {
+                    return order;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Marks the order for a checkout session as Paid once Stripe reports it paid, copying the customer, shipping
-        /// and final totals from Stripe. Safe to call repeatedly.
+        /// and final totals from Stripe, then emails the owner. Safe to call repeatedly.
         /// </summary>
         public async Task FulfillCheckoutSession(string sessionId)
         {
@@ -232,22 +295,37 @@ namespace HeroscapeBuilder.Server.Services
                 Expand = new List<string> { "shipping_cost.shipping_rate" },
             });
 
-            var order = await _shopRepository.GetOrderByCheckoutSession(session.Id, track: true);
+            var order = await FindOrderForSession(session, track: true);
             if (order == null)
             {
+                // Reconciliation emails the owner about paid sessions without an order.
                 _logger.LogWarning("Stripe checkout session {SessionId} does not match any order.", session.Id);
                 return;
             }
 
-            if (session.Metadata.TryGetValue(OrderIdMetadataKey, out var orderId) && orderId != order.Id.ToString())
+            if (session.Metadata != null && session.Metadata.TryGetValue(OrderIdMetadataKey, out var orderId) && orderId != order.Id.ToString())
             {
                 _logger.LogError("Stripe checkout session {SessionId} is for order {MetadataOrderId} but is stored on order {OrderId}.", session.Id, orderId, order.Id);
                 return;
             }
 
+            order.StripeCheckoutSessionId ??= session.Id;
+
             var paid = session.PaymentStatus == "paid" || session.PaymentStatus == "no_payment_required";
-            if (!paid || (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Expired))
+            if (!paid)
             {
+                if (session.Status == "expired" && order.Status == OrderStatus.Pending)
+                {
+                    order.Status = OrderStatus.Expired;
+                    order.UpdatedAt = DateTime.UtcNow;
+                }
+                await _shopRepository.SaveChanges();
+                return;
+            }
+
+            if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Expired)
+            {
+                await _shopRepository.SaveChanges();
                 return;
             }
 
@@ -279,6 +357,168 @@ namespace HeroscapeBuilder.Server.Services
 
             await _shopRepository.SaveChanges();
             _logger.LogInformation("Order {OrderNumber} paid ({TotalCents} cents).", OrderStatus.FormatNumber(order.Id), order.TotalCents);
+
+            await NotifyOwner(order.Id);
+        }
+
+        /// <summary>
+        /// Emails the owner about a paid order unless that already happened. The order is only marked as notified
+        /// after the email is sent, so a failure is retried by reconciliation. (A rare duplicate email is preferred
+        /// over a missed one.)
+        /// </summary>
+        public async Task NotifyOwner(int orderId)
+        {
+            var order = await _shopRepository.GetOrder(orderId, track: true);
+            if (order == null || order.OwnerNotifiedAt != null || order.PaidAt == null)
+            {
+                return;
+            }
+
+            if (!_emailService.IsConfigured)
+            {
+                _logger.LogError("Order {OrderNumber} is paid but email is not configured, so the owner was not notified.", OrderStatus.FormatNumber(order.Id));
+                return;
+            }
+
+            try
+            {
+                await _emailService.SendNewOrder(order);
+                order.OwnerNotifiedAt = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                order.NotifyAttempts++;
+                _logger.LogError(ex, "New order email for {OrderNumber} failed (attempt {Attempt}); it will be retried.", OrderStatus.FormatNumber(order.Id), order.NotifyAttempts);
+            }
+            await _shopRepository.SaveChanges();
+        }
+
+        /// <summary>
+        /// Safety net run every few minutes by <see cref="Background.ShopReconciliationWorker"/>:
+        /// 1. re-checks recent Pending orders with Stripe, so a missed webhook never leaves a paid order unrecorded;
+        /// 2. walks every completed Stripe checkout from the last few days and makes sure it has a Paid order, emailing
+        ///    the owner about any payment that matches no order at all;
+        /// 3. retries "new order" emails that have not been sent.
+        /// </summary>
+        public async Task Reconcile(CancellationToken cancellationToken)
+        {
+            if (_settings.StripeConfigured && _stripe.IsAvailable)
+            {
+                var since = DateTime.UtcNow.Subtract(ReconcileWindow);
+
+                foreach (var pending in await _shopRepository.GetPendingOrders(since))
+                {
+                    if (pending.StripeCheckoutSessionId == null)
+                    {
+                        continue; // No session id saved: found through step 2 if the customer paid.
+                    }
+                    try
+                    {
+                        await FulfillCheckoutSession(pending.StripeCheckoutSessionId);
+                    }
+                    catch (StripeException ex)
+                    {
+                        _logger.LogError(ex, "Reconciliation could not check order {OrderId} with Stripe.", pending.Id);
+                    }
+                }
+
+                var sessions = new SessionService(_stripe.Client).ListAutoPagingAsync(
+                    new SessionListOptions { Created = new DateRangeOptions { GreaterThanOrEqual = since }, Status = "complete", Limit = 100 },
+                    cancellationToken: cancellationToken);
+
+                await foreach (var session in sessions.WithCancellation(cancellationToken))
+                {
+                    var metadataId = session.Metadata != null && session.Metadata.TryGetValue(OrderIdMetadataKey, out var value) ? value : null;
+                    if (metadataId == null)
+                    {
+                        continue; // Not a card shop checkout (e.g. a payment link made in the dashboard).
+                    }
+
+                    var order = await FindOrderForSession(session, track: false);
+                    if (order == null)
+                    {
+                        await AlertUnmatchedPayment(session, metadataId);
+                    }
+                    else if (order.Status == OrderStatus.Pending || order.Status == OrderStatus.Expired || order.StripeCheckoutSessionId == null)
+                    {
+                        await FulfillCheckoutSession(session.Id);
+                    }
+                }
+            }
+
+            foreach (var orderId in await _shopRepository.GetOrderIdsAwaitingNotification())
+            {
+                await NotifyOwner(orderId);
+            }
+        }
+
+        /// <summary>
+        /// Emails the owner (once per session) about money Stripe took that no order accounts for.
+        /// </summary>
+        private async Task AlertUnmatchedPayment(Session session, string metadataOrderId)
+        {
+            var alertId = $"alert:unmatched:{session.Id}";
+            if (await _shopRepository.EventProcessed(alertId))
+            {
+                return;
+            }
+
+            _logger.LogError("Stripe checkout session {SessionId} was paid but matches no order (metadata order id {OrderId}).", session.Id, metadataOrderId);
+            if (!_emailService.IsConfigured)
+            {
+                return; // Retried on the next run, once email works.
+            }
+
+            try
+            {
+                await _emailService.SendUnmatchedPayment(session.Id, metadataOrderId, session.AmountTotal, session.CustomerDetails?.Email, session.CustomerDetails?.Name);
+                _shopRepository.AddEvent(new StripeEvent { EventId = alertId, EventType = "alert.unmatched_payment", ReceivedAt = DateTime.UtcNow });
+                await _shopRepository.SaveChanges();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Could not email the unmatched payment alert for {SessionId}; it will be retried.", session.Id);
+            }
+        }
+
+        /// <summary>
+        /// Expires every open Stripe checkout so nobody can finish paying after the shop closes.
+        /// </summary>
+        public async Task<int> ExpireOpenCheckouts()
+        {
+            if (!_settings.StripeConfigured || !_stripe.IsAvailable)
+            {
+                return 0;
+            }
+
+            var expired = 0;
+            var service = new SessionService(_stripe.Client);
+            foreach (var pending in await _shopRepository.GetPendingOrders(DateTime.UtcNow.Subtract(ReconcileWindow)))
+            {
+                if (pending.StripeCheckoutSessionId == null)
+                {
+                    continue;
+                }
+                try
+                {
+                    await service.ExpireAsync(pending.StripeCheckoutSessionId);
+                    expired++;
+                }
+                catch (StripeException)
+                {
+                    // Already expired, or paid a moment ago: the fulfillment below records whichever it was.
+                }
+
+                try
+                {
+                    await FulfillCheckoutSession(pending.StripeCheckoutSessionId);
+                }
+                catch (StripeException ex)
+                {
+                    _logger.LogError(ex, "Could not check order {OrderId} with Stripe while closing the shop.", pending.Id);
+                }
+            }
+            return expired;
         }
 
         /// <summary>

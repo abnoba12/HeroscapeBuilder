@@ -42,8 +42,17 @@ export interface ShopCatalogUnit {
     options: ShopCatalogOption[];
 }
 
+export interface ShopStoreStatus {
+    isOpen: boolean;
+    closedMessage?: string | null;
+    /** yyyy-MM-dd */
+    reopensOn?: string | null;
+    updatedAt?: string;
+}
+
 export interface ShopCatalog {
     checkoutEnabled: boolean;
+    store: ShopStoreStatus;
     formats: ShopFormat[];
     discountTiers: ShopDiscountTier[];
     shippingOptions: ShopShippingOption[];
@@ -86,6 +95,7 @@ export interface ShopQuote {
     totalCents: number;
     nextTier?: { minQuantity: number; percentOff: number; cardsNeeded: number } | null;
     discountTiers: ShopDiscountTier[];
+    store: ShopStoreStatus;
     turnaroundMinDays: number;
     turnaroundMaxDays: number;
     errors: string[];
@@ -150,6 +160,7 @@ export interface ShopAdminOrder extends ShopOrder {
     stripePaymentIntentId?: string | null;
     stripeCheckoutSessionId?: string | null;
     updatedAt: string;
+    ownerNotifiedAt?: string | null;
     formats: ShopQuoteFormat[];
 }
 
@@ -164,6 +175,7 @@ export interface ShopOrderSummary {
     totalCents: number;
     customerName?: string | null;
     email?: string | null;
+    ownerNotified: boolean;
 }
 
 export interface ShopOrderUpdateRequest {
@@ -183,6 +195,9 @@ export interface ShopSettings {
     stripeConfigured: boolean;
     webhookConfigured: boolean;
     stripeTestMode: boolean;
+    emailConfigured: boolean;
+    notifyEmail?: string | null;
+    store: ShopStoreStatus;
     formats: ShopFormat[];
     discountTiers: ShopDiscountTier[];
     shippingOptions: ShopShippingOption[];
