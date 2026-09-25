@@ -10,6 +10,8 @@ import { blobCache, removeCache } from '../../services/cache-manager';
 import { generateIndexCard, initializePDF, savePDF } from '../../services/card-maker-service';
 import { AddFileToUnit } from '../../services/file-service';
 import { getUnits } from '../../services/unit-service';
+import { usePagePointSystem } from '../PointSystem/PointSystemContext';
+import PointSystemPicker from '../PointSystem/PointSystemPicker';
 import './card-maker.scss';
 
 interface CardMakerProps {
@@ -50,6 +52,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
     const [unitNumbers, setUnitNumbers] = useState<string>('');
     const [numberOfUnitsInSet, setNumberOfUnitsInSet] = useState<number | undefined>(undefined);
     const [condenseAbilitiesChecked, setCondenseAbilitiesChecked] = useState<boolean>(true); // default to true
+    const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -87,6 +90,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             populateUnitData(selectedUnit);
         }
     }, [selectedUnit]);
+
+    // Switching point systems re-fills the loaded unit's points; everything else on the form is left alone.
+    useEffect(() => {
+        const data = unitData.find(x => x.id.toString() == selectedUnit);
+        if (data) setPoints(pointsFor(data));
+    }, [pointSystem]);
     async function populateUnitData(id: string) {
         const data = unitData.find(x => x.id.toString() == id);
         if (data) {
@@ -107,7 +116,7 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
             setAdvancedRange(data.advRange);
             setAdvancedAttack(data.advAttack);
             setAdvancedDefense(data.advDefense);
-            setPoints(data.points);
+            setPoints(pointsFor(data));
             setBasicMove(data.basicMove);
             setBasicRange(data.basicRange);
             setBasicAttack(data.basicAttack);
@@ -768,6 +777,12 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                     </label>
                     <input type="number" id="points" value={points} className="form-control" onChange={handleNumberChange(setPoints)} />
                     {errors.points && <div className="invalid-feedback">{errors.points}</div>}
+                    {selectedUnit && (
+                        <div className="form-text">
+                            {'Loaded using '}
+                            <PointSystemPicker value={pointSystem} onChange={setPointSystem} defaultValue={defaultPointSystem} />
+                        </div>
+                    )}
                 </div>
 
                 <div className="col-md-6">

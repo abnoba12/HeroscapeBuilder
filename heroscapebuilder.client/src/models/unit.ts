@@ -18,7 +18,11 @@ export interface Unit {
     advRange?: number;
     advAttack?: number;
     advDefense?: number;
-    points?: number;
+    standardPoints?: number | null;
+    /** Renegade override; null means Standard applies. Use getUnitPoints() rather than reading these directly. */
+    renegadePoints?: number | null;
+    /** Delta override; null means Standard applies. */
+    deltaPoints?: number | null;
     basicMove?: number;
     basicRange?: number;
     basicAttack?: number;

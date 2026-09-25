@@ -68,6 +68,7 @@ namespace HeroscapeBuilder.Server.Services
                 UserId = id,
                 Name = validated.Name,
                 PointLimit = validated.PointLimit,
+                PointSystem = validated.PointSystem,
                 Creator = validated.Creator,
                 Notes = validated.Notes,
                 IsShared = false,
@@ -95,6 +96,7 @@ namespace HeroscapeBuilder.Server.Services
 
             battlegroup.Name = validated.Name;
             battlegroup.PointLimit = validated.PointLimit;
+            battlegroup.PointSystem = validated.PointSystem;
             battlegroup.Creator = validated.Creator;
             battlegroup.Notes = validated.Notes;
             battlegroup.UpdatedAt = DateTime.UtcNow;
@@ -150,7 +152,7 @@ namespace HeroscapeBuilder.Server.Services
         }
 
         // A tuple, not a nested type: everything in this namespace is auto-registered with DI (see RegisterService).
-        private async Task<(string Name, int PointLimit, string? Creator, string? Notes, Dictionary<int, int> Units)> Validate(string userId, BattlegroupSaveRequest request, int? excludeId)
+        private async Task<(string Name, int PointLimit, PointSystem PointSystem, string? Creator, string? Notes, Dictionary<int, int> Units)> Validate(string userId, BattlegroupSaveRequest request, int? excludeId)
         {
             var errors = new List<string>();
 
@@ -171,6 +173,11 @@ namespace HeroscapeBuilder.Server.Services
             if (request.PointLimit <= 0)
             {
                 errors.Add("The point limit must be greater than 0.");
+            }
+
+            if (!Enum.IsDefined(request.PointSystem))
+            {
+                errors.Add($"\"{request.PointSystem}\" is not a known point system.");
             }
 
             // Notes are plain text; blank becomes null so an empty box doesn't store whitespace.
@@ -242,10 +249,10 @@ namespace HeroscapeBuilder.Server.Services
                 errors.Add($"{uniqueName} is a Unique unit and can only be in a Battlegroup once.");
             }
 
-            var totalPoints = units.Sum(x => (cards.TryGetValue(x.Key, out var card) ? (int)(card.Points ?? 0) : 0) * x.Value);
+            var totalPoints = units.Sum(x => (cards.TryGetValue(x.Key, out var card) ? PointsFor(card, request.PointSystem) : 0) * x.Value);
             if (request.PointLimit > 0 && totalPoints > request.PointLimit)
             {
-                errors.Add($"Total points ({totalPoints}) exceed the Battlegroup limit ({request.PointLimit}).");
+                errors.Add($"Total {request.PointSystem} points ({totalPoints}) exceed the Battlegroup limit ({request.PointLimit}).");
             }
 
             if (errors.Count > 0)
@@ -253,7 +260,13 @@ namespace HeroscapeBuilder.Server.Services
                 throw new BattlegroupException(BattlegroupErrorKind.Validation, errors.ToArray());
             }
 
-            return (name, request.PointLimit, creator, notes, units);
+            return (name, request.PointLimit, request.PointSystem, creator, notes, units);
+        }
+
+        private static int PointsFor(ArmyCard card, PointSystem system)
+        {
+            var points = card.PointValues;
+            return system.Resolve(points?.StandardPoints, points?.RenegadePoints, points?.DeltaPoints) ?? 0;
         }
 
         /// <summary>

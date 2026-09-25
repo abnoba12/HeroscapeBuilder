@@ -1,3 +1,4 @@
+import { PointSystem } from './point-system';
 import { Unit } from './unit';
 
 export interface BattlegroupUnit {
@@ -13,6 +14,8 @@ export interface Battlegroup {
     id: number;
     name: string;
     pointLimit: number;
+    /** The point values this Battlegroup is built with; totalPoints is measured in it. */
+    pointSystem: PointSystem;
     /** Null/undefined when units from any creator are allowed. */
     creator?: string | null;
     /** The owner's plain-text notes on how to play this Battlegroup. */
@@ -31,6 +34,7 @@ export interface Battlegroup {
 export interface BattlegroupSaveRequest {
     name: string;
     pointLimit: number;
+    pointSystem: PointSystem;
     creator?: string | null;
     notes?: string | null;
     units: Array<{ unitId: number; quantity: number }>;

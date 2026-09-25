@@ -1,3 +1,5 @@
+using HeroscapeBuilder.Server.Domain.Entities;
+
 namespace HeroscapeBuilder.Server.Data.Entities;
 
 public partial class Battlegroup
@@ -9,6 +11,11 @@ public partial class Battlegroup
     public string Name { get; set; } = null!;
 
     public int PointLimit { get; set; }
+
+    /// <summary>
+    /// Which point values the battlegroup is built with; totals and the point limit are measured in it.
+    /// </summary>
+    public PointSystem PointSystem { get; set; }
 
     /// <summary>
     /// When set, every unit in the battlegroup must come from this creator. Null means any creator.

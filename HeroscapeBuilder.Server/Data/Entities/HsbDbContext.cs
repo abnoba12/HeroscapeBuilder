@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using HeroscapeBuilder.Server.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace HeroscapeBuilder.Server.Data.Entities;
@@ -24,6 +25,8 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<ArmyCardFile> ArmyCardFiles { get; set; }
 
+    public virtual DbSet<ArmyCardPoints> ArmyCardPoints { get; set; }
+
     public virtual DbSet<ArmyCardStl> ArmyCardStls { get; set; }
 
     public virtual DbSet<Creator> Creators { get; set; }
@@ -39,6 +42,13 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(e => e.PointSystem)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+        });
 
         modelBuilder.Entity<ArmyCard>(entity =>
         {
@@ -107,6 +117,23 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(d => d.ParentNavigation).WithMany(p => p.InverseParentNavigation)
                 .HasForeignKey(d => d.Parent)
                 .HasConstraintName("army_card_files_parent_fkey");
+        });
+
+        modelBuilder.Entity<ArmyCardPoints>(entity =>
+        {
+            entity.HasKey(e => e.ArmyCardId).HasName("PK_army_card_points");
+
+            entity.ToTable("army_card_points");
+
+            entity.Property(e => e.ArmyCardId).HasColumnName("army_card_id");
+            entity.Property(e => e.StandardPoints).HasColumnName("standard_points");
+            entity.Property(e => e.RenegadePoints).HasColumnName("renegade_points");
+            entity.Property(e => e.DeltaPoints).HasColumnName("delta_points");
+
+            entity.HasOne(d => d.ArmyCard).WithOne(p => p.PointValues)
+                .HasForeignKey<ArmyCardPoints>(d => d.ArmyCardId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_army_card_points_army_card");
         });
 
         modelBuilder.Entity<ArmyCardStl>(entity =>
@@ -236,6 +263,9 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.UserId).HasMaxLength(450);
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Creator).HasMaxLength(450);
+            entity.Property(e => e.PointSystem)
+                .HasConversion<string>()
+                .HasMaxLength(20);
 
             entity.HasIndex(e => new { e.UserId, e.Name }, "UX_battlegroup_UserId_Name").IsUnique();
             entity.HasIndex(e => e.ShareId, "UX_battlegroup_ShareId").IsUnique();

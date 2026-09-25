@@ -1,26 +1,20 @@
-﻿using HeroscapeBuilder.Server.Common.Helpers;
-using HeroscapeBuilder.Server.Data.Entities;
+﻿using HeroscapeBuilder.Server.Data.Entities;
+using HeroscapeBuilder.Server.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Data;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
 public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IConfiguration _configuration;
+    private readonly TokenService _tokenService;
 
-    public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+    public AuthController(UserManager<ApplicationUser> userManager, TokenService tokenService)
     {
         _userManager = userManager;
-        _configuration = configuration;
+        _tokenService = tokenService;
     }
 
     [HttpPost]
@@ -44,16 +38,7 @@ public class AuthController : ControllerBase
         var user = await _userManager.FindByEmailAsync(model.Email);
         if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
         {
-            var roles = await _userManager.GetRolesAsync(user);
-
-            // Generate JWT and Refresh Token
-            var token = GenerateJwtToken(user, roles);
-            var refreshToken = GenerateRefreshToken();
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
-
-            await _userManager.UpdateAsync(user);
-
+            var (token, refreshToken) = await _tokenService.IssueTokens(user);
             return Ok(new { token, refreshToken });
         }
         return Unauthorized("Invalid credentials.");
@@ -69,55 +54,9 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid or expired refresh token.");
         }
 
-        // Generate new JWT and Refresh Token
-        var roles = await _userManager.GetRolesAsync(user);
-        var token = GenerateJwtToken(user, roles);
-        var refreshToken = GenerateRefreshToken();
-
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
-        await _userManager.UpdateAsync(user);
-
+        var (token, refreshToken) = await _tokenService.IssueTokens(user);
         return Ok(new { token, refreshToken });
     }
-
-
-
-    private string GenerateJwtToken(ApplicationUser user, IList<string> roles)
-    {
-        var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        claims.AddRange(roles.Select(role => new Claim("roles", role)));
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetConfigValue("HeroscapeBuilder", "Jwt:Key")));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddHours(1),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private string GenerateRefreshToken()
-    {
-        var randomBytes = new byte[64];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(randomBytes);
-        }
-        return Convert.ToBase64String(randomBytes);
-    }
-
 }
 
 public class RegisterModel

@@ -23,6 +23,9 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .Include(x => x.BattlegroupUnits)
                     .ThenInclude(unit => unit.ArmyCard)
                         .ThenInclude(card => card.SetNavigation)
+                .Include(x => x.BattlegroupUnits)
+                    .ThenInclude(unit => unit.ArmyCard)
+                        .ThenInclude(card => card.PointValues)
                 .NotCacheable();
         }
 
@@ -79,6 +82,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             var idList = ids.ToList();
             return await _context.ArmyCards
                 .NotCacheable()
+                .Include(x => x.PointValues)
                 .Where(x => idList.Contains(x.Id))
                 .AsNoTracking()
                 .ToListAsync();

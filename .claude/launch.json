@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "heroscapebuilder.client"],
       "port": 5173
+    },
+    {
+      "name": "heroscapebuilder-server",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "HeroscapeBuilder.Server", "--launch-profile", "http", "--no-launch-profile-arguments"],
+      "port": 5062
     }
   ]
 }

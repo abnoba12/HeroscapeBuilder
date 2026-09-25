@@ -25,15 +25,18 @@ import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
 import MyArmy from "./my-heroscape/my-army";
+import Profile from "./user/Profile";
 import PageMeta from "../components/Seo/PageMeta";
 import Battlegroups from "./my-heroscape/battlegroups/battlegroups";
 import BattlegroupDetail from "./my-heroscape/battlegroups/battlegroup-detail";
 import BattlegroupEditor from "./my-heroscape/battlegroups/battlegroup-editor";
 import BattlegroupShared from "./my-heroscape/battlegroups/battlegroup-shared";
+import { PointSystemProvider } from "../components/PointSystem/PointSystemContext";
 
 const App: React.FC = () => {
     return (
         <Router>
+            <PointSystemProvider>
             <div className="wrapper">
                 <Sidebar />
                 <div className="main-panel ps ps--active-y">
@@ -151,6 +154,13 @@ const App: React.FC = () => {
                                     </PageMeta>
                                 </PrivateRoute>
                             } />
+                            <Route path="/user/profile" element={
+                                <PrivateRoute>
+                                    <PageMeta title="Profile" description="Manage your Heroscape Builder account." noindex>
+                                        <Profile />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
                             <Route path="/my-heroscape" element={
                                 <PrivateRoute>
                                     <PageMeta title="My Heroscape" description="Manage your personal Heroscape unit collection." noindex>
@@ -198,6 +208,7 @@ const App: React.FC = () => {
                     <Footer />
                 </div>
             </div>
+            </PointSystemProvider>
         </Router>
     );
 };

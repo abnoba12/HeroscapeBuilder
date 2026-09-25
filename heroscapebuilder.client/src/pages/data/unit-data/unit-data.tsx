@@ -13,6 +13,8 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ability } from '../../../models/ability';
 import SelectFloatingFilter from '../../../components/SelectFloatingFilter/SelectFloatingFilter';
+import { usePagePointSystem } from '../../../components/PointSystem/PointSystemContext';
+import PointSystemPicker from '../../../components/PointSystem/PointSystemPicker';
 import { Unit } from '../../../models/unit';
 import { getUnits } from '../../../services/unit-service';
 import './unit-data.scss';
@@ -37,6 +39,7 @@ const UnitData: React.FC = () => {
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     const [hasColumnFilters, setHasColumnFilters] = useState(false);
     const [quickFilterText, setQuickFilterText] = useState('');
+    const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
 
     const handleOpenDialog = (content: string) => {
         setDialogContent(content);
@@ -81,7 +84,15 @@ const UnitData: React.FC = () => {
         { field: 'basicDefense', headerName: 'Basic Defence', filter: 'agNumberColumnFilter', minWidth: 140, hide: true },
         { field: 'basicMove', headerName: 'Basic Move', filter: 'agNumberColumnFilter', minWidth: 130, hide: true },
         { field: 'basicRange', headerName: 'Basic Range', filter: 'agNumberColumnFilter', minWidth: 130, hide: true },
-        { field: 'points', headerName: 'Points', filter: 'agNumberColumnFilter', maxWidth: 120 },
+        {
+            colId: 'points',
+            headerName: `Points (${pointSystem})`,
+            headerTooltip: `${pointSystem} points. Units without a ${pointSystem} value use Standard.`,
+            valueGetter: (params: ValueGetterParams<Unit, number>) => pointsFor(params.data),
+            filter: 'agNumberColumnFilter',
+            minWidth: 150,
+            maxWidth: 170,
+        },
         {
             field: 'abilities',
             headerName: 'Abilities',
@@ -156,7 +167,7 @@ const UnitData: React.FC = () => {
             },
             cellStyle: { display: 'flex', alignItems: 'center' },
         },
-    ], [dropdownFilterOptions]);
+    ], [dropdownFilterOptions, pointSystem, pointsFor]);
 
     const defaultColDef = useMemo<ColDef>(() => ({
         filter: true,
@@ -237,6 +248,7 @@ const UnitData: React.FC = () => {
                     variant="outlined"
                     fullWidth
                 />
+                <PointSystemPicker value={pointSystem} onChange={setPointSystem} defaultValue={defaultPointSystem} />
                 <Button onClick={clearFilters} disabled={!hasActiveFilters} variant="text">
                     Clear filters
                 </Button>

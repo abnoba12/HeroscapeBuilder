@@ -107,6 +107,7 @@ const Sidebar: React.FC = () => {
                                         )}
                                         {isAuthenticated() && (
                                             <>
+                                                <li><Link to="/user/profile" onClick={toggleSidebar}>Profile</Link></li>
                                                 <li><Link to="/user/Logout" onClick={toggleSidebar}>Logout</Link></li>
                                             </>
                                         )}

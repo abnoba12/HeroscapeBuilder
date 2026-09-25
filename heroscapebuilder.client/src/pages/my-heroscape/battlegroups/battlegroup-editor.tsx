@@ -27,6 +27,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Ability } from '../../../models/ability';
 import { Battlegroup } from '../../../models/battlegroup';
+import { PointSystem, getUnitPoints } from '../../../models/point-system';
 import { Unit } from '../../../models/unit';
 import {
     createBattlegroup,
@@ -37,6 +38,8 @@ import {
 } from '../../../services/battlegroup-service';
 import { getMyUnits } from '../../../services/my_army-service';
 import { PointsMeter, creatorLabel, isUniqueUnit } from './battlegroup-parts';
+import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
+import PointSystemSelect from '../../../components/PointSystem/PointSystemSelect';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
@@ -47,6 +50,7 @@ const MAX_NOTES_LENGTH = 10000;
 type AvailableRow = Unit & { owned: number; used: number };
 
 interface GridContext {
+    pointSystem: PointSystem;
     onAdd: (unitId: number) => void;
     onShowAbilities: (unitId: number) => void;
 }
@@ -99,6 +103,10 @@ const BattlegroupEditor: React.FC = () => {
     const [savedUnits, setSavedUnits] = useState<Unit[]>([]);
     const [name, setName] = useState('');
     const [pointLimitText, setPointLimitText] = useState('');
+    // New Battlegroups start on the account default; saved ones keep their own.
+    const { defaultPointSystem } = usePointSystem();
+    const [chosenPointSystem, setPointSystem] = useState<PointSystem | null>(null);
+    const pointSystem = chosenPointSystem ?? defaultPointSystem;
     const [creator, setCreator] = useState('');
     const [notes, setNotes] = useState('');
     const [selection, setSelection] = useState<Record<number, number>>({});
@@ -121,6 +129,7 @@ const BattlegroupEditor: React.FC = () => {
                     const bg: Battlegroup = await getBattlegroup(Number(id));
                     setName(bg.name);
                     setPointLimitText(String(bg.pointLimit));
+                    setPointSystem(bg.pointSystem);
                     setCreator((bg.creator ?? '').toUpperCase());
                     setNotes(bg.notes ?? '');
                     setSavedUnits(bg.units.map(item => item.unit));
@@ -165,7 +174,8 @@ const BattlegroupEditor: React.FC = () => {
     }, [reviewSelected, selectedList.length]);
 
     const pointLimit = Number.parseInt(pointLimitText, 10) || 0;
-    const totalPoints = selectedList.reduce((sum, item) => sum + (item.unit.points ?? 0) * item.quantity, 0);
+    const pointsOf = (unit: Unit) => getUnitPoints(unit, pointSystem) ?? 0;
+    const totalPoints = selectedList.reduce((sum, item) => sum + pointsOf(item.unit) * item.quantity, 0);
     const overLimit = pointLimit > 0 && totalPoints > pointLimit;
     const overAllocated = selectedList.filter(item => item.quantity > (ownedById.get(item.unit.id) ?? 0));
 
@@ -186,8 +196,8 @@ const BattlegroupEditor: React.FC = () => {
             // Built from the selection (not My Army) so a saved unit you no longer own still shows up.
             return selectedList.map(({ unit, quantity }) => ({ ...unit, owned: ownedById.get(unit.id) ?? 0, used: quantity }));
         }
-        return filterByPoints ? creatorRows.filter(unit => (unit.points ?? 0) <= remainingPoints) : creatorRows;
-    }, [reviewingSelected, selectedList, ownedById, creatorRows, filterByPoints, remainingPoints]);
+        return filterByPoints ? creatorRows.filter(unit => (getUnitPoints(unit, pointSystem) ?? 0) <= remainingPoints) : creatorRows;
+    }, [reviewingSelected, selectedList, ownedById, creatorRows, filterByPoints, remainingPoints, pointSystem]);
 
     /** Returns why the unit can't be added, or null when it can. */
     const addBlockedReason = (unit: Unit): string | null => {
@@ -210,9 +220,9 @@ const BattlegroupEditor: React.FC = () => {
                 : `You only own ${owned} of ${unit.name} - all of them are already in this Battlegroup.`;
         }
 
-        const points = unit.points ?? 0;
+        const points = pointsOf(unit);
         if (totalPoints + points > pointLimit) {
-            return `Adding ${unit.name} (${points} pts) would bring this Battlegroup to ${totalPoints + points} points, over its limit of ${pointLimit}.`;
+            return `Adding ${unit.name} (${points} ${pointSystem} pts) would bring this Battlegroup to ${totalPoints + points} points, over its limit of ${pointLimit}.`;
         }
 
         return null;
@@ -233,9 +243,10 @@ const BattlegroupEditor: React.FC = () => {
     const addUnitRef = useRef(addUnit);
     addUnitRef.current = addUnit;
     const gridContext = useMemo<GridContext>(() => ({
+        pointSystem,
         onAdd: unitId => addUnitRef.current(unitId),
         onShowAbilities: unitId => setAbilityUnitId(unitId),
-    }), []);
+    }), [pointSystem]);
 
     const decrementUnit = (unitId: number) => {
         setSelection(prev => {
@@ -271,6 +282,7 @@ const BattlegroupEditor: React.FC = () => {
         const request = {
             name: name.trim(),
             pointLimit,
+            pointSystem,
             creator: creator || null,
             notes: notes.trim() || null,
             units: selectedList.map(item => ({ unitId: item.unit.id, quantity: item.quantity })),
@@ -307,7 +319,14 @@ const BattlegroupEditor: React.FC = () => {
         { headerName: '', cellRenderer: AddCell, width: 90, flex: 0, pinned: 'left', sortable: false, filter: false, floatingFilter: false, resizable: false },
         { field: 'name', headerName: 'Unit', width: 165, flex: 0, pinned: 'left' },
         { field: 'rarity', headerName: 'Rarity', width: 95, flex: 0 },
-        { field: 'points', headerName: 'Points', filter: 'agNumberColumnFilter', width: 85, flex: 0 },
+        {
+            colId: 'points',
+            headerName: 'Points',
+            valueGetter: (params: ValueGetterParams<AvailableRow, number, GridContext>) => getUnitPoints(params.data, params.context.pointSystem),
+            filter: 'agNumberColumnFilter',
+            width: 85,
+            flex: 0,
+        },
         { field: 'life', headerName: 'Life', filter: 'agNumberColumnFilter', width: 80, flex: 0 },
         { field: 'advMove', headerName: 'Adv Move', filter: 'agNumberColumnFilter', width: 100, flex: 0 },
         { field: 'advRange', headerName: 'Adv Range', filter: 'agNumberColumnFilter', width: 100, flex: 0 },
@@ -392,6 +411,7 @@ const BattlegroupEditor: React.FC = () => {
                                 sx={{ minWidth: 160 }}
                                 required
                             />
+                            <PointSystemSelect value={pointSystem} onChange={setPointSystem} />
                             <TextField
                                 select
                                 label="Restrict to creator"
@@ -408,6 +428,7 @@ const BattlegroupEditor: React.FC = () => {
                         </Stack>
                         {pointLimit > 0 && <PointsMeter total={totalPoints} limit={pointLimit} />}
                         <Typography variant="caption" color="text.secondary">
+                            {`Points are counted using ${pointSystem} values. `}
                             Unique units can be added once. Uncommon and common units can be added up to the number you own. The point limit cannot be exceeded.
                         </Typography>
                     </Stack>
@@ -535,7 +556,7 @@ const BattlegroupEditor: React.FC = () => {
                                                         {item.quantity}
                                                         <IconButton size="small" aria-label={`Add one ${item.unit.name}`} onClick={() => addUnit(item.unit.id)}>+</IconButton>
                                                     </TableCell>
-                                                    <TableCell align="right">{(item.unit.points ?? 0) * item.quantity}</TableCell>
+                                                    <TableCell align="right">{pointsOf(item.unit) * item.quantity}</TableCell>
                                                     <TableCell align="right">
                                                         <Button size="small" color="error" onClick={() => removeUnit(item.unit.id)}>Remove</Button>
                                                     </TableCell>

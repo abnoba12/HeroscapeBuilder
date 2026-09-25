@@ -21,6 +21,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .Include(x => x.ArmyCardAbilities)
                 .Include(x => x.ArmyCardFiles)
                 .Include(x => x.ArmyCardStls)
+                .Include(x => x.PointValues)
                 .ToListAsync();
         }
     }

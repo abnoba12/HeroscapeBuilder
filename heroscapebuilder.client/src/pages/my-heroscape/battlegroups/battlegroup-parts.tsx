@@ -22,6 +22,7 @@ import {
 import React from 'react';
 import { Battlegroup } from '../../../models/battlegroup';
 import { getCreatorInfo } from '../../../models/creator';
+import { getUnitPoints } from '../../../models/point-system';
 
 export const creatorLabel = (creator?: string | null): string =>
     creator ? (getCreatorInfo(creator)?.label ?? creator.toUpperCase()) : 'Any creator';
@@ -134,6 +135,7 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
                     <PointsMeter total={battlegroup.totalPoints} limit={battlegroup.pointLimit} />
                     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                         <Chip label={`Point limit: ${battlegroup.pointLimit}`} size="small" variant="outlined" />
+                        <Chip label={`${battlegroup.pointSystem} points`} size="small" variant="outlined" />
                         <Chip label={`Creator: ${creatorLabel(battlegroup.creator)}`} size="small" variant="outlined" />
                         <Chip label={`Units: ${unitCount}`} size="small" variant="outlined" />
                         <Chip label="Unique units: max 1 each" size="small" variant="outlined" />
@@ -164,7 +166,7 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
                             </TableRow>
                         )}
                         {battlegroup.units.map(item => {
-                            const points = item.unit.points ?? 0;
+                            const points = getUnitPoints(item.unit, battlegroup.pointSystem) ?? 0;
                             const flagged = showOwnerFlags && item.overAllocated;
                             return (
                                 <TableRow key={item.unit.id} sx={flagged ? { bgcolor: 'rgba(255, 23, 68, 0.12)' } : undefined}>

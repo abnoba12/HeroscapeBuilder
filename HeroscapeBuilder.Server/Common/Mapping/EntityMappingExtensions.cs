@@ -29,7 +29,9 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 AdvRange = source.AdvRange,
                 AdvAttack = source.AdvAttack,
                 AdvDefense = source.AdvDefense,
-                Points = source.Points,
+                StandardPoints = source.PointValues?.StandardPoints,
+                RenegadePoints = source.PointValues?.RenegadePoints,
+                DeltaPoints = source.PointValues?.DeltaPoints,
                 BasicMove = source.BasicMove,
                 BasicRange = source.BasicRange,
                 BasicAttack = source.BasicAttack,
@@ -75,7 +77,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 .OrderBy(unit => unit.Unit.Name)
                 .ToList();
 
-            var totalPoints = source.BattlegroupUnits.Sum(unit => (int)(unit.ArmyCard.Points ?? 0) * unit.Quantity);
+            var totalPoints = units.Sum(unit => (unit.Unit.PointsFor(source.PointSystem) ?? 0) * unit.Quantity);
 
             var reasons = new List<string>();
             var overAllocated = units.Where(unit => unit.OverAllocated).ToList();
@@ -85,7 +87,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
             }
             if (isOwner && totalPoints > source.PointLimit)
             {
-                reasons.Add($"Total points ({totalPoints}) exceed the limit ({source.PointLimit}).");
+                reasons.Add($"Total {source.PointSystem} points ({totalPoints}) exceed the limit ({source.PointLimit}).");
             }
 
             return new BattlegroupEntity
@@ -93,6 +95,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 Id = source.Id,
                 Name = source.Name,
                 PointLimit = source.PointLimit,
+                PointSystem = source.PointSystem,
                 Creator = source.Creator,
                 Notes = source.Notes,
                 IsShared = source.IsShared,

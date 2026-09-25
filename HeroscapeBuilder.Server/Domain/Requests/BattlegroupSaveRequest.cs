@@ -1,3 +1,5 @@
+using HeroscapeBuilder.Server.Domain.Entities;
+
 namespace HeroscapeBuilder.Server.Domain.Requests
 {
     public class BattlegroupSaveRequest
@@ -5,6 +7,8 @@ namespace HeroscapeBuilder.Server.Domain.Requests
         public string? Name { get; set; }
 
         public int PointLimit { get; set; }
+
+        public PointSystem PointSystem { get; set; } = PointSystemExtensions.Default;
 
         public string? Creator { get; set; }
 

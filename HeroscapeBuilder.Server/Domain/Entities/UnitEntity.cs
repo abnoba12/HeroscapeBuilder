@@ -43,7 +43,17 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public long? AdvDefense { get; set; }
 
-        public long? Points { get; set; }
+        public int? StandardPoints { get; set; }
+
+        /// <summary>
+        /// Renegade override; null means the Standard value applies.
+        /// </summary>
+        public int? RenegadePoints { get; set; }
+
+        /// <summary>
+        /// Delta override; null means the Standard value applies.
+        /// </summary>
+        public int? DeltaPoints { get; set; }
 
         public long? BasicMove { get; set; }
 

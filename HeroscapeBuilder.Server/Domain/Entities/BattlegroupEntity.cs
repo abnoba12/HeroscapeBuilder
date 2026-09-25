@@ -9,6 +9,11 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public int PointLimit { get; set; }
 
         /// <summary>
+        /// The point values this battlegroup is built with. TotalPoints is measured in it.
+        /// </summary>
+        public PointSystem PointSystem { get; set; }
+
+        /// <summary>
         /// Null when the battlegroup can use units from any creator.
         /// </summary>
         public string? Creator { get; set; }

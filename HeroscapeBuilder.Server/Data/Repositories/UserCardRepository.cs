@@ -14,6 +14,16 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             _context = context;
         }
 
+        /// <summary>
+        /// Removes a user's whole My Army. The database does not cascade this from AspNetUsers.
+        /// </summary>
+        public async Task<int> RemoveAllForUser(string userId)
+        {
+            return await _context.UserCards
+                .Where(x => x.UserId == userId)
+                .ExecuteDeleteAsync();
+        }
+
         public async Task<IEnumerable<UserCard>> GetMyArmyCards(Guid userId)
         {
             return await _context.UserCards
@@ -24,6 +34,8 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                     .ThenInclude(card => card.ArmyCardAbilities)
                 .Include(x => x.OwnedArmyCardNavigation)!
                     .ThenInclude(card => card.ArmyCardFiles)
+                .Include(x => x.OwnedArmyCardNavigation)!
+                    .ThenInclude(card => card.PointValues)
                 .AsNoTracking()
                 .ToListAsync();
         }

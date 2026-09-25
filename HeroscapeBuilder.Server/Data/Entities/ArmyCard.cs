@@ -40,8 +40,6 @@ public partial class ArmyCard
 
     public long? AdvDefense { get; set; }
 
-    public long? Points { get; set; }
-
     public long? BasicMove { get; set; }
 
     public long? BasicRange { get; set; }
@@ -63,6 +61,8 @@ public partial class ArmyCard
     public virtual ICollection<ArmyCardFile> ArmyCardFiles { get; set; } = new List<ArmyCardFile>();
 
     public virtual ICollection<ArmyCardStl> ArmyCardStls { get; set; } = new List<ArmyCardStl>();
+
+    public virtual ArmyCardPoints? PointValues { get; set; }
 
     public virtual Creator CreatorNavigation { get; set; } = null!;
 
