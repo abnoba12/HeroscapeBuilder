@@ -248,6 +248,8 @@ const MyArmy: React.FC = () => {
 
     const openAddUnitsDialog = async () => {
         try {
+            // Carry the collection search into the dialog so a unit you just looked for is already filtered
+            setAddQuickFilterText(quickFilterText);
             setAddDialogOpen(true);
             setAddSelection([]);
             if (!allUnits.length) {
@@ -343,6 +345,7 @@ const MyArmy: React.FC = () => {
                                 placeholder="Search all units"
                                 variant="outlined"
                                 fullWidth
+                                autoFocus
                             />
                             <Button onClick={clearAddFilters} variant="text" disabled={!addQuickFilterText}>
                                 Clear filters
