@@ -25,6 +25,7 @@ import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
 import MyArmy from "./my-heroscape/my-army";
+import ArmyStats from "./my-heroscape/army-stats";
 import Profile from "./user/Profile";
 import PageMeta from "../components/Seo/PageMeta";
 import Battlegroups from "./my-heroscape/battlegroups/battlegroups";
@@ -172,6 +173,13 @@ const App: React.FC = () => {
                                 <PrivateRoute>
                                     <PageMeta title="My Army" description="Manage your personal Heroscape unit collection." noindex>
                                         <MyArmy />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/my-heroscape/army-stats" element={
+                                <PrivateRoute>
+                                    <PageMeta title="Army Stats" description="See how much of each Heroscape creator and set your collection covers." noindex>
+                                        <ArmyStats />
                                     </PageMeta>
                                 </PrivateRoute>
                             } />

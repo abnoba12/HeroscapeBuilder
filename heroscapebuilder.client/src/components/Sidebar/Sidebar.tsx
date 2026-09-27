@@ -142,6 +142,7 @@ const Sidebar: React.FC = () => {
                                     {activeMenu === 'my-heroscape' && (
                                         <ul className="submenu">
                                             <li><Link to="/my-heroscape/my-army" onClick={toggleSidebar}>My Army</Link></li>
+                                            <li><Link to="/my-heroscape/army-stats" onClick={toggleSidebar}>Army Stats</Link></li>
                                             {hasArmyUnits && (
                                                 <li><Link to="/my-heroscape/battlegroups" onClick={toggleSidebar}>Battlegroups</Link></li>
                                             )}
