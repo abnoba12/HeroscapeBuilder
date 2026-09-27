@@ -20,6 +20,8 @@ services:
 
   minio:
     image: quay.io/minio/minio:latest
+    # MinIO no longer publishes this image publicly (Sep 2026), so reuse the copy cached on the host.
+    pull_policy: never
     command: server --address ":9000" --console-address ":9081" /data
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}

@@ -585,6 +585,25 @@ WHEN NOT MATCHED THEN
     VALUES (source.army_card_id, source.standard_points, source.renegade_points, source.delta_points);
 GO
 
+-- Prod has covering indexes that include Points, which block the drop. Rebuild them without it.
+IF EXISTS (SELECT 1 FROM sys.index_columns ic
+           JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+           WHERE i.object_id = OBJECT_ID(N'dbo.army_card') AND i.name = N'IX_army_card_Set_cover'
+             AND ic.column_id = COLUMNPROPERTY(i.object_id, N'Points', 'ColumnId'))
+    CREATE NONCLUSTERED INDEX IX_army_card_Set_cover ON dbo.army_card ([Set])
+        INCLUDE (Name, General, Race, Type, Rarity)
+        WITH (DROP_EXISTING = ON);
+GO
+
+IF EXISTS (SELECT 1 FROM sys.index_columns ic
+           JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+           WHERE i.object_id = OBJECT_ID(N'dbo.army_card') AND i.name = N'IX_army_card_Creator_cover'
+             AND ic.column_id = COLUMNPROPERTY(i.object_id, N'Points', 'ColumnId'))
+    CREATE NONCLUSTERED INDEX IX_army_card_Creator_cover ON dbo.army_card (Creator)
+        INCLUDE (Name, General, Race, Type, Rarity)
+        WITH (DROP_EXISTING = ON);
+GO
+
 IF COL_LENGTH(N'dbo.army_card', N'Points') IS NOT NULL
     ALTER TABLE dbo.army_card DROP COLUMN Points;
 GO
