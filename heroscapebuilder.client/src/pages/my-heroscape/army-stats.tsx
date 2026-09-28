@@ -1,4 +1,4 @@
-import { Alert, Box, Card, CardContent, Chip, LinearProgress, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardActionArea, CardContent, Chip, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePagePointSystem } from '../../components/PointSystem/PointSystemContext';
@@ -19,6 +19,7 @@ interface Tally {
 
 interface SetTally extends Tally {
     set: UnitSet;
+    units: Unit[];
 }
 
 interface CreatorTally extends Tally {
@@ -66,26 +67,180 @@ interface LabeledTally extends Tally {
     label: string;
 }
 
-const TallyCards: React.FC<{ tallies: LabeledTally[] }> = ({ tallies }) => (
+interface GeneralTally extends LabeledTally {
+    units: Unit[];
+}
+
+const TallyCards = <T extends LabeledTally>({ tallies, onSelect }: { tallies: T[]; onSelect?: (tally: T) => void }) => (
     <div className="row gy-3 mb-4">
-        {tallies.map(tally => (
-            <div key={tally.key} className="col-sm-6 col-md-4 col-xl-3">
-                <Card variant="outlined" sx={{ height: '100%' }}>
-                    <CardContent>
-                        <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={1}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{tally.label}</Typography>
-                            <Typography variant="h6" sx={{ fontWeight: 700 }}>{formatPercent(tally)}</Typography>
-                        </Stack>
-                        <CompletionBar tally={tally} />
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                            {`${tally.owned} of ${tally.total} units`}
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </div>
-        ))}
+        {tallies.map(tally => {
+            const content = (
+                <CardContent>
+                    <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={1}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{tally.label}</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>{formatPercent(tally)}</Typography>
+                    </Stack>
+                    <CompletionBar tally={tally} />
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {`${tally.owned} of ${tally.total} units`}
+                    </Typography>
+                </CardContent>
+            );
+            return (
+                <div key={tally.key} className="col-sm-6 col-md-4 col-xl-3">
+                    <Card variant="outlined" sx={{ height: '100%' }}>
+                        {onSelect
+                            ? <CardActionArea sx={{ height: '100%' }} onClick={() => onSelect(tally)}>{content}</CardActionArea>
+                            : content}
+                    </Card>
+                </div>
+            );
+        })}
     </div>
 );
+
+/** One creator's share of a general, with the units still missing tucked behind a toggle. */
+const GeneralCreatorRow: React.FC<{ creator: string; units: Unit[]; ownedIds: Set<number> }> = ({ creator, units, ownedIds }) => {
+    const [showMissing, setShowMissing] = useState(false);
+    const missing = units.filter(unit => !ownedIds.has(unit.id)).sort((a, b) => a.name.localeCompare(b.name));
+    const tally = { owned: units.length - missing.length, total: units.length };
+
+    return (
+        <Box>
+            <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={1}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{creatorLabel(creator)}</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    {`${formatPercent(tally)} · ${tally.owned} / ${tally.total}`}
+                </Typography>
+            </Stack>
+            <CompletionBar tally={tally} />
+            {missing.length > 0 && (
+                <>
+                    <Button size="small" sx={{ mt: 0.5, px: 0, textTransform: 'none' }} onClick={() => setShowMissing(value => !value)}>
+                        {showMissing ? 'Hide missing' : `Show ${missing.length} missing`}
+                    </Button>
+                    <Collapse in={showMissing} unmountOnExit>
+                        <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                            {missing.map(unit => (
+                                <li key={unit.id}>
+                                    <Typography variant="body2" component="span">{unit.name}</Typography>
+                                    {unit.set?.name && (
+                                        <Typography variant="caption" color="text.secondary">{` · ${unit.set.name}`}</Typography>
+                                    )}
+                                </li>
+                            ))}
+                        </Box>
+                    </Collapse>
+                </>
+            )}
+        </Box>
+    );
+};
+
+const GeneralDialog: React.FC<{ general: GeneralTally | null; ownedIds: Set<number>; onClose: () => void }> = ({ general, ownedIds, onClose }) => {
+    const byCreator = useMemo(() => {
+        const groups = new Map<string, Unit[]>();
+        for (const unit of general?.units ?? []) {
+            const creator = unit.creator || 'Unknown';
+            groups.set(creator, [...(groups.get(creator) ?? []), unit]);
+        }
+        return [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    }, [general]);
+
+    return (
+        <Dialog open={general !== null} onClose={onClose} maxWidth="sm" fullWidth>
+            {general && (
+                <>
+                    <DialogTitle>
+                        <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={2}>
+                            <span>{general.label}</span>
+                            <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
+                                {`${formatPercent(general)} · ${general.owned} / ${general.total}`}
+                            </Typography>
+                        </Stack>
+                    </DialogTitle>
+                    <DialogContent dividers>
+                        <Stack spacing={2.5}>
+                            {byCreator.map(([creator, units]) => (
+                                <GeneralCreatorRow key={creator} creator={creator} units={units} ownedIds={ownedIds} />
+                            ))}
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={onClose}>Close</Button>
+                    </DialogActions>
+                </>
+            )}
+        </Dialog>
+    );
+};
+
+/** A set's completion row; selecting it expands a list of the units still needed to finish the set. */
+const SetRow: React.FC<{ tally: SetTally; ownedIds: Set<number> }> = ({ tally, ownedIds }) => {
+    const [open, setOpen] = useState(false);
+    const missing = tally.units.filter(unit => !ownedIds.has(unit.id)).sort((a, b) => a.name.localeCompare(b.name));
+    const toggle = () => setOpen(value => !value);
+
+    return (
+        <>
+            <TableRow
+                hover
+                onClick={toggle}
+                onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(); } }}
+                tabIndex={0}
+                aria-expanded={open}
+                sx={{ cursor: 'pointer', '& > td': open ? { borderBottom: 'none' } : undefined }}
+            >
+                <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Box component="span" sx={{ display: 'inline-block', width: 16, color: 'text.secondary' }}>{open ? '▾' : '▸'}</Box>
+                        {tally.set.name}
+                    </Typography>
+                    {tally.set.wave && tally.set.wave !== tally.set.type && (
+                        <Typography variant="caption" color="text.secondary" sx={{ pl: 2 }}>
+                            {/^\d/.test(tally.set.wave) ? `Wave ${tally.set.wave}` : tally.set.wave}
+                        </Typography>
+                    )}
+                </TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tally.set.type}</TableCell>
+                <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <Box sx={{ flexGrow: 1 }}><CompletionBar tally={tally} /></Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700, minWidth: 40, textAlign: 'right' }}>
+                            {formatPercent(tally)}
+                        </Typography>
+                    </Stack>
+                </TableCell>
+                <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>{`${tally.owned} / ${tally.total}`}</TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell colSpan={4} sx={{ py: 0, ...(open ? {} : { borderBottom: 'none' }) }}>
+                    <Collapse in={open} unmountOnExit>
+                        <Box sx={{ pb: 1.5, pl: 2 }}>
+                            {missing.length === 0 ? (
+                                <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>Complete - you own every unit in this set.</Typography>
+                            ) : (
+                                <>
+                                    <Typography variant="body2" color="text.secondary">{`Missing ${missing.length}:`}</Typography>
+                                    <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                                        {missing.map(unit => (
+                                            <li key={unit.id}>
+                                                <Typography variant="body2" component="span">{unit.name}</Typography>
+                                                {unit.general && (
+                                                    <Typography variant="caption" color="text.secondary">{` · ${unit.general}`}</Typography>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </Box>
+                                </>
+                            )}
+                        </Box>
+                    </Collapse>
+                </TableCell>
+            </TableRow>
+        </>
+    );
+};
 
 interface StatCategory {
     label: string;
@@ -129,6 +284,7 @@ const ArmyStats: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [setFilter, setSetFilter] = useState<SetFilter>('all');
+    const [selectedGeneral, setSelectedGeneral] = useState<GeneralTally | null>(null);
     const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
 
     useEffect(() => {
@@ -147,19 +303,21 @@ const ArmyStats: React.FC = () => {
         load();
     }, []);
 
+    const ownedIds = useMemo(() => new Set(myUnits.map(unit => unit.id)), [myUnits]);
+
     const { overall, creators, generals, totalCopies } = useMemo(() => {
-        const ownedIds = new Set(myUnits.map(unit => unit.id));
         const byCreator = new Map<string, { tally: CreatorTally; sets: Map<number, SetTally> }>();
-        const byGeneral = new Map<string, LabeledTally>();
+        const byGeneral = new Map<string, GeneralTally>();
 
         for (const unit of allUnits) {
             const general = unit.general || 'None';
             let generalTally = byGeneral.get(general);
             if (!generalTally) {
-                generalTally = { key: general, label: general, owned: 0, total: 0 };
+                generalTally = { key: general, label: general, owned: 0, total: 0, units: [] };
                 byGeneral.set(general, generalTally);
             }
             generalTally.total++;
+            generalTally.units.push(unit);
             generalTally.owned += ownedIds.has(unit.id) ? 1 : 0;
 
             const creator = unit.creator || 'Unknown';
@@ -176,11 +334,12 @@ const ArmyStats: React.FC = () => {
             if (unit.set) {
                 let setTally = entry.sets.get(unit.set.id);
                 if (!setTally) {
-                    setTally = { set: unit.set, owned: 0, total: 0 };
+                    setTally = { set: unit.set, owned: 0, total: 0, units: [] };
                     entry.sets.set(unit.set.id, setTally);
                 }
                 setTally.total++;
                 setTally.owned += owned;
+                setTally.units.push(unit);
             }
         }
 
@@ -194,7 +353,7 @@ const ArmyStats: React.FC = () => {
             generals: [...byGeneral.values()].sort((a, b) => b.total - a.total || a.label.localeCompare(b.label)),
             totalCopies: myUnits.reduce((sum, unit) => sum + (unit.quantity ?? 1), 0),
         };
-    }, [allUnits, myUnits]);
+    }, [allUnits, myUnits, ownedIds]);
 
     const points = useMemo(() => ({
         withDuplicates: myUnits.reduce((sum, unit) => sum + (pointsFor(unit) ?? 0) * (unit.quantity ?? 1), 0),
@@ -233,7 +392,7 @@ const ArmyStats: React.FC = () => {
     return (
         <div className="container-fluid">
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Typography variant="h4">Army Stats</Typography>
+                <Typography variant="h4">My Army Stats</Typography>
                 <PointSystemPicker value={pointSystem} onChange={setPointSystem} defaultValue={defaultPointSystem} />
             </Stack>
 
@@ -313,11 +472,16 @@ const ArmyStats: React.FC = () => {
             <Typography variant="h5" sx={{ mb: 1.5 }}>By creator</Typography>
             <TallyCards tallies={creators.map(creator => ({ ...creator, key: creator.creator, label: creatorLabel(creator.creator) }))} />
 
-            <Typography variant="h5" sx={{ mb: 1.5 }}>By general</Typography>
-            <TallyCards tallies={generals} />
+            <Typography variant="h5" sx={{ mb: 0.5 }}>By general</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>Select a general to see it by creator and what you're missing.</Typography>
+            <TallyCards tallies={generals} onSelect={setSelectedGeneral} />
+            <GeneralDialog general={selectedGeneral} ownedIds={ownedIds} onClose={() => setSelectedGeneral(null)} />
 
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={1} sx={{ mb: 1.5 }}>
-                <Typography variant="h5">By set</Typography>
+                <Box>
+                    <Typography variant="h5">By set</Typography>
+                    <Typography variant="body2" color="text.secondary">Select a set to see the units you still need.</Typography>
+                </Box>
                 <ToggleButtonGroup
                     size="small"
                     exclusive
@@ -348,28 +512,7 @@ const ArmyStats: React.FC = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {sets.map(tally => (
-                                        <TableRow key={tally.set.id}>
-                                            <TableCell>
-                                                <Typography variant="body2" sx={{ fontWeight: 600 }}>{tally.set.name}</Typography>
-                                                {tally.set.wave && tally.set.wave !== tally.set.type && (
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {/^\d/.test(tally.set.wave) ? `Wave ${tally.set.wave}` : tally.set.wave}
-                                                    </Typography>
-                                                )}
-                                            </TableCell>
-                                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tally.set.type}</TableCell>
-                                            <TableCell>
-                                                <Stack direction="row" alignItems="center" spacing={1}>
-                                                    <Box sx={{ flexGrow: 1 }}><CompletionBar tally={tally} /></Box>
-                                                    <Typography variant="body2" sx={{ fontWeight: 700, minWidth: 40, textAlign: 'right' }}>
-                                                        {formatPercent(tally)}
-                                                    </Typography>
-                                                </Stack>
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>{`${tally.owned} / ${tally.total}`}</TableCell>
-                                        </TableRow>
-                                    ))}
+                                    {sets.map(tally => <SetRow key={tally.set.id} tally={tally} ownedIds={ownedIds} />)}
                                 </TableBody>
                             </Table>
                         </TableContainer>

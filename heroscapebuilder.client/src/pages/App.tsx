@@ -178,7 +178,7 @@ const App: React.FC = () => {
                             } />
                             <Route path="/my-heroscape/army-stats" element={
                                 <PrivateRoute>
-                                    <PageMeta title="Army Stats" description="See how much of each Heroscape creator and set your collection covers." noindex>
+                                    <PageMeta title="My Army Stats" description="See how much of each Heroscape creator and set your collection covers." noindex>
                                         <ArmyStats />
                                     </PageMeta>
                                 </PrivateRoute>
