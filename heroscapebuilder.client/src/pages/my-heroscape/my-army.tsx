@@ -335,7 +335,7 @@ const MyArmy: React.FC = () => {
                 <DialogContent>
                     <Stack spacing={1} sx={{ paddingTop: 1 }}>
                         <Alert severity="info">
-                            Units already in My Army aren't listed here. To change how many you own, use the − / + buttons in the Quantity column of your collection.
+                            Units already in My Collection aren't listed here. To change how many you own, use the − / + buttons in the Quantity column of your collection.
                         </Alert>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
                             <TextField

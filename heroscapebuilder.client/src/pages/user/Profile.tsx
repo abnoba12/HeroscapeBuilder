@@ -186,7 +186,7 @@ const DeleteAccountSection: React.FC = () => {
             <Stack spacing={1} alignItems="flex-start">
                 <Typography variant="h6" color="error">Delete account</Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Permanently deletes your account, your My Army collection and all of your Battlegroups. Shared Battlegroup
+                    Permanently deletes your account, your collection and all of your armies. Shared army
                     links stop working. This cannot be undone.
                 </Typography>
                 <Button color="error" variant="outlined" onClick={() => setOpen(true)}>Delete my account</Button>
@@ -197,7 +197,7 @@ const DeleteAccountSection: React.FC = () => {
                 <DialogContent>
                     <Stack spacing={2}>
                         <DialogContentText>
-                            Your account, My Army and Battlegroups will be permanently deleted. Enter your password to confirm.
+                            Your account, collection and armies will be permanently deleted. Enter your password to confirm.
                         </DialogContentText>
                         {error && <Alert severity="error">{error}</Alert>}
                         <TextField

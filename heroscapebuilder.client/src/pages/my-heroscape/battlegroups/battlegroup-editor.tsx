@@ -136,7 +136,7 @@ const BattlegroupEditor: React.FC = () => {
                     setSelection(Object.fromEntries(bg.units.map(item => [item.unit.id, item.quantity])));
                 }
             } catch (err) {
-                setLoadError(isNotFound(err) ? 'Battlegroup not found.' : getErrorMessages(err, 'Failed to load the editor.')[0]);
+                setLoadError(isNotFound(err) ? 'Army not found.' : getErrorMessages(err, 'Failed to load the editor.')[0]);
             } finally {
                 setLoading(false);
             }
@@ -204,25 +204,25 @@ const BattlegroupEditor: React.FC = () => {
         if (pointLimit <= 0) return 'Set a point limit before adding units.';
 
         if (creator && unit.creator.toUpperCase() !== creator) {
-            return `${unit.name} is from ${unit.creator}, but this Battlegroup is restricted to ${creator}.`;
+            return `${unit.name} is from ${unit.creator}, but this army is restricted to ${creator}.`;
         }
 
         if (isUniqueUnit(unit.rarity)) {
             const alreadyIn = selectedList.some(item => item.unit.name.toLowerCase() === unit.name.toLowerCase());
-            if (alreadyIn) return `${unit.name} is a Unique unit and can only be in a Battlegroup once.`;
+            if (alreadyIn) return `${unit.name} is a Unique unit and can only be in an army once.`;
         }
 
         const owned = ownedById.get(unit.id) ?? 0;
         const used = selection[unit.id] ?? 0;
         if (used >= owned) {
             return owned === 0
-                ? `${unit.name} is not in My Army.`
-                : `You only own ${owned} of ${unit.name} - all of them are already in this Battlegroup.`;
+                ? `${unit.name} is not in My Collection.`
+                : `You only own ${owned} of ${unit.name} - all of them are already in this army.`;
         }
 
         const points = pointsOf(unit);
         if (totalPoints + points > pointLimit) {
-            return `Adding ${unit.name} (${points} ${pointSystem} pts) would bring this Battlegroup to ${totalPoints + points} points, over its limit of ${pointLimit}.`;
+            return `Adding ${unit.name} (${points} ${pointSystem} pts) would bring this army to ${totalPoints + points} points, over its limit of ${pointLimit}.`;
         }
 
         return null;
@@ -270,7 +270,7 @@ const BattlegroupEditor: React.FC = () => {
             ? selectedList.filter(item => item.unit.creator.toUpperCase() !== value)
             : [];
         if (conflicting.length > 0) {
-            setNotice(`Can't restrict this Battlegroup to ${value} while it contains ${conflicting.map(item => item.unit.name).join(', ')}. Remove them first.`);
+            setNotice(`Can't restrict this army to ${value} while it contains ${conflicting.map(item => item.unit.name).join(', ')}. Remove them first.`);
             return;
         }
         setCreator(value);
@@ -296,7 +296,7 @@ const BattlegroupEditor: React.FC = () => {
                 : await createBattlegroup(request);
             navigate(`/my-heroscape/battlegroups/${saved.id}`);
         } catch (err) {
-            setServerErrors(getErrorMessages(err, 'Failed to save the Battlegroup.'));
+            setServerErrors(getErrorMessages(err, 'Failed to save the army.'));
             setSaving(false);
         }
     };
@@ -362,7 +362,7 @@ const BattlegroupEditor: React.FC = () => {
         return (
             <div className="container-fluid">
                 <Alert severity="error" sx={{ mb: 2 }}>{loadError}</Alert>
-                <Button component={Link} to="/my-heroscape/battlegroups">Back to Battlegroups</Button>
+                <Button component={Link} to="/my-heroscape/battlegroups">Back to My Armies</Button>
             </div>
         );
     }
@@ -373,7 +373,7 @@ const BattlegroupEditor: React.FC = () => {
     return (
         <div className="container-fluid">
             <Stack spacing={2}>
-                <Typography variant="h4">{isEdit ? 'Edit Battlegroup' : 'New Battlegroup'}</Typography>
+                <Typography variant="h4">{isEdit ? 'Edit Army' : 'New Army'}</Typography>
 
                 {serverErrors.length > 0 && (
                     <Alert severity="error" onClose={() => setServerErrors([])}>
@@ -383,7 +383,7 @@ const BattlegroupEditor: React.FC = () => {
 
                 {overAllocated.length > 0 && (
                     <Alert severity="error" variant="filled" sx={{ fontWeight: 700 }}>
-                        {`⚠ My Army doesn't have enough of: ${overAllocated.map(item => `${item.unit.name} (own ${ownedById.get(item.unit.id) ?? 0}, using ${item.quantity})`).join(', ')}. Lower or remove them to save.`}
+                        {`⚠ My Collection doesn't have enough of: ${overAllocated.map(item => `${item.unit.name} (own ${ownedById.get(item.unit.id) ?? 0}, using ${item.quantity})`).join(', ')}. Lower or remove them to save.`}
                     </Alert>
                 )}
 
@@ -391,7 +391,7 @@ const BattlegroupEditor: React.FC = () => {
                     <Stack spacing={2}>
                         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                             <TextField
-                                label="Battlegroup name"
+                                label="Army name"
                                 value={name}
                                 onChange={event => setName(event.target.value)}
                                 slotProps={{ htmlInput: { maxLength: 100 } }}
@@ -438,7 +438,7 @@ const BattlegroupEditor: React.FC = () => {
                     <div className="col-xxl-8" ref={gridSectionRef}>
                         <Stack spacing={1}>
                             <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>{reviewingSelected ? 'Selected units' : 'My Army'}</Typography>
+                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>{reviewingSelected ? 'Selected units' : 'My Collection'}</Typography>
                                 <TextField
                                     size="small"
                                     fullWidth
@@ -489,7 +489,7 @@ const BattlegroupEditor: React.FC = () => {
                     <div className="col-xxl-4">
                         <Stack spacing={1}>
                             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-                                <Typography variant="h6">{`Battlegroup (${selectedList.reduce((sum, item) => sum + item.quantity, 0)} units)`}</Typography>
+                                <Typography variant="h6">{`Army (${selectedList.reduce((sum, item) => sum + item.quantity, 0)} units)`}</Typography>
                                 <Button
                                     size="small"
                                     variant={reviewingSelected ? 'contained' : 'outlined'}
@@ -533,7 +533,7 @@ const BattlegroupEditor: React.FC = () => {
                                             <TableRow>
                                                 <TableCell colSpan={4} align="center">
                                                     <Typography variant="body2" color="text.secondary">
-                                                        Click Add on a unit to put it in this Battlegroup.
+                                                        Click Add on a unit to put it in this army.
                                                     </Typography>
                                                 </TableCell>
                                             </TableRow>
@@ -572,7 +572,7 @@ const BattlegroupEditor: React.FC = () => {
 
                 <Paper variant="outlined" sx={{ p: 2 }}>
                     <TextField
-                        label="How to play this Battlegroup"
+                        label="How to play this army"
                         placeholder="Strategy, opening moves, how the units work together, things to watch out for..."
                         value={notes}
                         onChange={event => setNotes(event.target.value)}
@@ -587,7 +587,7 @@ const BattlegroupEditor: React.FC = () => {
 
                 <Stack direction="row" spacing={1}>
                     <Button variant="contained" onClick={handleSave} disabled={!canSave}>
-                        {isEdit ? 'Save changes' : 'Create Battlegroup'}
+                        {isEdit ? 'Save changes' : 'Create Army'}
                     </Button>
                     <Button component={Link} to={cancelTarget}>Cancel</Button>
                 </Stack>

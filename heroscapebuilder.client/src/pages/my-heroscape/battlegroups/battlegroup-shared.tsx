@@ -17,8 +17,8 @@ const BattlegroupShared: React.FC = () => {
                 setBattlegroup(await getSharedBattlegroup(shareId ?? ''));
             } catch (err) {
                 setError(isNotFound(err)
-                    ? 'This Battlegroup is not available. The link may be wrong, or the owner may have stopped sharing it.'
-                    : getErrorMessages(err, 'Failed to load the Battlegroup.')[0]);
+                    ? 'This army is not available. The link may be wrong, or the owner may have stopped sharing it.'
+                    : getErrorMessages(err, 'Failed to load the army.')[0]);
             }
         };
         load();
@@ -38,7 +38,7 @@ const BattlegroupShared: React.FC = () => {
             <Stack spacing={2}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
                     <div>
-                        <Typography variant="overline" color="text.secondary">Shared Battlegroup</Typography>
+                        <Typography variant="overline" color="text.secondary">Shared Army</Typography>
                         <Typography variant="h4">{battlegroup.name}</Typography>
                     </div>
                     {battlegroup.isOwner && (

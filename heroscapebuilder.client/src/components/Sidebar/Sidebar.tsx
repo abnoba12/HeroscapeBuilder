@@ -141,10 +141,10 @@ const Sidebar: React.FC = () => {
                                     <a href="#!" onClick={() => toggleSubmenu('my-heroscape')}><p>My Heroscape</p></a>
                                     {activeMenu === 'my-heroscape' && (
                                         <ul className="submenu">
-                                            <li><Link to="/my-heroscape/my-army" onClick={toggleSidebar}>My Army</Link></li>
-                                            <li><Link to="/my-heroscape/army-stats" onClick={toggleSidebar}>My Army Stats</Link></li>
+                                            <li><Link to="/my-heroscape/my-army" onClick={toggleSidebar}>My Collection</Link></li>
+                                            <li><Link to="/my-heroscape/army-stats" onClick={toggleSidebar}>My Collection Stats</Link></li>
                                             {hasArmyUnits && (
-                                                <li><Link to="/my-heroscape/battlegroups" onClick={toggleSidebar}>Battlegroups</Link></li>
+                                                <li><Link to="/my-heroscape/battlegroups" onClick={toggleSidebar}>My Armies</Link></li>
                                             )}
                                         </ul>
                                     )}

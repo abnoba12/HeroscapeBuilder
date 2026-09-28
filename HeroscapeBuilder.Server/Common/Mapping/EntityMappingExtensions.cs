@@ -83,7 +83,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
             var overAllocated = units.Where(unit => unit.OverAllocated).ToList();
             if (overAllocated.Count > 0)
             {
-                reasons.Add($"My Army no longer has enough copies of: {string.Join(", ", overAllocated.Select(unit => unit.Unit.Name))}.");
+                reasons.Add($"My Collection no longer has enough copies of: {string.Join(", ", overAllocated.Select(unit => unit.Unit.Name))}.");
             }
             if (isOwner && totalPoints > source.PointLimit)
             {

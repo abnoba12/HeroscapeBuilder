@@ -23,7 +23,7 @@ const Battlegroups: React.FC = () => {
                     setBattlegroups(await getMyBattlegroups());
                 }
             } catch (err) {
-                setError(getErrorMessages(err, 'Failed to load your Battlegroups.')[0]);
+                setError(getErrorMessages(err, 'Failed to load your armies.')[0]);
             }
         };
         load();
@@ -37,7 +37,7 @@ const Battlegroups: React.FC = () => {
             setBattlegroups(prev => prev.filter(x => x.id !== pendingDelete.id));
             setPendingDelete(null);
         } catch (err) {
-            setError(getErrorMessages(err, 'Failed to delete the Battlegroup.')[0]);
+            setError(getErrorMessages(err, 'Failed to delete the army.')[0]);
             setPendingDelete(null);
         } finally {
             setDeleting(false);
@@ -52,22 +52,22 @@ const Battlegroups: React.FC = () => {
     return (
         <div className="container-fluid">
             <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-                <Typography variant="h4">Battlegroups</Typography>
+                <Typography variant="h4">My Armies</Typography>
                 <Button variant="contained" onClick={() => navigate('/my-heroscape/battlegroups/new')}>
-                    New Battlegroup
+                    New Army
                 </Button>
             </Stack>
 
             {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
             {needsReviewCount > 0 && (
                 <Alert severity="error" variant="filled" sx={{ mb: 2, fontWeight: 700 }}>
-                    {`${needsReviewCount} Battlegroup${needsReviewCount === 1 ? ' needs' : 's need'} review - My Army no longer covers ${needsReviewCount === 1 ? 'it' : 'them'}.`}
+                    {`${needsReviewCount} ${needsReviewCount === 1 ? 'army needs' : 'armies need'} review - My Collection no longer covers ${needsReviewCount === 1 ? 'it' : 'them'}.`}
                 </Alert>
             )}
 
             {battlegroups.length === 0 && !error && (
                 <Typography color="text.secondary">
-                    You have no Battlegroups yet. Create one to pick units from My Army within a point limit.
+                    You have no armies yet. Create one to pick units from My Collection within a point limit.
                 </Typography>
             )}
 

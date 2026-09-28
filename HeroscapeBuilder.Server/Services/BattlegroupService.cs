@@ -159,15 +159,15 @@ namespace HeroscapeBuilder.Server.Services
             var name = request.Name?.Trim() ?? string.Empty;
             if (name.Length == 0)
             {
-                errors.Add("A Battlegroup name is required.");
+                errors.Add("An army name is required.");
             }
             else if (name.Length > MaxNameLength)
             {
-                errors.Add($"Battlegroup names can be at most {MaxNameLength} characters.");
+                errors.Add($"Army names can be at most {MaxNameLength} characters.");
             }
             else if (await _battlegroupRepository.NameInUse(userId, name, excludeId))
             {
-                throw new BattlegroupException(BattlegroupErrorKind.Conflict, $"You already have a Battlegroup named \"{name}\". Battlegroup names must be unique.");
+                throw new BattlegroupException(BattlegroupErrorKind.Conflict, $"You already have an army named \"{name}\". Army names must be unique.");
             }
 
             if (request.PointLimit <= 0)
@@ -225,16 +225,16 @@ namespace HeroscapeBuilder.Server.Services
 
                 if (ownedQuantity == 0)
                 {
-                    errors.Add($"{unitName} is not in My Army.");
+                    errors.Add($"{unitName} is not in My Collection.");
                 }
                 else if (quantity > ownedQuantity)
                 {
-                    errors.Add($"You only own {ownedQuantity} of {unitName} but this Battlegroup uses {quantity}.");
+                    errors.Add($"You only own {ownedQuantity} of {unitName} but this army uses {quantity}.");
                 }
 
                 if (creator != null && !string.Equals(card.Creator, creator, StringComparison.OrdinalIgnoreCase))
                 {
-                    errors.Add($"{unitName} is from {card.Creator}, but this Battlegroup is restricted to {creator}.");
+                    errors.Add($"{unitName} is from {card.Creator}, but this army is restricted to {creator}.");
                 }
             }
 
@@ -246,13 +246,13 @@ namespace HeroscapeBuilder.Server.Services
                 .Select(group => cards[group.First().Key].Name);
             foreach (var uniqueName in uniqueDuplicates)
             {
-                errors.Add($"{uniqueName} is a Unique unit and can only be in a Battlegroup once.");
+                errors.Add($"{uniqueName} is a Unique unit and can only be in an army once.");
             }
 
             var totalPoints = units.Sum(x => (cards.TryGetValue(x.Key, out var card) ? PointsFor(card, request.PointSystem) : 0) * x.Value);
             if (request.PointLimit > 0 && totalPoints > request.PointLimit)
             {
-                errors.Add($"Total {request.PointSystem} points ({totalPoints}) exceed the Battlegroup limit ({request.PointLimit}).");
+                errors.Add($"Total {request.PointSystem} points ({totalPoints}) exceed the army limit ({request.PointLimit}).");
             }
 
             if (errors.Count > 0)
@@ -284,13 +284,13 @@ namespace HeroscapeBuilder.Server.Services
                 {
                     throw;
                 }
-                throw new BattlegroupException(BattlegroupErrorKind.Conflict, $"You already have a Battlegroup named \"{name}\". Battlegroup names must be unique.");
+                throw new BattlegroupException(BattlegroupErrorKind.Conflict, $"You already have an army named \"{name}\". Army names must be unique.");
             }
         }
 
         private static BattlegroupException NotFound()
         {
-            return new BattlegroupException(BattlegroupErrorKind.NotFound, "Battlegroup not found.");
+            return new BattlegroupException(BattlegroupErrorKind.NotFound, "Army not found.");
         }
     }
 }

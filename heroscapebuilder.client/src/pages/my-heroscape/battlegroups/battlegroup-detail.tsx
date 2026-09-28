@@ -28,7 +28,7 @@ const BattlegroupDetail: React.FC = () => {
             try {
                 setBattlegroup(await getBattlegroup(Number(id)));
             } catch (err) {
-                setError(isNotFound(err) ? 'Battlegroup not found.' : getErrorMessages(err, 'Failed to load the Battlegroup.')[0]);
+                setError(isNotFound(err) ? 'Army not found.' : getErrorMessages(err, 'Failed to load the army.')[0]);
             }
         };
         load();
@@ -53,7 +53,7 @@ const BattlegroupDetail: React.FC = () => {
             await deleteBattlegroup(battlegroup.id);
             navigate('/my-heroscape/battlegroups', { replace: true });
         } catch (err) {
-            setError(getErrorMessages(err, 'Failed to delete the Battlegroup.')[0]);
+            setError(getErrorMessages(err, 'Failed to delete the army.')[0]);
             setConfirmDelete(false);
             setBusy(false);
         }
@@ -75,7 +75,7 @@ const BattlegroupDetail: React.FC = () => {
         return (
             <div className="container-fluid">
                 <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-                <Button component={Link} to="/my-heroscape/battlegroups">Back to Battlegroups</Button>
+                <Button component={Link} to="/my-heroscape/battlegroups">Back to My Armies</Button>
             </div>
         );
     }
@@ -90,7 +90,7 @@ const BattlegroupDetail: React.FC = () => {
                         {battlegroup.needsReview && <NeedsReviewChip />}
                     </Stack>
                     <Stack direction="row" spacing={1}>
-                        <Button component={Link} to="/my-heroscape/battlegroups">All Battlegroups</Button>
+                        <Button component={Link} to="/my-heroscape/battlegroups">All armies</Button>
                         <Button variant="contained" component={Link} to={`/my-heroscape/battlegroups/${battlegroup.id}/edit`}>Edit</Button>
                         {!battlegroup.isShared && (
                             <Button variant="outlined" onClick={() => runShareChange(shareBattlegroup)} disabled={busy}>Share</Button>
@@ -105,7 +105,7 @@ const BattlegroupDetail: React.FC = () => {
                     <Paper variant="outlined" sx={{ p: 2 }}>
                         <Stack spacing={1}>
                             <Typography variant="subtitle2">
-                                This Battlegroup is shared. Anyone with this link can view it (read-only):
+                                This army is shared. Anyone with this link can view it (read-only):
                             </Typography>
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                 <TextField

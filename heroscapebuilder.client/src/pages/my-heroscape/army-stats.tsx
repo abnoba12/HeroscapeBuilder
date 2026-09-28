@@ -295,7 +295,7 @@ const ArmyStats: React.FC = () => {
                 setMyUnits((mine?.data ?? []) as UnitWithQuantity[]);
             } catch (err) {
                 console.error('Error loading army stats:', err);
-                setError('Failed to load your army stats.');
+                setError('Failed to load your collection stats.');
             } finally {
                 setLoading(false);
             }
@@ -392,13 +392,13 @@ const ArmyStats: React.FC = () => {
     return (
         <div className="container-fluid">
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Typography variant="h4">My Army Stats</Typography>
+                <Typography variant="h4">My Collection Stats</Typography>
                 <PointSystemPicker value={pointSystem} onChange={setPointSystem} defaultValue={defaultPointSystem} />
             </Stack>
 
             {overall.owned === 0 && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                    Your army is empty. <Link to="/my-heroscape/my-army">Add units to My Army</Link> to track your collection.
+                    Your collection is empty. <Link to="/my-heroscape/my-army">Add units to My Collection</Link> to track it.
                 </Alert>
             )}
 

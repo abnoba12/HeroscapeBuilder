@@ -61,7 +61,7 @@ export const NeedsReviewBanner: React.FC<{ reasons: string[]; children?: React.R
         }}
     >
         <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-            ⚠ This Battlegroup needs review
+            ⚠ This army needs review
         </Typography>
         {reasons.map(reason => (
             <Typography key={reason} variant="body2">{reason}</Typography>
@@ -101,10 +101,10 @@ export const ConfirmDeleteDialog: React.FC<{
     onConfirm: () => void;
 }> = ({ open, name, busy, onCancel, onConfirm }) => (
     <Dialog open={open} onClose={onCancel}>
-        <DialogTitle>Delete Battlegroup?</DialogTitle>
+        <DialogTitle>Delete army?</DialogTitle>
         <DialogContent>
             <DialogContentText>
-                {`"${name}" will be permanently deleted. If it is shared, its public link will stop working. Your units in My Army are not affected.`}
+                {`"${name}" will be permanently deleted. If it is shared, its public link will stop working. Your units in My Collection are not affected.`}
             </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -124,7 +124,7 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
             {showOwnerFlags && battlegroup.needsReview && (
                 <NeedsReviewBanner reasons={battlegroup.reviewReasons}>
                     <Typography variant="body2" sx={{ mt: 1, fontWeight: 600 }}>
-                        Edit the Battlegroup (or update My Army) to clear this warning.
+                        Edit the army (or update My Collection) to clear this warning.
                     </Typography>
                 </NeedsReviewBanner>
             )}
@@ -174,7 +174,7 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
                                         <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.unit.name}</Typography>
                                         {flagged && (
                                             <Typography variant="caption" sx={{ color: '#d50000', fontWeight: 700 }}>
-                                                {`⚠ My Army has ${item.ownedQuantity}, this Battlegroup uses ${item.quantity}`}
+                                                {`⚠ My Collection has ${item.ownedQuantity}, this army uses ${item.quantity}`}
                                             </Typography>
                                         )}
                                     </TableCell>
