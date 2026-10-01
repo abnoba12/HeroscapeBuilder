@@ -17,17 +17,72 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    Tooltip,
     Typography,
 } from '@mui/material';
 import React from 'react';
+import { Unit } from '../../../models/unit';
 import { Battlegroup } from '../../../models/battlegroup';
 import { getCreatorInfo } from '../../../models/creator';
-import { getUnitPoints } from '../../../models/point-system';
+import { PointSystem, getUnitPoints } from '../../../models/point-system';
 
 export const creatorLabel = (creator?: string | null): string =>
     creator ? (getCreatorInfo(creator)?.label ?? creator.toUpperCase()) : 'Any creator';
 
 export const isUniqueUnit = (rarity?: string | null): boolean => rarity?.toLowerCase() === 'unique';
+
+const UnitInfoCard: React.FC<{ unit: Unit; pointSystem: PointSystem }> = ({ unit, pointSystem }) => {
+    const stats: [string, string | number | null | undefined][] = [
+        ['Points', getUnitPoints(unit, pointSystem)],
+        ['Life', unit.life],
+        ['Move', unit.advMove],
+        ['Range', unit.advRange],
+        ['Attack', unit.advAttack],
+        ['Defense', unit.advDefense],
+    ];
+    const abilities = unit.abilities ?? [];
+    return (
+        <Box sx={{ p: 0.5, maxWidth: 360 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>{unit.name}</Typography>
+            {unit.sizeCategory && (
+                <Typography variant="caption" sx={{ opacity: 0.8 }}>{unit.sizeCategory}</Typography>
+            )}
+            <Stack direction="row" spacing={2} sx={{ my: 1 }}>
+                {stats.map(([label, value]) => (
+                    <Box key={label} sx={{ textAlign: 'center' }}>
+                        <Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>{label}</Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 700 }}>{value ?? '-'}</Typography>
+                    </Box>
+                ))}
+            </Stack>
+            {abilities.length === 0 && <Typography variant="caption">No abilities.</Typography>}
+            {abilities.map(ability => (
+                <Box key={ability.id} sx={{ mt: 0.75 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{ability.abilityName}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block', whiteSpace: 'pre-line' }}>{ability.ability}</Typography>
+                </Box>
+            ))}
+        </Box>
+    );
+};
+
+/** Wraps a unit name; hovering shows its name, advanced stats (with life) and abilities. */
+export const UnitHover: React.FC<{ unit: Unit; pointSystem: PointSystem; children: React.ReactNode }> = ({ unit, pointSystem, children }) => (
+    <Tooltip
+        title={<UnitInfoCard unit={unit} pointSystem={pointSystem} />}
+        placement="right"
+        enterDelay={150}
+        enterNextDelay={150}
+        slotProps={{ tooltip: { sx: { maxWidth: 'none', bgcolor: 'grey.900' } } }}
+    >
+        <Box
+            component="span"
+            sx={{ cursor: 'help', textDecoration: 'underline dotted', textUnderlineOffset: 3 }}
+        >
+            {children}
+        </Box>
+    </Tooltip>
+);
 
 const pulse = keyframes`
     0%, 100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7); }
@@ -171,7 +226,9 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
                             return (
                                 <TableRow key={item.unit.id} sx={flagged ? { bgcolor: 'rgba(255, 23, 68, 0.12)' } : undefined}>
                                     <TableCell>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.unit.name}</Typography>
+                                        <UnitHover unit={item.unit} pointSystem={battlegroup.pointSystem}>
+                                            <Typography variant="body2" sx={{ fontWeight: 600, display: 'inline-block' }}>{item.unit.name}</Typography>
+                                        </UnitHover>
                                         {flagged && (
                                             <Typography variant="caption" sx={{ color: '#d50000', fontWeight: 700 }}>
                                                 {`⚠ My Collection has ${item.ownedQuantity}, this army uses ${item.quantity}`}

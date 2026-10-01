@@ -26,6 +26,9 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .Include(x => x.BattlegroupUnits)
                     .ThenInclude(unit => unit.ArmyCard)
                         .ThenInclude(card => card.PointValues)
+                .Include(x => x.BattlegroupUnits)
+                    .ThenInclude(unit => unit.ArmyCard)
+                        .ThenInclude(card => card.ArmyCardAbilities)
                 .NotCacheable();
         }
 

@@ -37,7 +37,7 @@ import {
     updateBattlegroup,
 } from '../../../services/battlegroup-service';
 import { getMyUnits } from '../../../services/my_army-service';
-import { PointsMeter, creatorLabel, isUniqueUnit } from './battlegroup-parts';
+import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit } from './battlegroup-parts';
 import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
 import PointSystemSelect from '../../../components/PointSystem/PointSystemSelect';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -73,6 +73,11 @@ const AbilitiesCell: React.FC<ICellRendererParams<AvailableRow, string, GridCont
             {value}
         </span>
     );
+};
+
+const NameCell: React.FC<ICellRendererParams<AvailableRow, string, GridContext>> = ({ data, value, context }) => {
+    if (!data) return null;
+    return <UnitHover unit={data} pointSystem={context.pointSystem}><span>{value}</span></UnitHover>;
 };
 
 const AddCell: React.FC<ICellRendererParams<AvailableRow, unknown, GridContext>> = ({ data, context }) => {
@@ -317,7 +322,7 @@ const BattlegroupEditor: React.FC = () => {
 
     const columnDefs = useMemo<ColDef<AvailableRow>[]>(() => [
         { headerName: '', cellRenderer: AddCell, width: 90, flex: 0, pinned: 'left', sortable: false, filter: false, floatingFilter: false, resizable: false },
-        { field: 'name', headerName: 'Unit', width: 165, flex: 0, pinned: 'left' },
+        { field: 'name', headerName: 'Unit', width: 165, flex: 0, pinned: 'left', cellRenderer: NameCell },
         { field: 'rarity', headerName: 'Rarity', width: 95, flex: 0 },
         {
             colId: 'points',
@@ -469,6 +474,9 @@ const BattlegroupEditor: React.FC = () => {
                                 </Typography>
                             </Stack>
                             )}
+                            <Typography variant="caption" color="text.secondary">
+                                Tip: hover a unit's name (dotted underline) to see its points, stats and abilities.
+                            </Typography>
                             <div className="ag-theme-alpine" style={{ height: '55vh', width: '100%' }}>
                                 <AgGridReact<AvailableRow>
                                     rowData={availableRows}
@@ -544,7 +552,7 @@ const BattlegroupEditor: React.FC = () => {
                                             return (
                                                 <TableRow key={item.unit.id} sx={flagged ? { bgcolor: 'rgba(255, 23, 68, 0.12)' } : undefined}>
                                                     <TableCell>
-                                                        {item.unit.name}
+                                                        <UnitHover unit={item.unit} pointSystem={pointSystem}><span>{item.unit.name}</span></UnitHover>
                                                         {flagged && (
                                                             <Typography variant="caption" display="block" sx={{ color: '#d50000', fontWeight: 700 }}>
                                                                 {`⚠ own ${owned}`}
