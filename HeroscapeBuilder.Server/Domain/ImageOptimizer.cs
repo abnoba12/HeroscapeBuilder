@@ -3,6 +3,7 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace HeroscapeBuilder.Server.Domain
 {
@@ -32,6 +33,28 @@ namespace HeroscapeBuilder.Server.Domain
                 "WEB" => OptimizeForWeb(image, format),
                 _ => throw new ArgumentException("Invalid purpose specified."),
             };
+        }
+
+        /// <summary>
+        /// Downscales (never upscales) an image to fit the given bounds and re-encodes it as lossy WebP.
+        /// Used for gallery thumbnails, where WebP is typically several times smaller than PNG.
+        /// </summary>
+        public byte[] EncodeWebp(byte[] imageData, int? maxWidth, int? maxHeight, int quality = 80)
+        {
+            using var image = Image.Load(imageData);
+
+            var scale = CalculateScaleDown(image.Width, image.Height, maxWidth, maxHeight, true);
+            if (scale < 1.0)
+            {
+                image.Mutate(x => x.Resize(
+                    Math.Max(1, (int)(image.Width * scale)),
+                    Math.Max(1, (int)(image.Height * scale)),
+                    KnownResamplers.Lanczos3));
+            }
+
+            using var memoryStream = new MemoryStream();
+            image.Save(memoryStream, new WebpEncoder { Quality = quality, FileFormat = WebpFileFormatType.Lossy });
+            return memoryStream.ToArray();
         }
 
         private double CalculateScaleDown(int originalWidth, int originalHeight, int? maxWidth, int? maxHeight, bool maintainAspectRatio)

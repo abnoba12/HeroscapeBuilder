@@ -1,4 +1,5 @@
-﻿using HeroscapeBuilder.Server.Domain.Entities;
+﻿using HeroscapeBuilder.Server.Common.Jobs;
+using HeroscapeBuilder.Server.Domain.Entities;
 using HeroscapeBuilder.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +14,11 @@ namespace HeroscapeBuilder.Server.Controllers
     {
         private readonly FileService _fileService;
         private readonly ImageService _imageOptimizationService;
+        private readonly ThumbnailRebuildJob _thumbnailRebuildJob;
 
-        public FileController(FileService fileService, ImageService imageOptimizationService)
+        public FileController(FileService fileService, ImageService imageOptimizationService, ThumbnailRebuildJob thumbnailRebuildJob)
         {
+            _thumbnailRebuildJob = thumbnailRebuildJob;
             _fileService = fileService;
             _imageOptimizationService = imageOptimizationService;
         }
@@ -81,6 +84,26 @@ namespace HeroscapeBuilder.Server.Controllers
             }
 
             return StatusCode(500, "Failed to optimize images.");
+        }
+
+        /// <summary>Rebuilds every PDF thumbnail (all card types) in the background. Poll GetRebuildThumbnailsStatus for progress.</summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public IActionResult StartRebuildAllThumbnails()
+        {
+            if (!_thumbnailRebuildJob.TryStart())
+            {
+                return Conflict("A thumbnail rebuild is already running.");
+            }
+
+            return Accepted(_thumbnailRebuildJob.GetStatus());
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public IActionResult GetRebuildThumbnailsStatus()
+        {
+            return Ok(_thumbnailRebuildJob.GetStatus());
         }
 
         [Authorize(Roles = "Admin")]

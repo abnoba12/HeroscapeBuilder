@@ -1,37 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { base64Cache } from './cache-manager';
+import React, { useState } from 'react';
 
-// Example component to display cached images
-export const ImageCache: React.FC<{ src?: string; alt: string; cacheKey?: string; className: string }> = ({ src, alt, cacheKey, className }) => {
-    const [imageSrc, setImageSrc] = useState<string | null>(null);
+const NOT_FOUND_IMAGE = "/assets/img/imageNotFound.png";
 
-    useEffect(() => {
-        // If src or cacheKey is not provided, return the broken image
-        if (!src || !cacheKey) {
-            console.error(`Image path not set: ${src} - ${cacheKey}`);
-            setImageSrc("/assets/img/imageNotFound.png");
-            return;
-        }
+// Plain lazy-loaded <img>: the browser's HTTP cache handles caching, decoding and eviction.
+// `cacheKey` is accepted for backwards compatibility but no longer used.
+export const ImageCache: React.FC<{ src?: string; alt: string; cacheKey?: string; className: string }> = ({ src, alt, className }) => {
+    const [failedSrc, setFailedSrc] = useState<string | undefined>();
 
-        const fetchImage = async () => {
-            try {
-                const cachedImage = await base64Cache(src, cacheKey);
-                setImageSrc(cachedImage);
-            } catch (error) {
-                console.error(`Error fetching image: ${src}`, error);
-                // If an error occurs, fall back to the broken image
-                setImageSrc("/assets/img/imageNotFound.png");
-            }
-        };
-
-        fetchImage();
-    }, [src, cacheKey]);
-
-    if (!imageSrc) {
-        return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
+    if (!src) {
+        console.error(`Image path not set: ${src}`);
     }
 
-    return <img src={imageSrc} alt={alt} className={className} />;
+    return (
+        <img
+            src={!src || failedSrc === src ? NOT_FOUND_IMAGE : src}
+            alt={alt}
+            className={className}
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailedSrc(src)}
+        />
+    );
 };
 
 export default ImageCache;

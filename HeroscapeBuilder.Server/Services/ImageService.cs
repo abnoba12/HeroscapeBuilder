@@ -56,6 +56,11 @@ namespace HeroscapeBuilder.Server.Services
             return _imageOptimizer.OptimizeImage(image, purpose, maxWidth, maxHeight, maintainAspectRatio);
         }
 
+        public byte[] EncodeWebp(byte[] image, int? maxWidth = null, int? maxHeight = null, int quality = 80)
+        {
+            return _imageOptimizer.EncodeWebp(image, maxWidth, maxHeight, quality);
+        }
+
         // Helper method to check for JPG
         public bool IsJpg(byte[] fileData)
         {

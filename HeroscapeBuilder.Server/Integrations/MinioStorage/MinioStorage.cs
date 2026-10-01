@@ -1,6 +1,7 @@
 ﻿using HeroscapeBuilder.Server.Integrations.Interfaces;
 using Minio.DataModel.Args;
 using Minio;
+using Microsoft.AspNetCore.StaticFiles;
 using System.Reactive.Linq;
 
 namespace HeroscapeBuilder.Server.Integrations.MinioStorage
@@ -23,13 +24,21 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
             var bucketName = GetBucketName(path);
             path = path.Replace($"/{bucketName}/", "");
 
-            using var stream = new MemoryStream(fileData);
-            await _minioClient.PutObjectAsync(new PutObjectArgs()
+            var putArgs = new PutObjectArgs()
                 .WithBucket(bucketName)
                 .WithObject(path)
+                .WithContentType(GetContentType(path));
+
+            // Thumbnails are content-hashed (see FileService), so a given URL never changes and browsers can keep it forever.
+            if (bucketName == ThumbnailBucket)
+            {
+                putArgs.WithHeaders(new Dictionary<string, string> { ["Cache-Control"] = "public, max-age=31536000, immutable" });
+            }
+
+            using var stream = new MemoryStream(fileData);
+            await _minioClient.PutObjectAsync(putArgs
                 .WithStreamData(stream)
-                .WithObjectSize(stream.Length)
-                .WithContentType("application/octet-stream"));
+                .WithObjectSize(stream.Length));
 
             // Constructing the URL manually as Endpoint is not directly accessible
             return $"/{bucketName}{path}";
@@ -139,6 +148,15 @@ namespace HeroscapeBuilder.Server.Integrations.MinioStorage
 
             return string.Join("/", pathParts.Select(p => p.Replace("\\", "/").Trim('/')));
         }
+
+        private const string ThumbnailBucket = "thumbs";
+
+        private static string GetContentType(string path)
+        {
+            return ContentTypes.TryGetContentType(path, out var contentType) ? contentType : "application/octet-stream";
+        }
+
+        private static readonly FileExtensionContentTypeProvider ContentTypes = new();
 
         private string GetBucketName(string path)
         {

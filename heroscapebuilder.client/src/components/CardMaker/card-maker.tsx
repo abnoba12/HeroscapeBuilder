@@ -6,7 +6,7 @@ import { Unit } from '../../models/unit';
 import { UnitFormData } from '../../models/unit-form-data';
 import { UnitFormFile } from '../../models/unit-form-file';
 import { hasRole } from '../../services/authService';
-import { blobCache, removeCache } from '../../services/cache-manager';
+import { blobCache } from '../../services/cache-manager';
 import { generateIndexCard, initializePDF, savePDF } from '../../services/card-maker-service';
 import { AddFileToUnit } from '../../services/file-service';
 import { getUnits } from '../../services/unit-service';
@@ -365,7 +365,6 @@ const CardMaker: React.FC<CardMakerProps> = ({ cardSize }) => {
                 await AddFileToUnit(pdf, selectedUnit, pdfPurpose, fileName);
             }
 
-            removeCache("Unit");
         }
 
         return;

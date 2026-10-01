@@ -55,6 +55,11 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .FirstOrDefaultAsync(x => x.ArmyCardId == armyCardId && x.FilePurpose == filePurpose);
         }
 
+        public async Task<ArmyCardFile?> GetArmyCardFileByIdAsync(long id)
+        {
+            return await _context.ArmyCardFiles.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
         /// <summary>
         /// Save a list of files and return the count of how many files were saved
         /// </summary>

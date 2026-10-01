@@ -47,6 +47,7 @@ namespace HeroscapeBuilder.Server.Services
 
             //If the file is a PDF then compress it
             byte[] thumbImage = null;
+            string? thumbFileName = null;
             if (_pdfService.IsPdf(fileData))
             {
                 var newFileData = _pdfService.CompressPdf(fileData);
@@ -56,7 +57,7 @@ namespace HeroscapeBuilder.Server.Services
                     fileData = newFileData;
                 }
 
-                thumbImage = await _pdfService.CreateThumbnailFromPdf(fileData);
+                (thumbImage, thumbFileName) = await CreateWebThumbnailAsync(fileData, $"{filePurpose}_Thumb", Path.GetFileNameWithoutExtension(fileName));
             }
 
             //If the file is an image then optimize it
@@ -105,10 +106,9 @@ namespace HeroscapeBuilder.Server.Services
                 fileId = await _fileRepository.AddArmyCardFileAsync(acf);
             }
 
-            if (thumbImage != null)
+            if (thumbImage != null && thumbFileName != null)
             {
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                await AddFileToUnit(armyCardId, $"{filePurpose}_Thumb", $"pdf-thumbnail-{fileNameWithoutExtension}.png", thumbImage, fileId);
+                await AddFileToUnit(armyCardId, $"{filePurpose}_Thumb", thumbFileName, thumbImage, fileId);
             }
 
             return true;
@@ -191,21 +191,15 @@ namespace HeroscapeBuilder.Server.Services
             }
 
             byte[] thumbImage;
+            string thumbnailFileName;
             try
             {
-                thumbImage = await _pdfService.CreateThumbnailFromPdf(pdfData);
+                (thumbImage, thumbnailFileName) = await CreateWebThumbnailAsync(pdfData, thumbnailPurpose, Path.GetFileNameWithoutExtension(pdfFile.FilePath));
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Failed to create thumbnail from PDF.", ex);
             }
-
-            if (thumbImage == null || thumbImage.Length == 0)
-            {
-                throw new InvalidOperationException("Failed to create thumbnail from PDF.");
-            }
-
-            thumbImage = OptimizeThumbnailForType(thumbImage, thumbnailPurpose);
 
             var thumbnailDirectory = GetPathByFilePurpose(thumbnailPurpose);
             if (string.IsNullOrWhiteSpace(thumbnailDirectory))
@@ -213,22 +207,12 @@ namespace HeroscapeBuilder.Server.Services
                 throw new InvalidOperationException($"Unable to determine storage location for purpose '{thumbnailPurpose}'.");
             }
 
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pdfFile.FilePath);
-            var thumbnailFileName = $"pdf-thumbnail-{fileNameWithoutExtension}.png";
             var thumbnailFilePath = Path.Combine(thumbnailDirectory, thumbnailFileName);
 
             var existingThumbnail = await _fileRepository.GetArmyCardFileAsync(pdfFile.ArmyCardId, thumbnailPurpose);
-            if (existingThumbnail != null)
+            if (existingThumbnail != null && existingThumbnail.Parent.HasValue && existingThumbnail.Parent.Value != pdfFile.Id)
             {
-                if (existingThumbnail.Parent.HasValue && existingThumbnail.Parent.Value != pdfFile.Id)
-                {
-                    throw new InvalidOperationException("Existing thumbnail is associated with a different parent PDF.");
-                }
-
-                if (!string.IsNullOrWhiteSpace(existingThumbnail.FilePath))
-                {
-                    await _blobStorage.DeleteAsync(existingThumbnail.FilePath);
-                }
+                throw new InvalidOperationException("Existing thumbnail is associated with a different parent PDF.");
             }
 
             string uploadResult;
@@ -244,6 +228,12 @@ namespace HeroscapeBuilder.Server.Services
             if (string.IsNullOrEmpty(uploadResult))
             {
                 throw new InvalidOperationException($"Failed to upload thumbnail to '{thumbnailFilePath}'.");
+            }
+
+            // Only remove the previous thumbnail once the new one is safely stored
+            if (existingThumbnail != null && !string.IsNullOrWhiteSpace(existingThumbnail.FilePath) && existingThumbnail.FilePath != thumbnailFilePath)
+            {
+                await _blobStorage.DeleteAsync(existingThumbnail.FilePath);
             }
 
             if (existingThumbnail != null)
@@ -278,7 +268,7 @@ namespace HeroscapeBuilder.Server.Services
             {
                 case "3x5":
                     return ("3x5_Army_Card", "3x5_Army_Card_Thumb");
-                case "PC":
+                case "pc":
                     return ("PC_Army_Card", "PC_Army_Card_Thumb");
                 case "standard":
                     return ("Standard_Army_Card", "Standard_Army_Card_Thumb");
@@ -287,19 +277,57 @@ namespace HeroscapeBuilder.Server.Services
             }
         }
 
-        private byte[] OptimizeThumbnailForType(byte[] thumbnail, string thumbnailPurpose)
+        /// <summary>
+        /// Renders the first page of a PDF and returns it as a small WebP plus its file name. The name carries a short
+        /// content hash so a changed thumbnail always gets a new URL, which lets browsers cache each URL forever.
+        /// </summary>
+        private async Task<(byte[] Data, string FileName)> CreateWebThumbnailAsync(byte[] pdfData, string thumbnailPurpose, string pdfFileNameWithoutExtension)
         {
-            switch (thumbnailPurpose)
+            var png = await _pdfService.CreateThumbnailFromPdf(pdfData);
+            if (png == null || png.Length == 0)
             {
-                case "3x5_Army_Card_Thumb":
-                case "Standard_Army_Card_Thumb":
-                    return _imageService.OptimizeImage(thumbnail, "WEB", null, 300);
-                case "PC_Army_Card_Thumb":
-                    return _imageService.OptimizeImage(thumbnail, "WEB", 350);
-                default:
-                    return thumbnail;
+                throw new InvalidOperationException("Failed to create thumbnail from PDF.");
             }
+
+            var (maxWidth, maxHeight) = GetThumbnailBounds(thumbnailPurpose);
+            var webp = _imageService.EncodeWebp(png, maxWidth, maxHeight);
+
+            var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(webp))[..8].ToLowerInvariant();
+            return (webp, $"pdf-thumbnail-{pdfFileNameWithoutExtension}-{hash}.webp");
         }
+
+        private static (int? MaxWidth, int? MaxHeight) GetThumbnailBounds(string thumbnailPurpose)
+        {
+            return thumbnailPurpose switch
+            {
+                "3x5_Army_Card_Thumb" or "Standard_Army_Card_Thumb" => (null, 300),
+                "PC_Army_Card_Thumb" => (350, null),
+                _ => (null, 300),
+            };
+        }
+
+        /// <summary>Ids of every army card PDF (all card types) that should have a thumbnail.</summary>
+        public async Task<List<(string ArmyCardType, long PdfFileId)>> GetAllPdfFilesForThumbnailsAsync()
+        {
+            var result = new List<(string, long)>();
+            foreach (var armyCardType in ArmyCardTypes)
+            {
+                var (pdfPurpose, _) = GetFilePurposesForArmyCardType(armyCardType);
+                var pdfFiles = await _fileRepository.GetFiles(new List<int> { -1 }, pdfPurpose);
+                result.AddRange(pdfFiles.Select(f => (armyCardType, f.Id)));
+            }
+            return result;
+        }
+
+        public async Task RegenerateThumbnailForPdfIdAsync(string armyCardType, long pdfFileId)
+        {
+            var (_, thumbnailPurpose) = GetFilePurposesForArmyCardType(armyCardType);
+            var pdfFile = await _fileRepository.GetArmyCardFileByIdAsync(pdfFileId)
+                ?? throw new InvalidOperationException($"PDF file {pdfFileId} no longer exists.");
+            await RegenerateThumbnailForPdfAsync(pdfFile, thumbnailPurpose);
+        }
+
+        private static readonly string[] ArmyCardTypes = { "standard", "3x5", "pc" };
 
         private string? GetPathByFilePurpose(string filePurpose)
         {

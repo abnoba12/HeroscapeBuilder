@@ -26,6 +26,9 @@ namespace HeroscapeBuilder.Server.Program
                 return new MinioStorage(blobStorageConfig["API"], blobStorageConfig["User"], blobStorageConfig["Password"]);
             });
 
+            //Background jobs (singletons; they create their own scopes)
+            builder.Services.AddSingleton<HeroscapeBuilder.Server.Common.Jobs.ThumbnailRebuildJob>();
+
             //Repositories
             // Automatically register all Repositories in the HeroscapeBuilder.Server.Data.Repositories namespace
             RegisterAllServices(builder.Services, "HeroscapeBuilder.Server.Data.Repositories");
