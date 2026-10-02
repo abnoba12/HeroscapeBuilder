@@ -1,37 +1,48 @@
 import React from 'react';
+import { HubPage } from '../../components/HubCards/HubCards';
 
 const ArmyCards: React.FC = () => {
     return (
-        <div>
-            <div className="cards row gy-4">
-                <div className="col-md-4 card-option">
-                    <a href="/army-cards/standard" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Charos-SQ.webp" alt="Standard Heroscape Card" className="img-fluid" />
-                            <p className="text-center mt-2">Standard Heroscape Cards</p>
-                    </a>
-                </div>
-                <div className="col-md-4 card-option">
-                    <a href="/army-cards/threebyfive" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Index_3x5_Charos-SQ.webp" alt="3x5 Heroscape Index Card" className="img-fluid" />
-                            <p className="text-center mt-2">3x5 Heroscape Index Cards</p>
-                    </a>
-                </div>
-                <div className="col-md-4 card-option">
-                    <a href="/army-cards/playingcard" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Index_PC_Charos-SQ.webp" alt="PC Heroscape Index Card" className="img-fluid" />
-                            <p className="text-center mt-2">Heroscape Playing Cards</p>
-                    </a>
-                </div>
-            </div>
-            <div className="row my-4">
-            <div className="offset-md-4 col-md-4 card-option text-center">
-                    <a href="/army-cards/printing" className="text-decoration-none text-dark">
-                        <img src="/assets/img/Printing Cards.webp" alt="Printing" className="img-fluid" />
-                    <p className="mt-2">Printing Cards</p>
-                </a>
-            </div>
-            </div>
-        </div>
+        <HubPage
+            title="Heroscape Army Cards"
+            intro="Download or create army cards in the format that suits your table, then print them."
+            accent="green"
+            tiles={[
+                {
+                    to: "/army-cards/standard",
+                    title: "Standard Cards",
+                    description: "The classic full-size Heroscape army card.",
+                    image: "/assets/img/cardThumbnails/Charos-SQ.webp",
+                    imageAlt: "Standard Heroscape card"
+                },
+                {
+                    to: "/army-cards/threebyfive",
+                    title: "3x5 Index Cards",
+                    description: "Cards sized for 3x5 index cards, easy to print at home.",
+                    image: "/assets/img/cardThumbnails/Index_3x5_Charos-SQ.webp",
+                    imageAlt: "3x5 Heroscape index card"
+                },
+                {
+                    to: "/army-cards/playingcard",
+                    title: "Playing Cards",
+                    description: "Compact cards the size of a deck of playing cards.",
+                    image: "/assets/img/cardThumbnails/Index_PC_Charos-SQ.webp",
+                    imageAlt: "Heroscape playing card"
+                },
+                {
+                    to: "/army-cards/printing",
+                    title: "Printing Cards",
+                    description: "Recommended print services and settings.",
+                    image: "/assets/img/Printing Cards.webp",
+                    imageAlt: "Printing cards",
+                    cta: "Printing tips",
+                    accent: "orange",
+                    wide: true
+                }
+            ]}
+            layout="showcase"
+            crumbs={[{ label: "Home", to: "/" }, { label: "Army Cards" }]}
+        />
     );
 };
 

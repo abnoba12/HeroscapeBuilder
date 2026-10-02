@@ -1,33 +1,31 @@
 import React from 'react';
+import { HubPage } from '../../../components/HubCards/HubCards';
 
 const ThreebyfiveArmyCards: React.FC = () => {
     return (
-        <div>
-            <div className="cards row gy-6">
-                <div className="offset-md-1 col-md-2 card-option text-center">
-                    <a href="/army-cards/threebyfive/download" className="text-decoration-none text-dark">
-                        <img src="/assets/img/card_pile_3x5.webp" alt="Standard Heroscape Card" className="img-fluid" />
-                    </a>
-                </div>
-                <div className="col-md-6 card-option d-flex align-items-center">
-                    <a href="/army-cards/threebyfive/download" className="text-decoration-none text-dark">
-                        <h1 className="text-center mt-2">Download 3x5 Army Cards</h1>
-                    </a>
-                </div>
-            </div>
-            <div className="cards row gy-6">
-                <div className="offset-md-1 col-md-2 card-option text-center">
-                    <a href="/army-cards/threebyfive/create" className="text-decoration-none text-dark">
-                        <img src="/assets/img/CardMaker.webp" alt="Create standard Heroscape Card" className="img-fluid" />
-                    </a>
-                </div>
-                <div className="col-md-6 card-option d-flex align-items-center">
-                    <a href="/army-cards/threebyfive/create" className="text-decoration-none text-dark">
-                        <h1 className="text-center mt-2">Create a New Army Card</h1>
-                    </a>
-                </div>
-            </div>
-        </div>
+        <HubPage
+            title="3x5 Index Cards"
+            intro="Army cards sized to print on standard 3x5 index cards."
+            accent="green"
+            layout="steps"
+            crumbs={[{ label: "Home", to: "/" }, { label: "Army Cards", to: "/army-cards" }, { label: "3x5 Index Cards" }]}
+            tiles={[
+                {
+                    to: "/army-cards/threebyfive/download",
+                    title: "Download Army Cards",
+                    description: "Grab print-ready cards for existing Heroscape units.",
+                    image: "/assets/img/card_pile_3x5.webp",
+                    cta: "Browse downloads"
+                },
+                {
+                    to: "/army-cards/threebyfive/create",
+                    title: "Create a New Army Card",
+                    description: "Design your own custom unit and export it as a card.",
+                    image: "/assets/img/CardMaker.webp",
+                    cta: "Open card maker"
+                }
+            ]}
+        />
     );
 };
 

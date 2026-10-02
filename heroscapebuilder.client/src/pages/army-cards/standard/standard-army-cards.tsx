@@ -1,33 +1,31 @@
 import React from 'react';
+import { HubPage } from '../../../components/HubCards/HubCards';
 
 const StandardArmyCards: React.FC = () => {
     return (
-        <div>
-            <div className="cards row gy-6">
-                <div className="offset-md-1 col-md-2 card-option text-center">
-                    <a href="/army-cards/standard/download" className="text-decoration-none text-dark">
-                        <img src="/assets/img/card_pile.webp" alt="Standard Heroscape Card" className="img-fluid" />
-                    </a>
-                </div>
-                <div className="col-md-6 card-option d-flex align-items-center">
-                    <a href="/army-cards/standard/download" className="text-decoration-none text-dark">
-                        <h1 className="mt-2">Download Standard Army Cards</h1>
-                    </a>
-                </div>
-            </div>
-            <div className="cards row gy-6">
-                <div className="offset-md-1 col-md-2 card-option text-center">
-                    <a href="/army-cards/standard/create" className="text-decoration-none text-dark">
-                        <img src="/assets/img/CardMaker.webp" alt="Create standard Heroscape Card" className="img-fluid" />
-                    </a>
-                </div>
-                <div className="col-md-6 card-option d-flex align-items-center">
-                    <a href="/army-cards/standard/create" className="text-decoration-none text-dark">
-                        <h1 className="text-center mt-2">Create a New Army Card</h1>
-                    </a>
-                </div>
-            </div>
-        </div>
+        <HubPage
+            title="Standard Army Cards"
+            intro="Full-size Heroscape army cards in the classic format."
+            accent="green"
+            layout="steps"
+            crumbs={[{ label: "Home", to: "/" }, { label: "Army Cards", to: "/army-cards" }, { label: "Standard" }]}
+            tiles={[
+                {
+                    to: "/army-cards/standard/download",
+                    title: "Download Army Cards",
+                    description: "Grab print-ready cards for existing Heroscape units.",
+                    image: "/assets/img/card_pile.webp",
+                    cta: "Browse downloads"
+                },
+                {
+                    to: "/army-cards/standard/create",
+                    title: "Create a New Army Card",
+                    description: "Design your own custom unit and export it as a card.",
+                    image: "/assets/img/CardMaker.webp",
+                    cta: "Open card maker"
+                }
+            ]}
+        />
     );
 };
 
