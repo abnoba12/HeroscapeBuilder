@@ -36,19 +36,19 @@ const User: React.FC = () => {
             <section className="cards row gy-4">
                 <div className="col-md-4 site-area">
                     <a href="/army-cards" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Charos-SQ.png" alt="Heroscape Army Cards" className="img-fluid" />
+                        <img src="/assets/img/cardThumbnails/Charos-SQ.webp" alt="Heroscape Army Cards" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Army Cards</p>
                     </a>
                 </div>
                 <div className="col-md-4 site-area">
                     <a href="/units" className="text-decoration-none text-dark">
-                        <img src="/assets/img/DataBuilderLogo.png" alt="Heroscape Data" className="img-fluid" />
+                        <img src="/assets/img/DataBuilderLogo.webp" alt="Heroscape Data" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Data</p>
                     </a>
                 </div>
                 <div className="col-md-4 site-area">
                     <a href="/game-play" className="text-decoration-none text-dark">
-                        <img src="/assets/img/game-play.png" alt="Heroscape Data" className="img-fluid" />
+                        <img src="/assets/img/game-play.webp" alt="Heroscape Data" className="img-fluid" />
                         <p className="text-center mt-2">Game Play</p>
                     </a>
                 </div>

@@ -6,19 +6,19 @@ const ArmyCards: React.FC = () => {
             <div className="cards row gy-4">
                 <div className="col-md-4 card-option">
                     <a href="/army-cards/standard" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Charos-SQ.png" alt="Standard Heroscape Card" className="img-fluid" />
+                        <img src="/assets/img/cardThumbnails/Charos-SQ.webp" alt="Standard Heroscape Card" className="img-fluid" />
                             <p className="text-center mt-2">Standard Heroscape Cards</p>
                     </a>
                 </div>
                 <div className="col-md-4 card-option">
                     <a href="/army-cards/threebyfive" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Index_3x5_Charos-SQ.png" alt="3x5 Heroscape Index Card" className="img-fluid" />
+                        <img src="/assets/img/cardThumbnails/Index_3x5_Charos-SQ.webp" alt="3x5 Heroscape Index Card" className="img-fluid" />
                             <p className="text-center mt-2">3x5 Heroscape Index Cards</p>
                     </a>
                 </div>
                 <div className="col-md-4 card-option">
                     <a href="/army-cards/playingcard" className="text-decoration-none text-dark">
-                        <img src="/assets/img/cardThumbnails/Index_PC_Charos-SQ.png" alt="PC Heroscape Index Card" className="img-fluid" />
+                        <img src="/assets/img/cardThumbnails/Index_PC_Charos-SQ.webp" alt="PC Heroscape Index Card" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Playing Cards</p>
                     </a>
                 </div>
@@ -26,8 +26,8 @@ const ArmyCards: React.FC = () => {
             <div className="row my-4">
             <div className="offset-md-4 col-md-4 card-option text-center">
                     <a href="/army-cards/printing" className="text-decoration-none text-dark">
-                        <img src="/assets/img/Printing Cards.png" alt="Printing" className="img-fluid" />
-                    <p className="mt-2">Printing</p>
+                        <img src="/assets/img/Printing Cards.webp" alt="Printing" className="img-fluid" />
+                    <p className="mt-2">Printing Cards</p>
                 </a>
             </div>
             </div>

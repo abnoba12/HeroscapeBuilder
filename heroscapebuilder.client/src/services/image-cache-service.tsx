@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const NOT_FOUND_IMAGE = "/assets/img/imageNotFound.png";
+const NOT_FOUND_IMAGE = "/assets/img/imageNotFound.webp";
 
 // Plain lazy-loaded <img>: the browser's HTTP cache handles caching, decoding and eviction.
 // `cacheKey` is accepted for backwards compatibility but no longer used.

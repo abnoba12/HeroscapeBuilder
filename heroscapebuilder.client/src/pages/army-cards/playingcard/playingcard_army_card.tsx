@@ -6,7 +6,7 @@ const PlayingCardArmyCards: React.FC = () => {
             <div className="cards row gy-6">
                 <div className="offset-md-1 col-md-2 card-option text-center">
                     <a href="/army-cards/playingcard/download" className="text-decoration-none text-dark">
-                        <img src="/assets/img/card_pile_4x6.png" alt="Playing Cards" className="img-fluid" />
+                        <img src="/assets/img/card_pile_4x6.webp" alt="Playing Cards" className="img-fluid" />
                     </a>
                 </div>
                 <div className="col-md-6 card-option d-flex align-items-center">
@@ -18,7 +18,7 @@ const PlayingCardArmyCards: React.FC = () => {
             <div className="cards row gy-6">
                 <div className="offset-md-1 col-md-2 card-option text-center">
                     <a href="/army-cards/playingcard/create" className="text-decoration-none text-dark">
-                        <img src="/assets/img/CardMaker.png" alt="Create Heroscape playing Card" className="img-fluid" />
+                        <img src="/assets/img/CardMaker.webp" alt="Create Heroscape playing Card" className="img-fluid" />
                     </a>
                 </div>
                 <div className="col-md-6 card-option d-flex align-items-center">

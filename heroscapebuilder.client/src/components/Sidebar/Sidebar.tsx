@@ -80,7 +80,7 @@ const Sidebar: React.FC = () => {
                 <div className='sidebar' data-color={getColor()} data-active-color="info">
                     <div className="logo">
                         <a href="/" className="simple-text logo-mini">
-                            <div className="logo-img"><img src="/assets/img/logo.png" alt="logo" /></div>
+                            <div className="logo-img"><img src="/assets/img/logo.webp" alt="logo" /></div>
                         </a>
                         <a href="/" className="simple-text logo-normal">Heroscape Builder</a>
                     </div>
