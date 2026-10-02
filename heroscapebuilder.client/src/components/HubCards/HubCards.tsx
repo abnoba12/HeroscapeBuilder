@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import "./HubCards.scss";
 
-export type HubAccent = "green" | "blue" | "light-blue" | "orange" | "neutral";
+export type HubAccent = "green" | "blue" | "purple" | "orange" | "neutral";
 export type HubLayout = "feature" | "showcase" | "steps";
 
 export interface HubTile {
@@ -36,8 +36,9 @@ const TileImage: React.FC<{ tile: HubTile }> = ({ tile }) => (
     <img src={tile.image} alt={tile.imageAlt ?? tile.title} loading="lazy" />
 );
 
+// Only tiles that give an explicit label show a call to action
 const Cta: React.FC<{ tile: HubTile }> = ({ tile }) => (
-    <span className="hub-cta">{tile.cta ?? "Open"} <span aria-hidden="true">&rarr;</span></span>
+    tile.cta ? <span className="hub-cta">{tile.cta} <span aria-hidden="true">&rarr;</span></span> : null
 );
 
 /** Gradient tile with the artwork bleeding off the right edge. */

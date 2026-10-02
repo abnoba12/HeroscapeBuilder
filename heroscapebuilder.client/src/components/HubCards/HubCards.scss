@@ -19,7 +19,7 @@ $hex-clip: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
 
     &-green { --hub-accent: #2f9e6b; --hub-dark: #1d7a4f; --hub-light: #55c48a; --hub-soft: rgba(107, 208, 152, .2); }
     &-blue { --hub-accent: #2584a8; --hub-dark: #185f7c; --hub-light: #4db3d6; --hub-soft: rgba(81, 188, 218, .2); }
-    &-light-blue { --hub-accent: #1f97c9; --hub-dark: #1673a0; --hub-light: #52c1e8; --hub-soft: rgba(81, 203, 206, .22); }
+    &-purple { --hub-accent: #7a5bb5; --hub-dark: #54397f; --hub-light: #9d82d6; --hub-soft: rgba(157, 130, 214, .22); }
     &-orange { --hub-accent: #c98608; --hub-dark: #b8710a; --hub-light: #f6bd4a; --hub-soft: rgba(251, 198, 88, .26); }
 }
 
@@ -124,7 +124,7 @@ $hex-clip: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
     .hub-overlay-text {
         position: relative;
         z-index: 1;
-        max-width: 58%;
+        max-width: 50%;
 
         h2 { font-size: 1.6rem; font-weight: 700; margin: 0 0 8px; color: #fff; }
         p { margin: 0 0 14px; color: rgba(255, 255, 255, .92); }
@@ -135,7 +135,7 @@ $hex-clip: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
         position: absolute;
         right: 3%;
         top: 50%;
-        height: 104%;
+        height: calc(100% - 36px);
         max-width: 42%;
         object-fit: contain;
         transform: translateY(-50%);
@@ -146,7 +146,7 @@ $hex-clip: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
 
 .hub-overlay-large {
     .hub-overlay-text h2 { font-size: 2.1rem; }
-    img { right: 4%; height: 112%; }
+    img { right: 4%; height: calc(100% - 28px); }
 }
 
 .hub-overlay-wide {
@@ -304,7 +304,7 @@ $hex-clip: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
     .hub-banner, .hub-layout-feature .hub-banner { padding: 28px 22px; h1 { font-size: 1.9rem; } }
 
     .hub-overlay {
-        .hub-overlay-text { max-width: 62%; h2 { font-size: 1.3rem; } }
+        .hub-overlay-text { max-width: 52%; h2 { font-size: 1.3rem; } }
         img { opacity: .9; }
     }
     .hub-overlay-large .hub-overlay-text h2 { font-size: 1.5rem; }

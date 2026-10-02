@@ -30,7 +30,7 @@ const Home: React.FC = () => {
             description: "Work out recommended points and game length for your group.",
             image: "/assets/img/game-play.webp",
             imageAlt: "Heroscape Game Play Calculator",
-            accent: "light-blue"
+            accent: "purple"
         }
     ];
     if (showMyHeroscape) {

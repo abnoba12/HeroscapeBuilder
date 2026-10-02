@@ -1,11 +1,13 @@
 @import "src/assets/scss/paper-dashboard/_variables";
 
+$purple-light-bg: lighten($purple-bg, 38%); // Light enough for dark text
+
 .game-play-calc-container {
     max-width: 400px;
     margin: 2rem auto;
     padding: 2rem;
-    background-color: $light-blue-bg; // Main background color
-    border: $border-thin solid $blue-bg;
+    background-color: $purple-light-bg; // Main background color
+    border: $border-thin solid $purple-bg;
     border-radius: $border-radius-large;
     box-shadow: $box-shadow-raised;
     text-align: center;
@@ -36,7 +38,7 @@
                 font-weight: bold;
                 font-size: $font-size-small;
                 margin-bottom: 0.5rem;
-                color: $black-color; // Black for strong contrast against light blue background
+                color: $black-color; // Black for strong contrast against light purple background
             }
 
             input {
@@ -45,7 +47,7 @@
                 border: $border-thin solid $dark-gray; // Dark gray for subtle contrast
                 border-radius: $border-radius-small;
                 font-size: $font-size-base;
-                background-color: lighten($light-blue-bg, 15%); // Slightly lighter input background
+                background-color: lighten($purple-light-bg, 10%); // Slightly lighter input background
                 color: $black-color; // Black text for readability
 
                 &:focus {
@@ -64,14 +66,14 @@
             padding: $padding-btn-vertical $padding-btn-horizontal;
             font-size: $font-size-medium;
             color: $white-color; // White text for strong contrast
-            background-color: $blue-bg; // Primary button color
+            background-color: $purple-bg; // Primary button color
             border: none;
             border-radius: $btn-round-radius;
             cursor: pointer;
             transition: background-color $general-transition-time;
 
             &:hover {
-                background-color: darken($blue-bg, 10%); // Darkened blue for hover
+                background-color: darken($purple-bg, 10%); // Darkened purple for hover
             }
 
             &:active {

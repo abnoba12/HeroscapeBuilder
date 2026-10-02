@@ -41,7 +41,7 @@ const Sidebar: React.FC = () => {
             return "blue";
         }
         if (location.pathname.startsWith("/game-play")) {
-            return "light-blue";
+            return "purple";
         }
         if (location.pathname.startsWith("/my-heroscape")) {
             return "orange";

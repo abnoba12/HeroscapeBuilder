@@ -275,6 +275,10 @@
         @include icon-gradient($light-blue-bg);
     }
 
+    &[data-color="purple"]:after {
+        @include icon-gradient($purple-bg);
+    }
+
     &[data-color="orange"]:after {
         @include icon-gradient($orange-bg);
     }

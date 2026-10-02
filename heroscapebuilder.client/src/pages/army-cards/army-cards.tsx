@@ -35,7 +35,6 @@ const ArmyCards: React.FC = () => {
                     description: "Recommended print services and settings.",
                     image: "/assets/img/Printing Cards.webp",
                     imageAlt: "Printing cards",
-                    cta: "Printing tips",
                     accent: "orange",
                     wide: true
                 }
