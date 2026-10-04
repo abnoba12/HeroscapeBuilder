@@ -39,6 +39,14 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<UserCard> UserCards { get; set; }
 
+    public virtual DbSet<UnitDuelVote> UnitDuelVotes { get; set; }
+
+    public virtual DbSet<UnitRating> UnitRatings { get; set; }
+
+    public virtual DbSet<ArmyGame> ArmyGames { get; set; }
+
+    public virtual DbSet<ArmyGameUnit> ArmyGameUnits { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -296,6 +304,51 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(d => d.ArmyCardId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_battlegroup_unit_army_card");
+        });
+
+        modelBuilder.Entity<UnitDuelVote>(entity =>
+        {
+            entity.ToTable("unit_duel_vote");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.AnonymousId).HasMaxLength(64);
+
+            entity.HasIndex(e => new { e.UserId, e.ArmyCardAId, e.ArmyCardBId }, "UX_unit_duel_vote_User_Pair")
+                .IsUnique()
+                .HasFilter("[UserId] IS NOT NULL");
+            entity.HasIndex(e => new { e.AnonymousId, e.ArmyCardAId, e.ArmyCardBId }, "UX_unit_duel_vote_Anonymous_Pair")
+                .IsUnique()
+                .HasFilter("[AnonymousId] IS NOT NULL");
+        });
+
+        modelBuilder.Entity<UnitRating>(entity =>
+        {
+            entity.ToTable("unit_rating");
+
+            entity.HasKey(e => e.ArmyCardId).HasName("PK_unit_rating");
+        });
+
+        modelBuilder.Entity<ArmyGame>(entity =>
+        {
+            entity.ToTable("army_game");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.Note).HasMaxLength(500);
+
+            entity.HasMany(d => d.Units)
+                .WithOne(p => p.ArmyGame)
+                .HasForeignKey(d => d.ArmyGameId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_army_game_unit_army_game");
+        });
+
+        modelBuilder.Entity<ArmyGameUnit>(entity =>
+        {
+            entity.ToTable("army_game_unit");
+
+            entity.Property(e => e.Id).HasColumnName("id");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -20,6 +20,7 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
+import type { Instance } from '@popperjs/core';
 import React from 'react';
 import { Unit } from '../../../models/unit';
 import { Battlegroup } from '../../../models/battlegroup';
@@ -31,9 +32,9 @@ export const creatorLabel = (creator?: string | null): string =>
 
 export const isUniqueUnit = (rarity?: string | null): boolean => rarity?.toLowerCase() === 'unique';
 
-const UnitInfoCard: React.FC<{ unit: Unit; pointSystem: PointSystem }> = ({ unit, pointSystem }) => {
+const UnitInfoCard: React.FC<{ unit: Unit; pointSystem: PointSystem; showPoints: boolean }> = ({ unit, pointSystem, showPoints }) => {
     const stats: [string, string | number | null | undefined][] = [
-        ['Points', getUnitPoints(unit, pointSystem)],
+        ...(showPoints ? [['Points', getUnitPoints(unit, pointSystem)] as [string, number | undefined]] : []),
         ['Life', unit.life],
         ['Move', unit.advMove],
         ['Range', unit.advRange],
@@ -66,23 +67,62 @@ const UnitInfoCard: React.FC<{ unit: Unit; pointSystem: PointSystem }> = ({ unit
     );
 };
 
-/** Wraps a unit name; hovering shows its name, advanced stats (with life) and abilities. */
-export const UnitHover: React.FC<{ unit: Unit; pointSystem: PointSystem; children: React.ReactNode }> = ({ unit, pointSystem, children }) => (
-    <Tooltip
-        title={<UnitInfoCard unit={unit} pointSystem={pointSystem} />}
-        placement="right"
-        enterDelay={150}
-        enterNextDelay={150}
-        slotProps={{ tooltip: { sx: { maxWidth: 'none', bgcolor: 'grey.900' } } }}
-    >
-        <Box
-            component="span"
-            sx={{ cursor: 'help', textDecoration: 'underline dotted', textUnderlineOffset: 3 }}
+interface UnitHoverProps {
+    unit: Unit;
+    pointSystem: PointSystem;
+    children: React.ReactNode;
+    /** Leave the points out of the popup (the power ranking duels never show points). Defaults to showing them. */
+    showPoints?: boolean;
+    /** Wrap a whole block (such as a card) instead of underlining a name. */
+    block?: boolean;
+    /** Where a block's popup opens relative to the pointer. Defaults to beside it. */
+    blockPlacement?: 'right-start' | 'bottom-start';
+}
+
+/**
+ * Wraps a unit name (or card); hovering shows its name, advanced stats (with life) and abilities.
+ * A name gets a popup beside it. A wide block (a card or a list row) follows the pointer instead, because a
+ * popup anchored to the edge of a wide row would land far from where the pointer is.
+ */
+export const UnitHover: React.FC<UnitHoverProps> = ({ unit, pointSystem, children, showPoints = true, block = false, blockPlacement = 'right-start' }) => {
+    const pointer = React.useRef({ x: 0, y: 0 });
+    const popper = React.useRef<Instance | null>(null);
+
+    const onMouseMove = (event: React.MouseEvent) => {
+        pointer.current = { x: event.clientX, y: event.clientY };
+        popper.current?.update();
+    };
+
+    return (
+        <Tooltip
+            title={<UnitInfoCard unit={unit} pointSystem={pointSystem} showPoints={showPoints} />}
+            placement={block ? blockPlacement : 'right'}
+            enterDelay={150}
+            enterNextDelay={150}
+            slotProps={{
+                tooltip: { sx: { maxWidth: 'none', bgcolor: 'grey.900' } },
+                popper: block
+                    ? {
+                        popperRef: popper,
+                        // A zero-size anchor at the pointer; the popup keeps clear of the pointer and flips at screen edges.
+                        anchorEl: { getBoundingClientRect: () => new DOMRect(pointer.current.x, pointer.current.y, 0, 0) },
+                        modifiers: [{ name: 'offset', options: { offset: [0, 18] } }],
+                    }
+                    : undefined,
+            }}
         >
-            {children}
-        </Box>
-    </Tooltip>
-);
+            <Box
+                component="span"
+                onMouseMove={block ? onMouseMove : undefined}
+                sx={block
+                    ? { display: 'flex', flex: '1 1 0', minWidth: 0 }
+                    : { cursor: 'help', textDecoration: 'underline dotted', textUnderlineOffset: 3 }}
+            >
+                {children}
+            </Box>
+        </Tooltip>
+    );
+};
 
 const pulse = keyframes`
     0%, 100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7); }

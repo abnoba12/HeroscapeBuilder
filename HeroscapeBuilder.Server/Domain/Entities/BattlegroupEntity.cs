@@ -44,6 +44,11 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public DateTime UpdatedAt { get; set; }
 
+        /// <summary>The owner's logged results with this army. Zero for everyone else.</summary>
+        public int Wins { get; set; }
+
+        public int Losses { get; set; }
+
         public List<BattlegroupUnitEntity> Units { get; set; } = new List<BattlegroupUnitEntity>();
     }
 

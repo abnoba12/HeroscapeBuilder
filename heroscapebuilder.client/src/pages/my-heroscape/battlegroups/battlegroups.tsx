@@ -88,6 +88,9 @@ const Battlegroups: React.FC = () => {
                                         {bg.isShared && <Chip label="Shared" size="small" color="success" />}
                                         <Chip label={creatorLabel(bg.creator)} size="small" variant="outlined" />
                                         <Chip label={`${bg.pointSystem} points`} size="small" variant="outlined" />
+                                        {bg.wins + bg.losses > 0 && (
+                                            <Chip label={`${bg.wins}-${bg.losses} record`} size="small" variant="outlined" />
+                                        )}
                                         <Chip
                                             label={`${bg.units.reduce((sum, item) => sum + item.quantity, 0)} units`}
                                             size="small"

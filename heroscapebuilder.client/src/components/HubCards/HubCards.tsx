@@ -29,7 +29,10 @@ interface HubPageProps {
     layout: HubLayout;
     tiles: HubTile[];
     crumbs?: HubCrumb[];
+    /** Rendered inside the banner, under the intro. */
     children?: React.ReactNode;
+    /** Rendered in its own box below the tiles, outside the banner. */
+    after?: React.ReactNode;
 }
 
 const TileImage: React.FC<{ tile: HubTile }> = ({ tile }) => (
@@ -54,7 +57,7 @@ const OverlayTile: React.FC<{ tile: HubTile; accent: HubAccent; className?: stri
 );
 
 /** Shared layout for pages that only exist to send visitors somewhere else. */
-export const HubPage: React.FC<HubPageProps> = ({ title, intro, accent = "neutral", layout, tiles, crumbs, children }) => {
+export const HubPage: React.FC<HubPageProps> = ({ title, intro, accent = "neutral", layout, tiles, crumbs, children, after }) => {
     const wideTiles = tiles.filter(t => t.wide);
     const mainTiles = tiles.filter(t => !t.wide);
 
@@ -127,6 +130,8 @@ export const HubPage: React.FC<HubPageProps> = ({ title, intro, accent = "neutra
                     ))}
                 </div>
             )}
+
+            {after}
         </div>
     );
 };

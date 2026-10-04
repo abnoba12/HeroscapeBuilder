@@ -28,6 +28,7 @@ namespace HeroscapeBuilder.Server.Program
 
             //Background jobs (singletons; they create their own scopes)
             builder.Services.AddSingleton<HeroscapeBuilder.Server.Common.Jobs.ThumbnailRebuildJob>();
+            builder.Services.AddHostedService<HeroscapeBuilder.Server.Common.Jobs.PowerRankingJob>();
 
             //Repositories
             // Automatically register all Repositories in the HeroscapeBuilder.Server.Data.Repositories namespace

@@ -35,6 +35,8 @@ import BattlegroupShared from "./my-heroscape/battlegroups/battlegroup-shared";
 import UnitPage from "./catalog/unit-page";
 import GroupPage from "./catalog/group-page";
 import { GroupIndexPage } from "./catalog/index-pages";
+import PowerRanking from "./catalog/power-ranking";
+import PowerBalance from "./catalog/power-balance";
 import { PointSystemProvider } from "../components/PointSystem/PointSystemContext";
 
 const App: React.FC = () => {
@@ -124,6 +126,14 @@ const App: React.FC = () => {
                                 </PageMeta>
                             } />
                             <Route path="/units/:slug" element={<UnitPage />} />
+                            <Route path="/power-ranking" element={<PowerRanking />} />
+                            <Route path="/power-ranking/balance" element={
+                                <AdminRoute>
+                                    <PageMeta title="Power vs. Points" description="Admin report comparing the power ranking with unit points." noindex>
+                                        <PowerBalance />
+                                    </PageMeta>
+                                </AdminRoute>
+                            } />
                             <Route path="/species" element={<GroupIndexPage kind="species" />} />
                             <Route path="/species/:slug" element={<GroupPage kind="species" />} />
                             <Route path="/generals" element={<GroupIndexPage kind="generals" />} />

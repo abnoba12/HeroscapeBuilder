@@ -15,10 +15,12 @@ namespace HeroscapeBuilder.Server.Services
         private const string UniqueRarity = "Unique";
 
         private readonly BattlegroupRepository _battlegroupRepository;
+        private readonly ArmyGameRepository _gameRepository;
 
-        public BattlegroupService(BattlegroupRepository battlegroupRepository)
+        public BattlegroupService(BattlegroupRepository battlegroupRepository, ArmyGameRepository gameRepository)
         {
             _battlegroupRepository = battlegroupRepository;
+            _gameRepository = gameRepository;
         }
 
         public async Task<List<BattlegroupEntity>> GetMyBattlegroups(Guid userId)
@@ -26,9 +28,10 @@ namespace HeroscapeBuilder.Server.Services
             var id = userId.ToString();
             var battlegroups = await _battlegroupRepository.GetAllForUser(id);
             var owned = await _battlegroupRepository.GetOwnedQuantities(id);
+            var tallies = await _gameRepository.GetTallies(id);
 
             return battlegroups
-                .Select(x => x.ToBattlegroupEntity(owned))
+                .Select(x => WithTally(x.ToBattlegroupEntity(owned), tallies))
                 .OrderBy(x => x.Name)
                 .ToList();
         }
@@ -39,7 +42,18 @@ namespace HeroscapeBuilder.Server.Services
             var battlegroup = await _battlegroupRepository.GetForUser(id, battlegroupId)
                 ?? throw NotFound();
 
-            return battlegroup.ToBattlegroupEntity(await _battlegroupRepository.GetOwnedQuantities(id));
+            var entity = battlegroup.ToBattlegroupEntity(await _battlegroupRepository.GetOwnedQuantities(id));
+            return WithTally(entity, await _gameRepository.GetTallies(id));
+        }
+
+        private static BattlegroupEntity WithTally(BattlegroupEntity entity, Dictionary<int, (int Wins, int Losses)> tallies)
+        {
+            if (tallies.TryGetValue(entity.Id, out var tally))
+            {
+                entity.Wins = tally.Wins;
+                entity.Losses = tally.Losses;
+            }
+            return entity;
         }
 
         /// <summary>
@@ -133,6 +147,8 @@ namespace HeroscapeBuilder.Server.Services
             var battlegroup = await _battlegroupRepository.GetForUser(userId.ToString(), battlegroupId, track: true)
                 ?? throw NotFound();
 
+            // The results stay (they feed the power ranking); they just stop pointing at the deleted army.
+            await _gameRepository.DetachFromBattlegroup(userId.ToString(), battlegroupId);
             _battlegroupRepository.Remove(battlegroup);
             await _battlegroupRepository.SaveChanges();
         }

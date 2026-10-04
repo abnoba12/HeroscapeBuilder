@@ -3,6 +3,7 @@ import "./Home.scss";
 import { isAuthenticated } from "../../services/authService";
 import { HubPage } from "../../components/HubCards/HubCards";
 import type { HubTile } from "../../components/HubCards/HubCards";
+import PowerDuelWidget from "../../components/PowerDuel/PowerDuelWidget";
 
 const Home: React.FC = () => {
     const showMyHeroscape = isAuthenticated();
@@ -50,6 +51,7 @@ const Home: React.FC = () => {
             intro="A home for the creative and custom side of Heroscape: custom units, terrain, cards, play styles, and even alternate games built from Heroscape components."
             tiles={tiles}
             layout="feature"
+            after={<PowerDuelWidget />}
         >
             <div className="home-community">
                 <span>Join the community:</span>

@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios';
 import AxiosSingletonService from './AxiosSingletonService';
-import { Battlegroup, BattlegroupSaveRequest } from '../models/battlegroup';
+import { ArmyGame, ArmyGameRequest, ArmyTally, Battlegroup, BattlegroupSaveRequest } from '../models/battlegroup';
 
 const api = AxiosSingletonService.getInstance();
 
@@ -25,6 +25,17 @@ export const shareBattlegroup = async (id: number): Promise<Battlegroup> =>
 
 export const hideBattlegroup = async (id: number): Promise<Battlegroup> =>
     (await api.post<Battlegroup>(`/Battlegroup/HideBattlegroup`, null, { params: { id } })).data;
+
+export const getArmyGames = async (id: number): Promise<ArmyGame[]> =>
+    (await api.get<ArmyGame[]>(`/Battlegroup/GetGames`, { params: { id } })).data;
+
+/** Records one result (or `count` identical past results) and returns the army's new tally. */
+export const logArmyGames = async (id: number, request: ArmyGameRequest): Promise<ArmyTally> =>
+    (await api.post<ArmyTally>(`/Battlegroup/LogGames`, request, { params: { id } })).data;
+
+/** Removes a logged result and returns the army's new tally. */
+export const deleteArmyGame = async (gameId: number): Promise<ArmyTally> =>
+    (await api.delete<ArmyTally>(`/Battlegroup/DeleteGame`, { params: { gameId } })).data;
 
 /** Public endpoint - works without signing in. */
 export const getSharedBattlegroup = async (shareId: string): Promise<Battlegroup> =>

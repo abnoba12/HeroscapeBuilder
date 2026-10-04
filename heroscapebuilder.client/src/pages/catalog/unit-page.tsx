@@ -20,6 +20,8 @@ import {
     useCatalog,
 } from '../../services/catalog';
 import { KeywordText, buildKeywordIndex } from '../../services/keywords';
+import { usePowerRanking } from '../../services/power-ranking-service';
+import PowerDuelWidget from '../../components/PowerDuel/PowerDuelWidget';
 
 const RELATED_LIMIT = 12;
 
@@ -69,6 +71,9 @@ const UnitPageContent: React.FC<{ unit: Unit; catalog: Catalog }> = ({ unit, cat
 
     const keywordIndex = useMemo(() => buildKeywordIndex(catalog.units), [catalog]);
 
+    const ranking = usePowerRanking();
+    const powerRank = ranking?.units.find(entry => entry.armyCardId === unit.id)?.rank ?? null;
+
     const goRandom = () => {
         const others = catalog.units.filter(other => other.id !== unit.id);
         navigate(unitPath(others[Math.floor(Math.random() * others.length)]));
@@ -114,7 +119,14 @@ const UnitPageContent: React.FC<{ unit: Unit; catalog: Catalog }> = ({ unit, cat
                         <Stat label="Attack" value={unit.advAttack} />
                         <Stat label="Defense" value={unit.advDefense} />
                         <Stat label={`Points (${pointSystem})`} value={points} />
+                        <Stat label="Power Ranking" value={powerRank != null ? `#${powerRank}` : null} />
                     </div>
+                    {powerRank != null && ranking && (
+                        <p className="unit-about">
+                            {unit.name} is ranked the #{powerRank} most powerful unit in Heroscape out of {ranking.rankedCount}.{' '}
+                            <Link to="/power-ranking">See the full power ranking</Link>
+                        </p>
+                    )}
 
                     <p className="unit-about">{describeUnit(unit, points)}</p>
 
@@ -205,6 +217,8 @@ const UnitPageContent: React.FC<{ unit: Unit; catalog: Catalog }> = ({ unit, cat
                     </div>
                 </>
             )}
+
+            <PowerDuelWidget />
 
             <SectionTitle>Explore</SectionTitle>
             <div className="catalog-chips">

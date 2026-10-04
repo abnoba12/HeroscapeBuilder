@@ -28,7 +28,29 @@ export interface Battlegroup {
     needsReview: boolean;
     reviewReasons: string[];
     updatedAt: string;
+    /** The owner's logged results with this army. Zero for anyone else. */
+    wins: number;
+    losses: number;
     units: BattlegroupUnit[];
+}
+
+export interface ArmyTally {
+    wins: number;
+    losses: number;
+}
+
+export interface ArmyGame {
+    id: number;
+    won: boolean;
+    playedAt: string;
+    note?: string | null;
+}
+
+export interface ArmyGameRequest {
+    won: boolean;
+    /** How many identical results to record at once (for entering past results). */
+    count?: number;
+    note?: string | null;
 }
 
 export interface BattlegroupSaveRequest {

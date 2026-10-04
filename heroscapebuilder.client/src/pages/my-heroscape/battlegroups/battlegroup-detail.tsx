@@ -12,6 +12,7 @@ import {
     shareBattlegroup,
 } from '../../../services/battlegroup-service';
 import { BattlegroupView, ConfirmDeleteDialog, NeedsReviewChip } from './battlegroup-parts';
+import BattlegroupRecord from './battlegroup-record';
 
 /** The owner's view of one Battlegroup, with edit / share / delete controls. */
 const BattlegroupDetail: React.FC = () => {
@@ -123,6 +124,11 @@ const BattlegroupDetail: React.FC = () => {
                         </Stack>
                     </Paper>
                 )}
+
+                <BattlegroupRecord
+                    battlegroupId={battlegroup.id}
+                    initial={{ wins: battlegroup.wins, losses: battlegroup.losses }}
+                />
 
                 <BattlegroupView battlegroup={battlegroup} />
             </Stack>

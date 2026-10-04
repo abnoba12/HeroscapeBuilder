@@ -1,4 +1,5 @@
 using HeroscapeBuilder.Server.Common.Helpers;
+using HeroscapeBuilder.Server.Domain.Entities;
 using HeroscapeBuilder.Server.Domain.Exceptions;
 using HeroscapeBuilder.Server.Domain.Requests;
 using HeroscapeBuilder.Server.Services;
@@ -13,10 +14,12 @@ namespace HeroscapeBuilder.Server.Controllers
     public class BattlegroupController : ControllerBase
     {
         private readonly BattlegroupService _battlegroupService;
+        private readonly ArmyGameService _armyGameService;
 
-        public BattlegroupController(BattlegroupService battlegroupService)
+        public BattlegroupController(BattlegroupService battlegroupService, ArmyGameService armyGameService)
         {
             _battlegroupService = battlegroupService;
+            _armyGameService = armyGameService;
         }
 
         [HttpGet]
@@ -63,6 +66,24 @@ namespace HeroscapeBuilder.Server.Controllers
         public Task<IActionResult> HideBattlegroup(int id)
         {
             return Run(userId => _battlegroupService.SetShared(userId, id, false));
+        }
+
+        [HttpGet]
+        public Task<IActionResult> GetGames(int id)
+        {
+            return Run(userId => _armyGameService.GetRecentGames(userId, id));
+        }
+
+        [HttpPost]
+        public Task<IActionResult> LogGames(int id, ArmyGameRequest request)
+        {
+            return Run(userId => _armyGameService.LogGames(userId, id, request));
+        }
+
+        [HttpDelete]
+        public Task<IActionResult> DeleteGame(int gameId)
+        {
+            return Run(userId => _armyGameService.DeleteGame(userId, gameId));
         }
 
         /// <summary>

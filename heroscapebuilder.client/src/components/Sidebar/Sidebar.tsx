@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { getUser, hasRole, isAuthenticated } from "../../services/authService";
 import { MY_ARMY_CHANGED_EVENT, getMyUnitCount } from "../../services/my_army-service";
 
-const isDataPath = (path: string) => ["/data", "/units", "/species", "/generals", "/sets"].some(prefix => path.startsWith(prefix));
+const isDataPath = (path: string) => ["/data", "/units", "/species", "/generals", "/sets", "/power-ranking"].some(prefix => path.startsWith(prefix));
 
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
@@ -138,6 +138,10 @@ const Sidebar: React.FC = () => {
                                         <li><Link to="/species" onClick={toggleSidebar}>Species</Link></li>
                                         <li><Link to="/generals" onClick={toggleSidebar}>Generals</Link></li>
                                         <li><Link to="/sets" onClick={toggleSidebar}>Sets</Link></li>
+                                        <li><Link to="/power-ranking" onClick={toggleSidebar}>Power Ranking</Link></li>
+                                        {hasRole("Admin") && (
+                                            <li><Link to="/power-ranking/balance" onClick={toggleSidebar}>Power vs. Points</Link></li>
+                                        )}
                                     </ul>
                                 )}
                             </li>
