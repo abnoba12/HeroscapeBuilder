@@ -41,6 +41,7 @@ try
     });
 
     builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddMemoryCache();
 
     var connectionString = builder.Configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "MsSqlDb");
     builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) =>
@@ -87,6 +88,8 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+
+    app.MapSeoEndpoints();
 
     app.MapFallbackToFile("/index.html");
 

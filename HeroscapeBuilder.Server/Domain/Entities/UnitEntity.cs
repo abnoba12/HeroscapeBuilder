@@ -72,6 +72,11 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public int Id { get; set; }
 
+        /// <summary>
+        /// Unique URL slug for the unit's page (/units/{slug}).
+        /// </summary>
+        public string Slug { get; set; } = string.Empty;
+
         public SetEntity? Set { get; set; }
 
         public string? Note { get; set; }

@@ -41,7 +41,7 @@ const User: React.FC = () => {
                     </a>
                 </div>
                 <div className="col-md-4 site-area">
-                    <a href="/units" className="text-decoration-none text-dark">
+                    <a href="/data" className="text-decoration-none text-dark">
                         <img src="/assets/img/DataBuilderLogo.webp" alt="Heroscape Data" className="img-fluid" />
                             <p className="text-center mt-2">Heroscape Data</p>
                     </a>

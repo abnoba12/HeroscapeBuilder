@@ -11,6 +11,7 @@ import {
     ValueGetterParams,
 } from 'ag-grid-community';
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Ability } from '../../../models/ability';
 import SelectFloatingFilter from '../../../components/SelectFloatingFilter/SelectFloatingFilter';
 import { usePagePointSystem } from '../../../components/PointSystem/PointSystemContext';
@@ -67,7 +68,13 @@ const UnitData: React.FC = () => {
     const baseColumnDefs = useMemo((): ColDef[] => [
         { field: 'creator', headerName: 'Creator', minWidth: 150, ...dropdownFilter(dropdownFilterOptions.creator) },
         { field: 'general', headerName: 'General', minWidth: 160, ...dropdownFilter(dropdownFilterOptions.general) },
-        { field: 'name', headerName: 'Unit Name', minWidth: 200 },
+        {
+            field: 'name',
+            headerName: 'Unit Name',
+            minWidth: 200,
+            cellRenderer: (params: ICellRendererParams<Unit>) =>
+                params.data ? <Link to={`/units/${params.data.slug}`}>{params.value}</Link> : params.value,
+        },
         { field: 'rarity', headerName: 'Rarity', minWidth: 150, ...dropdownFilter(dropdownFilterOptions.rarity) },
         { field: 'type', headerName: 'Unit Type', minWidth: 140, ...dropdownFilter(dropdownFilterOptions.type) },
         { field: 'race', headerName: 'Species', minWidth: 140 },

@@ -17,7 +17,10 @@ namespace HeroscapeBuilder.Server.Common.Helpers
                 "upper" => value?.ToUpper(),
                 "lower" => value?.ToLower(),
                 "capitalize" => string.IsNullOrEmpty(value) ? value : char.ToUpper(value[0]) + value.Substring(1).ToLower(),
-                "title" => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value.ToLower()),
+                "title" => System.Text.RegularExpressions.Regex.Replace(
+                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value.ToLower()),
+                    @"(?<=\d)(St|Nd|Rd|Th)\b",
+                    match => match.Value.ToLower()),
                 _ => value
             };
         }

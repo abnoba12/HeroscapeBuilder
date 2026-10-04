@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 
 const SITE_NAME = "Heroscape Builder";
 const BASE_URL = "https://heroscapebuilder.com";
+const DEFAULT_IMAGE = `${BASE_URL}/WKnight.png`;
 
 interface PageMetaProps {
     title: string;
@@ -10,6 +11,8 @@ interface PageMetaProps {
     canonicalPath?: string;
     /** Tells search engines not to index this page (private/admin/auth pages). */
     noindex?: boolean;
+    /** Absolute URL of the image link previews should show. Defaults to the site logo. */
+    image?: string;
     children: React.ReactNode;
 }
 
@@ -23,7 +26,7 @@ function setMetaTag(attr: "name" | "property", key: string, content: string): vo
     el.setAttribute("content", content);
 }
 
-const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, noindex, children }) => {
+const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, noindex, image, children }) => {
     useEffect(() => {
         const fullTitle = `${title} | ${SITE_NAME}`;
         document.title = fullTitle;
@@ -35,7 +38,9 @@ const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, 
         setMetaTag("property", "og:title", fullTitle);
         setMetaTag("property", "og:description", description);
         setMetaTag("property", "og:type", "website");
-        setMetaTag("name", "twitter:card", "summary");
+        setMetaTag("property", "og:image", image ?? DEFAULT_IMAGE);
+        setMetaTag("name", "twitter:image", image ?? DEFAULT_IMAGE);
+        setMetaTag("name", "twitter:card", image ? "summary_large_image" : "summary");
         setMetaTag("name", "twitter:title", fullTitle);
         setMetaTag("name", "twitter:description", description);
 
@@ -49,7 +54,7 @@ const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, 
             document.head.appendChild(canonicalEl);
         }
         canonicalEl.setAttribute("href", canonicalHref);
-    }, [title, description, canonicalPath, noindex]);
+    }, [title, description, canonicalPath, noindex, image]);
 
     return <>{children}</>;
 };

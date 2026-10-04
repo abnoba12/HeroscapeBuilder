@@ -32,6 +32,9 @@ import Battlegroups from "./my-heroscape/battlegroups/battlegroups";
 import BattlegroupDetail from "./my-heroscape/battlegroups/battlegroup-detail";
 import BattlegroupEditor from "./my-heroscape/battlegroups/battlegroup-editor";
 import BattlegroupShared from "./my-heroscape/battlegroups/battlegroup-shared";
+import UnitPage from "./catalog/unit-page";
+import GroupPage from "./catalog/group-page";
+import { GroupIndexPage } from "./catalog/index-pages";
 import { PointSystemProvider } from "../components/PointSystem/PointSystemContext";
 
 const App: React.FC = () => {
@@ -120,6 +123,13 @@ const App: React.FC = () => {
                                     <UnitData/>
                                 </PageMeta>
                             } />
+                            <Route path="/units/:slug" element={<UnitPage />} />
+                            <Route path="/species" element={<GroupIndexPage kind="species" />} />
+                            <Route path="/species/:slug" element={<GroupPage kind="species" />} />
+                            <Route path="/generals" element={<GroupIndexPage kind="generals" />} />
+                            <Route path="/generals/:slug" element={<GroupPage kind="generals" />} />
+                            <Route path="/sets" element={<GroupIndexPage kind="sets" />} />
+                            <Route path="/sets/:slug" element={<GroupPage kind="sets" />} />
                             <Route path="/game-play" element={
                                 <PageMeta title="Heroscape Game Play Calculator" description="Calculate recommended points and game length for your Heroscape game based on player count and playtime." canonicalPath="/game-play/game-play-calc">
                                     <GamePlayCalc />

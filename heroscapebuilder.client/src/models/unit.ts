@@ -31,6 +31,8 @@ export interface Unit {
     unitNumbers?: string;
     quantity?: number;
     id: number;
+    /** Unique URL slug for the unit's page (/units/:slug). */
+    slug: string;
     set?: Set; // Assuming Set is another model you'll define
     note?: string;
     abilities: Ability[]; // Assuming Ability is another model you'll define

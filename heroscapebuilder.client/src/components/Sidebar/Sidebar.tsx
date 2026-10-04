@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { getUser, hasRole, isAuthenticated } from "../../services/authService";
 import { MY_ARMY_CHANGED_EVENT, getMyUnitCount } from "../../services/my_army-service";
 
+const isDataPath = (path: string) => ["/data", "/units", "/species", "/generals", "/sets"].some(prefix => path.startsWith(prefix));
+
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
     const [activeMenu, setActiveMenu] = useState<string | null>(null); // Tracks which menu is expanded
@@ -37,7 +39,7 @@ const Sidebar: React.FC = () => {
         if (location.pathname.startsWith("/army-cards")) {
             return "green";
         }
-        if (location.pathname.startsWith("/data")) {
+        if (isDataPath(location.pathname)) {
             return "blue";
         }
         if (location.pathname.startsWith("/game-play")) {
@@ -53,7 +55,7 @@ const Sidebar: React.FC = () => {
     useEffect(() => {
         if (location.pathname.startsWith("/army-cards")) {
             setActiveMenu("army-cards");
-        } else if (location.pathname.startsWith("/data")) {
+        } else if (isDataPath(location.pathname)) {
             setActiveMenu("data");
         } else if (location.pathname.startsWith("/game-play")) {
             setActiveMenu("game-play");
@@ -133,6 +135,9 @@ const Sidebar: React.FC = () => {
                                 {activeMenu === 'data' && (
                                     <ul className="submenu">
                                         <li><Link to="/data/unit-data" onClick={toggleSidebar}>Unit Data</Link></li>
+                                        <li><Link to="/species" onClick={toggleSidebar}>Species</Link></li>
+                                        <li><Link to="/generals" onClick={toggleSidebar}>Generals</Link></li>
+                                        <li><Link to="/sets" onClick={toggleSidebar}>Sets</Link></li>
                                     </ul>
                                 )}
                             </li>
