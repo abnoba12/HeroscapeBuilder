@@ -276,9 +276,12 @@ namespace HeroscapeBuilder.Server.Services
         private async Task<(List<BradleyTerry.FixedResult> Results, int[] GameCount, int[] UserCount)> BuildGameEvidence(
             Dictionary<int, int> indexById, int unitCount)
         {
-            var rows = (await _gameRepository.GetAllGameUnits()).Where(r => indexById.ContainsKey(r.ArmyCardId)).ToList();
-
-            var games = rows.GroupBy(r => r.GameId).ToList();
+            // Every unit stays in the game's points total so the units that are ranked get only their own share,
+            // even when the army also held a unit that is not part of the ranking (such as a Marvel unit).
+            var games = (await _gameRepository.GetAllGameUnits())
+                .GroupBy(r => r.GameId)
+                .Where(game => game.Any(r => indexById.ContainsKey(r.ArmyCardId)))
+                .ToList();
             var perUser = games
                 .GroupBy(g => g.First().UserId)
                 .ToDictionary(
@@ -306,7 +309,8 @@ namespace HeroscapeBuilder.Server.Services
 
                 foreach (var row in game)
                 {
-                    var index = indexById[row.ArmyCardId];
+                    if (!indexById.TryGetValue(row.ArmyCardId, out var index)) continue;
+
                     var contribution = totalPoints > 0 ? (double)row.Quantity * row.Points : row.Quantity;
                     var share = contribution / totalWeight;
 

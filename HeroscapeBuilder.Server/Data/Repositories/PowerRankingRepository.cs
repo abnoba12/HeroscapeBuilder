@@ -11,6 +11,12 @@ namespace HeroscapeBuilder.Server.Data.Repositories
     /// </summary>
     public class PowerRankingRepository
     {
+        /// <summary>
+        /// Units from this general (the Marvel set) are left out of the power ranking entirely: they were deliberately
+        /// not balanced against the rest of the game, so comparing or ranking them with other units means nothing.
+        /// </summary>
+        public const string ExcludedGeneral = "Marvel";
+
         private readonly HsbDbContext _context;
 
         public PowerRankingRepository(HsbDbContext context)
@@ -18,13 +24,13 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             _context = context;
         }
 
-        /// <summary>Every unit with its Renegade points (Standard when there is no override).</summary>
+        /// <summary>Every unit that is part of the ranking, with its Renegade points (Standard when there is no override).</summary>
         public async Task<List<RankableCard>> GetRankableCards()
         {
             return await _context.ArmyCards
                 .NotCacheable()
                 .AsNoTracking()
-                .Where(x => x.PointValues != null)
+                .Where(x => x.PointValues != null && x.General != ExcludedGeneral)
                 .Select(x => new RankableCard(x.Id, x.Name, x.Creator, x.PointValues!.RenegadePoints ?? x.PointValues.StandardPoints))
                 .ToListAsync();
         }
@@ -79,7 +85,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 
         public async Task<bool> CardsExist(int a, int b)
         {
-            var found = await _context.ArmyCards.NotCacheable().CountAsync(x => x.Id == a || x.Id == b);
+            var found = await _context.ArmyCards.NotCacheable().CountAsync(x => (x.Id == a || x.Id == b) && x.General != ExcludedGeneral);
             return found == 2;
         }
 
