@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Unit } from '../models/unit';
 import { UnitFile } from '../models/unit-file';
+import { speciesKey } from '../models/species';
 import { getUnits } from './unit-service';
 
 /** Matches SlugHelper.Slugify on the server (used for the sitemap and server-rendered pages). */
@@ -33,12 +34,25 @@ export interface Catalog {
 
 const byName = (a: Unit, b: Unit) => (a.name ?? '').localeCompare(b.name ?? '', undefined, { sensitivity: 'base' });
 
-const groupUnits = (units: Unit[], key: (unit: Unit) => string | undefined): Map<string, UnitGroup> => {
+/**
+ * Picks the name to show for a set of spellings of the same thing: the one already in its normal (singular) form
+ * if there is one ("Goblin" over "Goblins"), otherwise the most common. Spellings stay as printed on the cards.
+ */
+export const pickSpelling = (spellings: Map<string, number>, normalize: (value: string) => string = value => value): string =>
+    [...spellings.entries()]
+        .sort((a, b) =>
+            Number(normalize(b[0]) === b[0].toLowerCase()) - Number(normalize(a[0]) === a[0].toLowerCase()) || b[1] - a[1])[0][0];
+
+const groupUnits = (
+    units: Unit[],
+    key: (unit: Unit) => string | undefined,
+    normalize: (value: string) => string = value => value,
+): Map<string, UnitGroup> => {
     const groups = new Map<string, UnitGroup & { spellings: Map<string, number> }>();
 
     for (const unit of units) {
         const label = key(unit)?.trim();
-        const slug = slugify(label);
+        const slug = slugify(label && normalize(label));
         if (!label || !slug) continue;
 
         let group = groups.get(slug);
@@ -50,9 +64,9 @@ const groupUnits = (units: Unit[], key: (unit: Unit) => string | undefined): Map
         group.spellings.set(label, (group.spellings.get(label) ?? 0) + 1);
     }
 
-    // Spellings are printed as-is on the cards; show the most common one for each group.
+    // Spellings are printed as-is on the cards; show one of them for each group.
     for (const group of groups.values()) {
-        group.name = [...group.spellings.entries()].sort((a, b) => b[1] - a[1])[0][0];
+        group.name = pickSpelling(group.spellings, normalize);
     }
 
     return groups;
@@ -63,7 +77,7 @@ export const buildCatalog = (allUnits: Unit[]): Catalog => {
     return {
         units,
         bySlug: new Map(units.map(unit => [unit.slug, unit])),
-        species: groupUnits(units, unit => unit.race),
+        species: groupUnits(units, unit => unit.race, speciesKey),
         generals: groupUnits(units, unit => unit.general),
         sets: groupUnits(units, unit => unit.set?.name),
     };
@@ -99,7 +113,8 @@ export const useCatalog = (): { catalog: Catalog | null; error: boolean } => {
 };
 
 export const unitPath = (unit: Pick<Unit, 'slug'>) => `/units/${unit.slug}`;
-export const groupPath = (kind: GroupKind, name?: string | null) => `/${kind}/${slugify(name)}`;
+export const groupPath = (kind: GroupKind, name?: string | null) =>
+    `/${kind}/${slugify(kind === 'species' ? speciesKey(name) : name)}`;
 
 // ---------- Card files ----------
 

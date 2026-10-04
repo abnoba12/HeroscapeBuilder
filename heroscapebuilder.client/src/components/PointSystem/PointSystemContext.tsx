@@ -4,6 +4,7 @@ import { DEFAULT_POINT_SYSTEM, PointSystem, getUnitPoints, isPointSystem } from 
 import { Unit } from '../../models/unit';
 import { getUser, isAuthenticated } from '../../services/authService';
 import { getProfile, setProfilePointSystem } from '../../services/profile-service';
+import { useUrlParam } from '../../services/url-state';
 
 interface PointSystemContextValue {
     /** The signed-in account's default point system, or Renegade for visitors and accounts that never chose one. */
@@ -85,16 +86,18 @@ export const usePointSystem = (): PointSystemContextValue => {
 
 /**
  * A page's point system: starts on (and follows) the account default until the viewer picks
- * another one on that page. The page choice is not saved and resets when they leave the page.
+ * another one on that page. The page choice is not saved, but lives in the URL (?points=Delta)
+ * so a shared link shows the same points.
  */
 export const usePagePointSystem = () => {
     const { defaultPointSystem } = usePointSystem();
-    const [override, setOverride] = useState<PointSystem | null>(null);
+    const [urlValue, setUrlValue] = useUrlParam('points');
+    const override = isPointSystem(urlValue) ? urlValue : null;
     const pointSystem = override ?? defaultPointSystem;
 
     const setPointSystem = useCallback(
-        (system: PointSystem) => setOverride(system === defaultPointSystem ? null : system),
-        [defaultPointSystem],
+        (system: PointSystem) => setUrlValue(system === defaultPointSystem ? '' : system),
+        [defaultPointSystem, setUrlValue],
     );
     const pointsFor = useCallback((unit: Unit | undefined | null) => getUnitPoints(unit, pointSystem), [pointSystem]);
 

@@ -86,12 +86,30 @@
         font-weight: 700;
         margin-top: 8px;
         line-height: 1.2;
+
+        &--top {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
     }
 
     &-sub {
         font-size: .8rem;
         opacity: .7;
         line-height: 1.25;
+    }
+
+    &-creator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 8px;
+        font-size: .75rem;
+        line-height: 1.2;
+        opacity: .8;
+
+        img { height: 24px; width: auto; flex: none; }
     }
 
     &-stats {
@@ -134,13 +152,24 @@
 }
 
 .unit-hitbox {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     margin-top: 14px;
-    font-size: .85rem;
+    padding: 16px 16px 12px;
+    text-align: center;
+    background: #000;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, .8);
 
-    img { height: 64px; width: auto; }
+    img {
+        display: block;
+        margin: 0 auto 8px;
+        max-width: 100%;
+        max-height: 260px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .unit-hitbox-caption { font-size: .8rem; letter-spacing: .05em; text-transform: uppercase; }
 }
 
 .unit-stats {
@@ -187,6 +216,12 @@
 
     h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 4px; color: #2c2c2c; }
     p { margin: 0; line-height: 1.55; }
+
+    .keyword-link {
+        font-weight: 600;
+        text-decoration: underline dotted;
+        text-underline-offset: 3px;
+    }
 }
 
 .unit-cards {

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useUrlNumber } from '../../../services/url-state';
 import "./game-play-calc.scss";
 
 const GamePlayCalc: React.FC = () => {
-    const [players, setPlayers] = useState<number | ''>(''); // Number of players
-    const [points, setPoints] = useState<number | ''>('');   // Points
-    const [hours, setHours] = useState<number | ''>('');     // Play time in hours
-    const [speed, setSpeed] = useState<number>(1);           // Play speed modifier
+    const [players, setPlayers] = useUrlNumber('players'); // Number of players
+    const [points, setPoints] = useUrlNumber('pts');   // Points
+    const [hours, setHours] = useUrlNumber('hours');     // Play time in hours
+    const [speedParam, setSpeed] = useUrlNumber('speed');
+    const speed = speedParam === '' ? 1 : speedParam;           // Play speed modifier
 
-    const handleInputChange = (setter: React.Dispatch<React.SetStateAction<number | ''>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (setter: (value: number | '') => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value ? parseFloat(e.target.value) : '';
         setter(value);
     };

@@ -50,7 +50,7 @@ namespace HeroscapeBuilder.Server.Services
             var catalog = new SeoCatalog
             {
                 Units = units,
-                Species = GroupUnits(units, unit => unit.Race),
+                Species = GroupUnits(units, unit => unit.Race, SpeciesHelper.Key),
                 Generals = GroupUnits(units, unit => unit.General),
                 Sets = GroupUnits(units, unit => unit.Set?.Name),
             };
@@ -59,17 +59,23 @@ namespace HeroscapeBuilder.Server.Services
             return catalog;
         }
 
-        private static Dictionary<string, SeoGroup> GroupUnits(List<UnitEntity> units, Func<UnitEntity, string?> key)
+        private static Dictionary<string, SeoGroup> GroupUnits(List<UnitEntity> units, Func<UnitEntity, string?> key, Func<string, string>? normalize = null)
         {
+            normalize ??= value => value;
+
             return units
                 .Where(unit => !string.IsNullOrWhiteSpace(key(unit)))
-                .GroupBy(unit => SlugHelper.Slugify(key(unit)))
+                .GroupBy(unit => SlugHelper.Slugify(normalize(key(unit)!)))
                 .Where(group => group.Key.Length > 0)
                 .ToDictionary(
                     group => group.Key,
                     group => new SeoGroup(
                         group.Key,
-                        group.GroupBy(unit => key(unit)!).OrderByDescending(names => names.Count()).First().Key,
+                        // Show the spelling already in its normal (singular) form if there is one, else the most common.
+                        group.GroupBy(unit => key(unit)!)
+                            .OrderByDescending(names => normalize(names.Key) == names.Key.ToLowerInvariant())
+                            .ThenByDescending(names => names.Count())
+                            .First().Key,
                         group.ToList()));
         }
 
@@ -117,7 +123,11 @@ namespace HeroscapeBuilder.Server.Services
             return kind switch
             {
                 "units" => catalog.Units.FirstOrDefault(unit => unit.Slug == slug) is { } unit ? UnitPage(unit) : null,
-                "species" => catalog.Species.TryGetValue(slug, out var species) ? GroupPage("species", species) : null,
+                // Old species links used the printed spelling ("goblins"); fold those onto the singular page.
+                "species" => catalog.Species.TryGetValue(slug, out var species)
+                    || catalog.Species.TryGetValue(SlugHelper.Slugify(SpeciesHelper.Key(slug.Replace('-', ' '))), out species)
+                        ? GroupPage("species", species)
+                        : null,
                 "generals" => catalog.Generals.TryGetValue(slug, out var general) ? GroupPage("generals", general) : null,
                 "sets" => catalog.Sets.TryGetValue(slug, out var set) ? GroupPage("sets", set) : null,
                 _ => null,
@@ -203,7 +213,7 @@ namespace HeroscapeBuilder.Server.Services
             }
 
             var related = new List<string>();
-            if (!string.IsNullOrWhiteSpace(unit.Race)) related.Add($"<a href=\"/species/{SlugHelper.Slugify(unit.Race)}\">{H(unit.Race)} units</a>");
+            if (!string.IsNullOrWhiteSpace(unit.Race)) related.Add($"<a href=\"/species/{SlugHelper.Slugify(SpeciesHelper.Key(unit.Race))}\">{H(unit.Race)} units</a>");
             if (!string.IsNullOrWhiteSpace(unit.General)) related.Add($"<a href=\"/generals/{SlugHelper.Slugify(unit.General)}\">{H(unit.General)} units</a>");
             if (unit.Set != null) related.Add($"<a href=\"/sets/{SlugHelper.Slugify(unit.Set.Name)}\">{H(unit.Set.Name)}</a>");
             if (related.Count > 0) body.Append($"<p>{string.Join(" | ", related)}</p>");

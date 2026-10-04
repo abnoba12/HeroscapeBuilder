@@ -5,6 +5,7 @@ import { getCreatorInfo } from '../../models/creator';
 import { blobCache } from '../../services/cache-manager';
 import { getFilesByPurpose } from '../../services/file-service';
 import ImageCache from "../../services/image-cache-service";
+import { useUrlParam } from "../../services/url-state";
 import "./card-gallery.scss";
 
 interface CardGalleryProps {
@@ -18,7 +19,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
     const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
     const [gallerySize, setGallerySize] = useState<string>("thumbnail col-xl-2 col-lg-3 col-md-4");
     const [isDownloading, setIsDownloading] = useState<boolean>(false); // Track download state
-    const [selectedCreator, setSelectedCreator] = useState<string>("");
+    const [selectedCreator, setSelectedCreator] = useUrlParam("creator");
 
     useEffect(() => {
         const fetchFiles = async () => {

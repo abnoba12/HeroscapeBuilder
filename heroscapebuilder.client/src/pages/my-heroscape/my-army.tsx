@@ -15,6 +15,7 @@ import { Unit } from '../../models/unit';
 import { getMyUnits, setMyUnits } from '../../services/my_army-service';
 import '../data/unit-data/unit-data.scss';
 import { getUnits } from '../../services/unit-service';
+import { useUrlParam } from '../../services/url-state';
 import { useUnsavedChangesGuard } from './use-unsaved-changes-guard';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -93,7 +94,7 @@ const MyArmy: React.FC = () => {
     const [availableUnits, setAvailableUnits] = useState<UnitWithQuantity[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [quickFilterText, setQuickFilterText] = useState('');
+    const [quickFilterText, setQuickFilterText] = useUrlParam('q');
     const [addQuickFilterText, setAddQuickFilterText] = useState('');
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     const [addGridApi, setAddGridApi] = useState<GridApi | null>(null);

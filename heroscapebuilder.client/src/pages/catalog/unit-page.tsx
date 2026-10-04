@@ -5,6 +5,7 @@ import { usePagePointSystem } from '../../components/PointSystem/PointSystemCont
 import PageMeta from '../../components/Seo/PageMeta';
 import { getCreatorInfo } from '../../models/creator';
 import { getUnitPoints } from '../../models/point-system';
+import { speciesKey } from '../../models/species';
 import { Unit } from '../../models/unit';
 import {
     CARD_KINDS,
@@ -18,6 +19,7 @@ import {
     unitPath,
     useCatalog,
 } from '../../services/catalog';
+import { KeywordText, buildKeywordIndex } from '../../services/keywords';
 
 const RELATED_LIMIT = 12;
 
@@ -53,7 +55,7 @@ const UnitPageContent: React.FC<{ unit: Unit; catalog: Catalog }> = ({ unit, cat
     const related = useMemo(() => {
         const pool = catalog.units.filter(other => other.id !== unit.id);
         const sameSet = new Set(setUnits.map(other => other.id));
-        const similar = pool.filter(other => !sameSet.has(other.id) && other.race && other.race === unit.race);
+        const similar = pool.filter(other => !sameSet.has(other.id) && other.race && speciesKey(other.race) === speciesKey(unit.race));
         // Prefer units that share both the species and the general, then fall back to the rest of the species.
         similar.sort((a, b) => Number(b.general === unit.general) - Number(a.general === unit.general));
         return similar.slice(0, RELATED_LIMIT);
@@ -61,9 +63,11 @@ const UnitPageContent: React.FC<{ unit: Unit; catalog: Catalog }> = ({ unit, cat
 
     const speciesAverage = useMemo(() => {
         if (!unit.race) return undefined;
-        const peers = catalog.units.filter(other => other.race === unit.race);
+        const peers = catalog.units.filter(other => speciesKey(other.race) === speciesKey(unit.race));
         return { count: peers.length, life: average(peers.map(p => p.life)), points: average(peers.map(p => pointsFor(p))) };
     }, [catalog, unit.race, pointsFor]);
+
+    const keywordIndex = useMemo(() => buildKeywordIndex(catalog.units), [catalog]);
 
     const goRandom = () => {
         const others = catalog.units.filter(other => other.id !== unit.id);
@@ -97,7 +101,7 @@ const UnitPageContent: React.FC<{ unit: Unit; catalog: Catalog }> = ({ unit, cat
                     {hitbox && (
                         <div className="unit-hitbox">
                             <img src={hitbox} alt={`${unit.name} hitbox`} loading="lazy" />
-                            <span>Hitbox footprint</span>
+                            <div className="unit-hitbox-caption">Hitbox footprint</div>
                         </div>
                     )}
                 </aside>
@@ -158,7 +162,7 @@ const UnitPageContent: React.FC<{ unit: Unit; catalog: Catalog }> = ({ unit, cat
                     {unit.abilities.map(ability => (
                         <div className="unit-ability" key={ability.id}>
                             <h3>{ability.abilityName}</h3>
-                            <p>{ability.ability}</p>
+                            <p><KeywordText text={ability.ability ?? ''} index={keywordIndex} unitName={unit.name} /></p>
                         </div>
                     ))}
                 </>

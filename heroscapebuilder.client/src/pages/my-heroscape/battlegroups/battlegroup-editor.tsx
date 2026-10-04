@@ -37,6 +37,7 @@ import {
     updateBattlegroup,
 } from '../../../services/battlegroup-service';
 import { getMyUnits } from '../../../services/my_army-service';
+import { useUrlFlag, useUrlParam } from '../../../services/url-state';
 import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit } from './battlegroup-parts';
 import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
 import PointSystemSelect from '../../../components/PointSystem/PointSystemSelect';
@@ -118,8 +119,8 @@ const BattlegroupEditor: React.FC = () => {
     const [notice, setNotice] = useState<string | null>(null);
     const [serverErrors, setServerErrors] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
-    const [quickFilter, setQuickFilter] = useState('');
-    const [onlyAffordable, setOnlyAffordable] = useState(true);
+    const [quickFilter, setQuickFilter] = useUrlParam('q');
+    const [onlyAffordable, setOnlyAffordable] = useUrlFlag('affordable', true);
     const [abilityUnitId, setAbilityUnitId] = useState<number | null>(null);
     const [reviewSelected, setReviewSelected] = useState(false);
     const gridSectionRef = useRef<HTMLDivElement>(null);

@@ -2,6 +2,7 @@ import { Alert, Box, Button, Card, CardActionArea, CardContent, Chip, Collapse, 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePagePointSystem } from '../../components/PointSystem/PointSystemContext';
+import { useUrlEnum } from '../../services/url-state';
 import PointSystemPicker from '../../components/PointSystem/PointSystemPicker';
 import { Unit } from '../../models/unit';
 import { Set as UnitSet } from '../../models/set';
@@ -28,6 +29,7 @@ interface CreatorTally extends Tally {
 }
 
 type SetFilter = 'all' | 'complete' | 'in-progress' | 'not-started';
+const SET_FILTERS: readonly SetFilter[] = ['all', 'complete', 'in-progress', 'not-started'];
 
 const percent = ({ owned, total }: Tally) => (total > 0 ? (owned / total) * 100 : 0);
 
@@ -283,7 +285,7 @@ const ArmyStats: React.FC = () => {
     const [myUnits, setMyUnits] = useState<UnitWithQuantity[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [setFilter, setSetFilter] = useState<SetFilter>('all');
+    const [setFilter, setSetFilter] = useUrlEnum<SetFilter>('show', SET_FILTERS, 'all');
     const [selectedGeneral, setSelectedGeneral] = useState<GeneralTally | null>(null);
     const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
 

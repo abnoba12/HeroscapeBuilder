@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CatalogLoading, CatalogMessage, CatalogShell } from '../../components/Catalog/CatalogParts';
 import { HubAccent } from '../../components/HubCards/HubCards';
 import PageMeta from '../../components/Seo/PageMeta';
+import { getCreatorInfo } from '../../models/creator';
 import { GroupKind, UnitGroup, getPrimaryImage, useCatalog } from '../../services/catalog';
+import { useUrlParam } from '../../services/url-state';
 
 interface GroupIndexConfig {
     kind: GroupKind;
@@ -44,7 +46,7 @@ const releaseYear = (group: UnitGroup): number =>
 export const GroupIndexPage: React.FC<{ kind: GroupKind }> = ({ kind }) => {
     const config = GROUP_INDEXES[kind];
     const { catalog, error } = useCatalog();
-    const [query, setQuery] = useState('');
+    const [query, setQuery] = useUrlParam('q');
 
     const groups = useMemo(() => {
         const list = [...(catalog?.[kind].values() ?? [])];
@@ -80,14 +82,23 @@ export const GroupIndexPage: React.FC<{ kind: GroupKind }> = ({ kind }) => {
                             {filtered.map(group => {
                                 const sample = group.units.find(unit => getPrimaryImage(unit));
                                 const image = sample && getPrimaryImage(sample);
+                                const creator = kind === 'sets' ? group.units.find(unit => unit.set)?.set?.creator : undefined;
+                                const creatorInfo = getCreatorInfo(creator);
                                 return (
                                     <Link key={group.slug} to={`/${kind}/${group.slug}`} className="catalog-tile">
+                                        <div className="catalog-tile-name catalog-tile-name--top">{group.name}</div>
                                         <div className="catalog-tile-art">
                                             {image
                                                 ? <img src={image} alt={`${group.name} unit card`} loading="lazy" decoding="async" />
                                                 : <span className="catalog-tile-noimage" aria-hidden="true">&#x2B21;</span>}
                                         </div>
-                                        <div className="catalog-tile-name">{group.name}</div>
+                                        {creator && (
+                                            <div className="catalog-tile-creator" title={creatorInfo?.label ?? creator}>
+                                                {creatorInfo
+                                                    ? <img src={creatorInfo.logo} alt={creatorInfo.label} />
+                                                    : <span>{creator}</span>}
+                                            </div>
+                                        )}
                                         <div className="catalog-tile-stats">
                                             <span>{group.units.length} {config.unitNoun}{group.units.length === 1 ? '' : 's'}</span>
                                         </div>

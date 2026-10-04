@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CatalogLoading, CatalogMessage, CatalogShell, SectionTitle, UnitGrid, UnitTile } from '../../components/Catalog/CatalogParts';
 import { HubAccent } from '../../components/HubCards/HubCards';
@@ -6,6 +6,7 @@ import PointSystemPicker from '../../components/PointSystem/PointSystemPicker';
 import { usePagePointSystem } from '../../components/PointSystem/PointSystemContext';
 import PageMeta from '../../components/Seo/PageMeta';
 import { getCreatorInfo } from '../../models/creator';
+import { speciesKey } from '../../models/species';
 import { Unit } from '../../models/unit';
 import {
     GroupKind,
@@ -14,9 +15,11 @@ import {
     describeGroup,
     getPrimaryImage,
     groupPath,
+    pickSpelling,
     slugify,
     useCatalog,
 } from '../../services/catalog';
+import { useUrlEnum } from '../../services/url-state';
 
 interface KindInfo {
     accent: HubAccent;
@@ -47,20 +50,31 @@ const KINDS: Record<GroupKind, KindInfo> = {
 };
 
 type SortKey = 'name' | 'points' | 'life' | 'attack';
+const SORT_KEYS: readonly SortKey[] = ['name', 'points', 'life', 'attack'];
 
-const countBy = (units: Unit[], key: (unit: Unit) => string | undefined): Array<{ name: string; count: number }> => {
-    const counts = new Map<string, number>();
+const countBy = (
+    units: Unit[],
+    key: (unit: Unit) => string | undefined,
+    normalize: (value: string) => string = value => value,
+): Array<{ name: string; count: number }> => {
+    const groups = new Map<string, { count: number; spellings: Map<string, number> }>();
     for (const unit of units) {
         const value = key(unit)?.trim();
-        if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+        if (!value) continue;
+        const group = groups.get(normalize(value)) ?? { count: 0, spellings: new Map<string, number>() };
+        group.count++;
+        group.spellings.set(value, (group.spellings.get(value) ?? 0) + 1);
+        groups.set(normalize(value), group);
     }
-    return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    return [...groups.values()]
+        .map(group => ({ name: pickSpelling(group.spellings, normalize), count: group.count }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 };
 
 const GroupContent: React.FC<{ kind: GroupKind; group: UnitGroup }> = ({ kind, group }) => {
     const info = KINDS[kind];
     const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
-    const [sort, setSort] = useState<SortKey>('name');
+    const [sort, setSort] = useUrlEnum<SortKey>('sort', SORT_KEYS, 'name');
 
     const sorted = useMemo(() => {
         const list = [...group.units];
@@ -80,7 +94,7 @@ const GroupContent: React.FC<{ kind: GroupKind; group: UnitGroup }> = ({ kind, g
     const firstSet = sets[0];
     const creators = [...new Set(group.units.map(unit => unit.creator))];
 
-    const speciesCounts = kind !== 'species' ? countBy(group.units, unit => unit.race) : [];
+    const speciesCounts = kind !== 'species' ? countBy(group.units, unit => unit.race, speciesKey) : [];
     const generalCounts = kind !== 'generals' ? countBy(group.units, unit => unit.general) : [];
     const setCounts = kind !== 'sets' ? countBy(group.units, unit => unit.set?.name) : [];
 
@@ -157,7 +171,10 @@ const GroupPage: React.FC<{ kind: GroupKind }> = ({ kind }) => {
     const { slug } = useParams<{ slug: string }>();
     const { catalog, error } = useCatalog();
     const info = KINDS[kind];
-    const group = catalog && slug ? catalog[kind].get(slugify(slug)) : undefined;
+    // Old species links used the printed spelling ("goblins"); fold those onto the singular page.
+    const group = catalog && slug
+        ? catalog[kind].get(slugify(slug)) ?? (kind === 'species' ? catalog.species.get(slugify(speciesKey(slug.replace(/-/g, ' ')))) : undefined)
+        : undefined;
 
     if (error) {
         return <PageMeta title={info.singular} description={`Heroscape ${info.singular.toLowerCase()}`} noindex><CatalogMessage title="Could not load this page.">Please try again in a moment.</CatalogMessage></PageMeta>;

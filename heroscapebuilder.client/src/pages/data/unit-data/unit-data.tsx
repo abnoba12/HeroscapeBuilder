@@ -4,10 +4,12 @@ import {
     AllCommunityModule,
     ColDef,
     GetRowIdParams,
+    FilterChangedEvent,
     GridApi,
     GridReadyEvent,
     ICellRendererParams,
     ModuleRegistry,
+    SortChangedEvent,
     ValueGetterParams,
 } from 'ag-grid-community';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -16,8 +18,11 @@ import { Ability } from '../../../models/ability';
 import SelectFloatingFilter from '../../../components/SelectFloatingFilter/SelectFloatingFilter';
 import { usePagePointSystem } from '../../../components/PointSystem/PointSystemContext';
 import PointSystemPicker from '../../../components/PointSystem/PointSystemPicker';
+import { speciesKey } from '../../../models/species';
 import { Unit } from '../../../models/unit';
 import { getUnits } from '../../../services/unit-service';
+import { KeywordText, buildKeywordIndex } from '../../../services/keywords';
+import { parseUrlJson, useUrlParam } from '../../../services/url-state';
 import './unit-data.scss';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -35,22 +40,27 @@ const UnitData: React.FC = () => {
     const [units, setUnits] = useState<Unit[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [dialogContent, setDialogContent] = useState<string>(''); // State to control dialog content
+    const [dialogContent, setDialogContent] = useState<React.ReactNode>(null); // State to control dialog content
     const [open, setOpen] = useState(false); // State to control dialog open/close
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     const [hasColumnFilters, setHasColumnFilters] = useState(false);
-    const [quickFilterText, setQuickFilterText] = useState('');
+    // Search, column filters and sort live in the URL so a link reproduces this exact view.
+    const [quickFilterText, setQuickFilterText] = useUrlParam('q');
+    const [filtersParam, setFiltersParam] = useUrlParam('filters');
+    const [sortParam, setSortParam] = useUrlParam('sort');
     const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
 
-    const handleOpenDialog = (content: string) => {
+    const handleOpenDialog = (content: React.ReactNode) => {
         setDialogContent(content);
         setOpen(true);
     };
 
     const handleCloseDialog = () => {
         setOpen(false);
-        setDialogContent('');
+        setDialogContent(null);
     };
+
+    const keywordIndex = useMemo(() => buildKeywordIndex(units), [units]);
 
     const dropdownFilterOptions = useMemo(() => {
         const distinctValues = (getValue: (unit: Unit) => string | undefined) =>
@@ -77,7 +87,8 @@ const UnitData: React.FC = () => {
         },
         { field: 'rarity', headerName: 'Rarity', minWidth: 150, ...dropdownFilter(dropdownFilterOptions.rarity) },
         { field: 'type', headerName: 'Unit Type', minWidth: 140, ...dropdownFilter(dropdownFilterOptions.type) },
-        { field: 'race', headerName: 'Species', minWidth: 140 },
+        // Filtering compares the singular key, so "Goblin" also finds units printed "Goblins".
+        { field: 'race', headerName: 'Species', minWidth: 140, filterValueGetter: (params: ValueGetterParams<Unit>) => speciesKey(params.data?.race) },
         { field: 'role', headerName: 'Role', minWidth: 160 },
         { field: 'sizeCategory', headerName: 'Size Category', minWidth: 140 },
         { field: 'size', headerName: 'Height', filter: 'agNumberColumnFilter', maxWidth: 110 },
@@ -108,9 +119,12 @@ const UnitData: React.FC = () => {
                 params.data?.abilities?.map((ability: Ability) => `${ability.abilityName}: ${ability.ability}`).join(' | ') ?? '',
             cellRenderer: (params: ICellRendererParams<Unit>) => {
                 const abilities = params.data?.abilities ?? [];
-                const renderedContent = abilities
-                    .map((ability: Ability) => `<strong>${ability.abilityName}</strong><br />${ability.ability}`)
-                    .join('<br /><br />');
+                const renderedContent = abilities.map((ability: Ability, index) => (
+                    <p key={ability.id ?? index} style={{ margin: index === 0 ? 0 : '1em 0 0' }}>
+                        <strong>{ability.abilityName}</strong><br />
+                        <KeywordText text={ability.ability ?? ''} index={keywordIndex} unitName={params.data?.name} onNavigate={handleCloseDialog} />
+                    </p>
+                ));
                 const textContent = params.value as string;
 
                 return (
@@ -140,7 +154,7 @@ const UnitData: React.FC = () => {
             cellRenderer: (params: ICellRendererParams<Unit>) => (
                 <span
                     className="cell-content"
-                    onClick={() => handleOpenDialog(params.value)}
+                    onClick={() => handleOpenDialog(<span dangerouslySetInnerHTML={{ __html: params.value }} />)}
                     style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
                 >
                     {params.value}
@@ -174,7 +188,7 @@ const UnitData: React.FC = () => {
             },
             cellStyle: { display: 'flex', alignItems: 'center' },
         },
-    ], [dropdownFilterOptions, pointSystem, pointsFor]);
+    ], [dropdownFilterOptions, pointSystem, pointsFor, keywordIndex]);
 
     const defaultColDef = useMemo<ColDef>(() => ({
         filter: true,
@@ -214,6 +228,33 @@ const UnitData: React.FC = () => {
     const onGridReady = (params: GridReadyEvent) => {
         setGridApi(params.api);
         params.api.setGridOption('quickFilterText', quickFilterText);
+
+        const filterModel = parseUrlJson<Record<string, unknown>>(filtersParam);
+        if (filterModel) params.api.setFilterModel(filterModel);
+
+        const sortState = sortParam.split(',').filter(Boolean).map((entry, sortIndex) => {
+            const [colId, direction] = entry.split(':');
+            return { colId, sort: direction === 'desc' ? 'desc' as const : 'asc' as const, sortIndex };
+        });
+        if (sortState.length) params.api.applyColumnState({ state: sortState, defaultState: { sort: null } });
+    };
+
+    // A link from the ability dialog changes the URL while this page stays mounted, so apply it to the grid.
+    useEffect(() => {
+        if (!gridApi) return;
+        const filterModel = parseUrlJson<Record<string, unknown>>(filtersParam) ?? null;
+        if (JSON.stringify(filterModel ?? {}) !== JSON.stringify(gridApi.getFilterModel() ?? {})) {
+            gridApi.setFilterModel(filterModel);
+        }
+        gridApi.setGridOption('quickFilterText', quickFilterText);
+    }, [filtersParam, quickFilterText, gridApi]);
+
+    const handleSortChanged =(event: SortChangedEvent) => {
+        const sorted = event.api.getColumnState()
+            .filter(column => column.sort)
+            .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
+            .map(column => `${column.colId}:${column.sort}`);
+        setSortParam(sorted.join(','));
     };
 
     const handleQuickFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,9 +272,11 @@ const UnitData: React.FC = () => {
 
     const getRowId = (params: GetRowIdParams<Unit>) => params.data.id?.toString();
 
-    const handleFilterChanged = () => {
-        const filterModel = gridApi?.getFilterModel();
-        setHasColumnFilters(filterModel ? Object.keys(filterModel).length > 0 : false);
+    const handleFilterChanged = (event: FilterChangedEvent) => {
+        const filterModel = event.api.getFilterModel();
+        const hasFilters = Object.keys(filterModel).length > 0;
+        setHasColumnFilters(hasFilters);
+        setFiltersParam(hasFilters ? JSON.stringify(filterModel) : '');
     };
 
     const hasActiveFilters = useMemo(
@@ -273,6 +316,7 @@ const UnitData: React.FC = () => {
                     headerHeight={40}
                     onGridReady={onGridReady}
                     onFilterChanged={handleFilterChanged}
+                    onSortChanged={handleSortChanged}
                     getRowId={getRowId}
                     suppressDragLeaveHidesColumns
                     suppressCellFocus
@@ -282,9 +326,7 @@ const UnitData: React.FC = () => {
 
             {/* Dialog for displaying full content */}
             <Dialog open={open} onClose={handleCloseDialog}>
-                <DialogContent>
-                    <div dangerouslySetInnerHTML={{ __html: dialogContent }} />
-                </DialogContent>
+                <DialogContent>{dialogContent}</DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog} color="primary">
                         Close
