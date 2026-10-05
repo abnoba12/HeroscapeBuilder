@@ -27,15 +27,19 @@ namespace HeroscapeBuilder.Server.Services
             "/army-cards/threebyfive", "/army-cards/threebyfive/download", "/army-cards/threebyfive/create",
             "/army-cards/playingcard", "/army-cards/playingcard/download", "/army-cards/playingcard/create",
             "/army-cards/printing", "/data/unit-data", "/game-play/game-play-calc",
-            "/species", "/generals", "/sets",
+            "/species", "/generals", "/sets", "/power-ranking",
         };
 
+        private const int PowerRankingListSize = 50;
+
         private readonly UnitService _unitService;
+        private readonly PowerRankingService _powerRankingService;
         private readonly IMemoryCache _cache;
 
-        public SeoPageService(UnitService unitService, IMemoryCache cache)
+        public SeoPageService(UnitService unitService, PowerRankingService powerRankingService, IMemoryCache cache)
         {
             _unitService = unitService;
+            _powerRankingService = powerRankingService;
             _cache = cache;
         }
 
@@ -116,6 +120,7 @@ namespace HeroscapeBuilder.Server.Services
                     "species" => GroupIndexPage("species", "Heroscape Species", "Every Heroscape species and the units that belong to them.", catalog.Species),
                     "generals" => GroupIndexPage("generals", "Heroscape Generals", "Every Heroscape general and the units that serve them.", catalog.Generals),
                     "sets" => GroupIndexPage("sets", "Heroscape Sets", "Every Heroscape set and the units that come in each box.", catalog.Sets),
+                    "power-ranking" => await PowerRankingPage(catalog),
                     _ => null,
                 };
             }
@@ -267,6 +272,56 @@ namespace HeroscapeBuilder.Server.Services
             };
 
             return new SeoPageContent(title, description, path, image, body.ToString(), jsonLd);
+        }
+
+        /// <summary>The strongest units, as plain linked text. The live page adds the voting widget on top of this.</summary>
+        private async Task<SeoPageContent> PowerRankingPage(SeoCatalog catalog)
+        {
+            if (!_cache.TryGetValue("seo-power-ranking", out PowerRankingSummary? ranking) || ranking == null)
+            {
+                ranking = await _powerRankingService.GetRankings();
+                _cache.Set("seo-power-ranking", ranking, CacheDuration);
+            }
+
+            var byId = catalog.Units.ToDictionary(unit => unit.Id);
+            var top = ranking.Units
+                .OrderBy(entry => entry.Rank)
+                .Where(entry => byId.ContainsKey(entry.ArmyCardId))
+                .Take(PowerRankingListSize)
+                .Select(entry => (entry.Rank, Unit: byId[entry.ArmyCardId]))
+                .ToList();
+
+            var leaders = string.Join(", ", top.Take(3).Select(entry => entry.Unit.Name));
+            var description = top.Count > 0
+                ? $"Which Heroscape units are the most powerful? The community ranks every unit one matchup at a time. Right now {leaders} lead the list."
+                : "Which Heroscape units are the most powerful? See the community's power ranking of every unit, from the strongest to the weakest.";
+
+            var body = new StringBuilder($"<h1>Heroscape Power Ranking</h1><p>{H(description)}</p><ol>");
+            foreach (var (rank, unit) in top)
+            {
+                var identity = string.Join(" - ", new[] { unit.Race, unit.Role }.Where(v => !string.IsNullOrWhiteSpace(v)));
+                body.Append($"<li value=\"{rank}\"><a href=\"/units/{unit.Slug}\">{H(unit.Name)}</a>{(identity.Length > 0 ? $" ({H(identity)})" : string.Empty)}</li>");
+            }
+            body.Append("</ol>");
+
+            var jsonLd = new Dictionary<string, object?>
+            {
+                ["@context"] = "https://schema.org",
+                ["@type"] = "ItemList",
+                ["name"] = "Heroscape Power Ranking",
+                ["url"] = BaseUrl + "/power-ranking",
+                ["itemListOrder"] = "https://schema.org/ItemListOrderDescending",
+                ["itemListElement"] = top.Select(entry => new Dictionary<string, object?>
+                {
+                    ["@type"] = "ListItem",
+                    ["position"] = entry.Rank,
+                    ["name"] = entry.Unit.Name,
+                    ["url"] = $"{BaseUrl}/units/{entry.Unit.Slug}",
+                }).ToList(),
+            };
+
+            var image = top.Select(entry => CardImage(entry.Unit)).FirstOrDefault(i => i != null) ?? DefaultImage;
+            return new SeoPageContent("Heroscape Power Ranking - Strongest Units", description, "/power-ranking", image, body.ToString(), jsonLd);
         }
 
         private static SeoPageContent GroupIndexPage(string kind, string title, string description, Dictionary<string, SeoGroup> groups)

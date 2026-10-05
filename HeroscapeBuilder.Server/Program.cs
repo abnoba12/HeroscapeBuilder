@@ -43,6 +43,15 @@ try
     builder.Services.AddDistributedMemoryCache();
     builder.Services.AddMemoryCache();
 
+    // The unit catalog is ~2 MB of JSON; compressing it cuts first-load time sharply (and helps rankings).
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+    });
+    builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(options =>
+        options.Level = System.IO.Compression.CompressionLevel.Optimal);
+
     var connectionString = builder.Configuration.GetConnectionStringFromEnv("HeroscapeBuilder", "MsSqlDb");
     builder.Services.AddDbContext<HsbDbContext>((serviceProvider, options) =>
     {
@@ -69,6 +78,8 @@ try
     });
 
     var app = builder.Build();
+
+    app.UseResponseCompression();
 
     app.UseCors("AllowSpecificOrigins");
 

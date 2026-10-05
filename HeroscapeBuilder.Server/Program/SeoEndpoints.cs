@@ -15,6 +15,8 @@ namespace HeroscapeBuilder.Server.Program
             app.MapGet("/sitemap.xml", async (SeoPageService seo) =>
                 Results.Content(await seo.BuildSitemap(), "application/xml"));
 
+            app.MapGet("/power-ranking", (SeoPageService seo, IWebHostEnvironment env) => RenderPage(seo, env, "power-ranking", null));
+
             foreach (var kind in Kinds)
             {
                 var currentKind = kind;
