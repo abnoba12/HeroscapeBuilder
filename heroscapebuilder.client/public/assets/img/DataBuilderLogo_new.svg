@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700">
+<defs>
+  <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#e3e6ea"/><stop offset=".45" stop-color="#9aa1aa"/><stop offset="1" stop-color="#4b5058"/>
+  </linearGradient>
+  <linearGradient id="rimIn" x1="1" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#d5d9de"/><stop offset=".5" stop-color="#7c838c"/><stop offset="1" stop-color="#2f343a"/>
+  </linearGradient>
+  <linearGradient id="field" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3f6fd0"/><stop offset=".6" stop-color="#2748a8"/><stop offset="1" stop-color="#162a6e"/>
+  </linearGradient>
+  <radialGradient id="glow" cx=".5" cy=".35" r=".6">
+    <stop offset="0" stop-color="#7fa6ff" stop-opacity=".55"/><stop offset="1" stop-color="#7fa6ff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c9d3ea"/>
+  </linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#c79a3a"/>
+  </linearGradient>
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0" result="a"/>
+    <feComposite in="a" in2="SourceGraphic" operator="in"/>
+  </filter>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+    <feDropShadow dx="0" dy="6" stdDeviation="6" flood-opacity=".45"/>
+  </filter>
+  <pattern id="hex" width="60" height="103.92" patternUnits="userSpaceOnUse" patternTransform="translate(0 -6)">
+    <path d="M30 17.32 L60 34.64 V69.28 L30 86.6 L0 69.28 V34.64 Z M30 0 V17.32 M30 86.6 V103.92" fill="none" stroke="#cfdcff" stroke-width="2.4" stroke-linejoin="round"/>
+  </pattern>
+  <clipPath id="inner"><path id="innerP" d="M88 112 Q300 44 512 112 L512 378 Q512 535 300 642 Q88 535 88 378 Z"/></clipPath>
+  <g id="wing">
+<path transform="translate(290 292) rotate(-62) scale(0.78)" d="M0 0 C40 -17 105 -19 150 -2 C108 10 42 14 0 4 Z" fill="#fff"/>
+<path transform="translate(290 292) rotate(-42) scale(0.95)" d="M0 0 C40 -17 105 -19 150 -2 C108 10 42 14 0 4 Z" fill="#fff"/>
+<path transform="translate(290 292) rotate(-22) scale(1.08)" d="M0 0 C40 -17 105 -19 150 -2 C108 10 42 14 0 4 Z" fill="#fff"/>
+<path transform="translate(290 292) rotate(-4) scale(1.05)" d="M0 0 C40 -17 105 -19 150 -2 C108 10 42 14 0 4 Z" fill="#fff"/>
+<path transform="translate(290 292) rotate(16) scale(0.88)" d="M0 0 C40 -17 105 -19 150 -2 C108 10 42 14 0 4 Z" fill="#fff"/>
+<path transform="translate(290 292) rotate(34) scale(0.66)" d="M0 0 C40 -17 105 -19 150 -2 C108 10 42 14 0 4 Z" fill="#fff"/>
+<path d="M286 214 C248 214 196 200 160 138 C204 172 250 172 286 170 Z" fill="#fff"/>
+  </g>
+</defs>
+
+<!-- shield body -->
+<g filter="url(#shadow)">
+  <path d="M60 90 Q300 10 540 90 L540 380 Q540 568 300 682 Q60 568 60 380 Z" fill="url(#rim)"/>
+</g>
+<path d="M60 90 Q300 10 540 90 L540 380 Q540 568 300 682 Q60 568 60 380 Z" fill="#000" filter="url(#grain)" opacity=".35"/>
+<path d="M72 98 Q300 24 528 98 L528 380 Q528 556 300 668 Q72 556 72 380 Z" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3"/>
+<path d="M86 110 Q300 42 514 110 L514 378 Q514 537 300 645 Q86 537 86 378 Z" fill="url(#rimIn)"/>
+
+<!-- field -->
+<use href="#innerP" fill="url(#field)"/>
+<g clip-path="url(#inner)">
+  <rect width="600" height="700" fill="url(#hex)" opacity=".28"/>
+  <rect width="600" height="700" fill="url(#glow)"/>
+  <rect width="600" height="700" fill="#000" filter="url(#grain)" opacity=".25"/>
+</g>
+<use href="#innerP" fill="none" stroke="#0d1a4d" stroke-opacity=".7" stroke-width="3"/>
+
+<circle cx="300" cy="63" r="7" fill="#2b3036"/><circle cx="298.5" cy="61.5" r="5" fill="#8d949d"/><circle cx="297.5" cy="60.5" r="1.8" fill="#fff" opacity=".8"/>
+<circle cx="73" cy="300" r="7" fill="#2b3036"/><circle cx="71.5" cy="298.5" r="5" fill="#8d949d"/><circle cx="70.5" cy="297.5" r="1.8" fill="#fff" opacity=".8"/>
+<circle cx="527" cy="300" r="7" fill="#2b3036"/><circle cx="525.5" cy="298.5" r="5" fill="#8d949d"/><circle cx="524.5" cy="297.5" r="1.8" fill="#fff" opacity=".8"/>
+<!-- crest: horned wings -->
+<g filter="url(#shadow)">
+  <use href="#wing"/>
+  <use href="#wing" transform="translate(600 0) scale(-1 1)"/>
+  <!-- sword -->
+  <path d="M277 300 L323 300 L317 560 L300 632 L283 560 Z" fill="url(#blade)"/>
+  <path d="M300 306 L300 624" stroke="#8fa0cc" stroke-width="3"/>
+  <rect x="294" y="236" width="12" height="52" fill="#1b2f78"/>
+  <rect x="222" y="284" width="156" height="20" rx="8" fill="url(#gold)"/>
+  <circle cx="300" cy="212" r="22" fill="url(#gold)"/>
+  <circle cx="300" cy="212" r="9" fill="#2748a8"/>
+</g>
+</svg>
