@@ -21,14 +21,45 @@ namespace HeroscapeBuilder.Server.Services
         private const string DefaultImage = BaseUrl + "/WKnight.png";
         private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
 
-        private static readonly string[] StaticPaths =
+        public static readonly SeoStaticPage[] StaticPages =
         {
-            "/", "/army-cards", "/army-cards/standard", "/army-cards/standard/download", "/army-cards/standard/create",
-            "/army-cards/threebyfive", "/army-cards/threebyfive/download", "/army-cards/threebyfive/create",
-            "/army-cards/playingcard", "/army-cards/playingcard/download", "/army-cards/playingcard/create",
-            "/army-cards/printing", "/data/unit-data", "/game-play/game-play-calc",
-            "/species", "/generals", "/sets", "/power-ranking",
+            new("/army-cards", "/army-cards", "Heroscape Army Cards", "Create, download, and print Heroscape army cards in Standard, 3x5 index, and playing card formats."),
+            new("/army-cards/standard", "/army-cards/standard", "Standard Heroscape Army Cards", "Download or create Standard-format Heroscape army cards, ready to print."),
+            new("/army-cards/standard/download", "/army-cards/standard/download", "Download Standard Army Cards", "Download print-ready Standard-format Heroscape army cards."),
+            new("/army-cards/standard/create", "/army-cards/standard/create", "Create a Standard Army Card", "Design your own custom Standard-format Heroscape army card."),
+            new("/army-cards/threebyfive", "/army-cards/threebyfive", "3x5 Heroscape Index Cards", "Download or create 3x5 index-card-format Heroscape army cards, ready to print."),
+            new("/army-cards/threebyfive/download", "/army-cards/threebyfive/download", "Download 3x5 Army Cards", "Download print-ready 3x5 index-format Heroscape army cards."),
+            new("/army-cards/threebyfive/create", "/army-cards/threebyfive/create", "Create a 3x5 Army Card", "Design your own custom 3x5 index-format Heroscape army card."),
+            new("/army-cards/playingcard", "/army-cards/playingcard", "Heroscape Playing Cards", "Download or create standard playing-card-format Heroscape army cards, ready to print."),
+            new("/army-cards/playingcard/download", "/army-cards/playingcard/download", "Download Army Playing Cards", "Download print-ready playing-card-format Heroscape army cards."),
+            new("/army-cards/playingcard/create", "/army-cards/playingcard/create", "Create an Army Playing Card", "Design your own custom playing-card-format Heroscape army card."),
+            new("/army-cards/printing", "/army-cards/printing", "Printing Heroscape Cards", "Recommended print services and settings for printing your custom Heroscape army cards."),
+            new("/data", "/data/unit-data", "Heroscape Unit Data", "Browse stats and abilities for every Heroscape unit."),
+            new("/data/unit-data", "/data/unit-data", "Heroscape Unit Data", "Browse stats and abilities for every Heroscape unit."),
+            new("/game-play", "/game-play/game-play-calc", "Heroscape Game Play Calculator", "Calculate recommended points and game length for your Heroscape game based on player count and playtime."),
+            new("/game-play/game-play-calc", "/game-play/game-play-calc", "Heroscape Game Play Calculator", "Calculate recommended points and game length for your Heroscape game based on player count and playtime."),
         };
+
+        /// <summary>Paths in the sitemap that aren't generated from unit data (aliases like /data are excluded).</summary>
+        private static IEnumerable<string> SitemapStaticPaths =>
+            new[] { "/" }
+                .Concat(StaticPages.Where(page => page.Path == page.CanonicalPath).Select(page => page.Path))
+                .Concat(new[] { "/species", "/generals", "/sets", "/power-ranking" });
+
+        private const string NavHtml =
+            "<nav><a href=\"/\">Home</a> | <a href=\"/army-cards\">Army Cards</a> | <a href=\"/data/unit-data\">Unit Data</a> | " +
+            "<a href=\"/species\">Species</a> | <a href=\"/generals\">Generals</a> | <a href=\"/sets\">Sets</a> | " +
+            "<a href=\"/power-ranking\">Power Ranking</a> | <a href=\"/game-play/game-play-calc\">Game Play Calculator</a></nav>";
+
+        /// <summary>Plain heading + intro for a fixed page, so crawlers see an h1 without running the app.</summary>
+        public static SeoPageContent? GetStaticPage(string path)
+        {
+            var page = StaticPages.FirstOrDefault(p => p.Path == path);
+            if (page == null) return null;
+
+            var body = $"<h1>{H(page.Title)}</h1><p>{H(page.Description)}</p>{NavHtml}";
+            return new SeoPageContent(page.Title, page.Description, page.CanonicalPath, DefaultImage, body, null);
+        }
 
         private const int PowerRankingListSize = 50;
 
@@ -90,7 +121,7 @@ namespace HeroscapeBuilder.Server.Services
             var catalog = await GetCatalog();
             var paths = new List<(string Path, string Priority)>();
 
-            paths.AddRange(StaticPaths.Select(path => (path, path == "/" ? "1.0" : "0.7")));
+            paths.AddRange(SitemapStaticPaths.Select(path => (path, path == "/" ? "1.0" : "0.7")));
             paths.AddRange(catalog.Species.Keys.OrderBy(k => k).Select(slug => ($"/species/{slug}", "0.6")));
             paths.AddRange(catalog.Generals.Keys.OrderBy(k => k).Select(slug => ($"/generals/{slug}", "0.6")));
             paths.AddRange(catalog.Sets.Keys.OrderBy(k => k).Select(slug => ($"/sets/{slug}", "0.6")));
@@ -394,7 +425,8 @@ namespace HeroscapeBuilder.Server.Services
                 RegexOptions.Singleline);
 
             html = html.Replace("</head>", head + "</head>");
-            html = html.Replace("<div id=\"root\"></div>", $"<div id=\"root\">{page.BodyHtml}</div>");
+            // index.html ships a default heading inside #root; swap it for this page's content.
+            html = Regex.Replace(html, "<div id=\"root\">.*?</div>", _ => $"<div id=\"root\">{page.BodyHtml}</div>", RegexOptions.Singleline);
             return html;
         }
 

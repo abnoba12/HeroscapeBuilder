@@ -14,4 +14,7 @@ namespace HeroscapeBuilder.Server.Common.Seo
     }
 
     public sealed record SeoPageContent(string Title, string Description, string CanonicalPath, string Image, string BodyHtml, object? JsonLd);
+
+    /// <summary>A fixed public page. Keep titles and descriptions in step with the PageMeta in App.tsx.</summary>
+    public sealed record SeoStaticPage(string Path, string CanonicalPath, string Title, string Description);
 }

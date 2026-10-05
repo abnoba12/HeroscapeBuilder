@@ -15,6 +15,12 @@ namespace HeroscapeBuilder.Server.Program
             app.MapGet("/sitemap.xml", async (SeoPageService seo) =>
                 Results.Content(await seo.BuildSitemap(), "application/xml"));
 
+            foreach (var staticPage in SeoPageService.StaticPages)
+            {
+                var path = staticPage.Path;
+                app.MapGet(path, (IWebHostEnvironment env) => RenderStaticPage(env, path));
+            }
+
             app.MapGet("/power-ranking", (SeoPageService seo, IWebHostEnvironment env) => RenderPage(seo, env, "power-ranking", null));
 
             foreach (var kind in Kinds)
@@ -29,6 +35,20 @@ namespace HeroscapeBuilder.Server.Program
             }
 
             return app;
+        }
+
+        private static async Task<IResult> RenderStaticPage(IWebHostEnvironment env, string path)
+        {
+            var indexFile = env.WebRootFileProvider.GetFileInfo("index.html");
+            if (!indexFile.Exists) return Results.NotFound();
+
+            using var reader = new StreamReader(indexFile.CreateReadStream());
+            var template = await reader.ReadToEndAsync();
+
+            var page = SeoPageService.GetStaticPage(path);
+            return page == null
+                ? Results.Content(template, "text/html; charset=utf-8")
+                : Results.Content(SeoPageService.RenderShell(template, page), "text/html; charset=utf-8");
         }
 
         private static async Task<IResult> RenderPage(SeoPageService seo, IWebHostEnvironment env, string kind, string? slug)

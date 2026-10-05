@@ -64,12 +64,12 @@ const App: React.FC = () => {
                                 </PageMeta>
                             } />
                             <Route path="/army-cards/standard/download" element={
-                                <PageMeta title="Download Standard Army Cards" description="Download print-ready Standard-format Heroscape army cards.">
+                                <PageMeta title="Download Standard Army Cards" heading="Download Standard Army Cards" description="Download print-ready Standard-format Heroscape army cards.">
                                     <DownloadStandard />
                                 </PageMeta>
                             } />
                             <Route path="/army-cards/standard/create" element={
-                                <PageMeta title="Create a Standard Army Card" description="Design your own custom Standard-format Heroscape army card.">
+                                <PageMeta title="Create a Standard Army Card" heading="Create a Standard Army Card" description="Design your own custom Standard-format Heroscape army card.">
                                     <MakeCardStandard />
                                 </PageMeta>
                             } />
@@ -86,12 +86,12 @@ const App: React.FC = () => {
                                 </PageMeta>
                             } />
                             <Route path="/army-cards/threebyfive/download" element={
-                                <PageMeta title="Download 3x5 Army Cards" description="Download print-ready 3x5 index-format Heroscape army cards.">
+                                <PageMeta title="Download 3x5 Army Cards" heading="Download 3x5 Army Cards" description="Download print-ready 3x5 index-format Heroscape army cards.">
                                     <DownloadThreeByFive />
                                 </PageMeta>
                             } />
                             <Route path="/army-cards/threebyfive/create" element={
-                                <PageMeta title="Create a 3x5 Army Card" description="Design your own custom 3x5 index-format Heroscape army card.">
+                                <PageMeta title="Create a 3x5 Army Card" heading="Create a 3x5 Army Card" description="Design your own custom 3x5 index-format Heroscape army card.">
                                     <MakeCard3x5 />
                                 </PageMeta>
                             } />
@@ -101,27 +101,27 @@ const App: React.FC = () => {
                                 </PageMeta>
                             } />
                             <Route path="/army-cards/playingcard/download" element={
-                                <PageMeta title="Download Army Playing Cards" description="Download print-ready playing-card-format Heroscape army cards.">
+                                <PageMeta title="Download Army Playing Cards" heading="Download Army Playing Cards" description="Download print-ready playing-card-format Heroscape army cards.">
                                     <DownloadPlayingCard />
                                 </PageMeta>
                             } />
                             <Route path="/army-cards/playingcard/create" element={
-                                <PageMeta title="Create an Army Playing Card" description="Design your own custom playing-card-format Heroscape army card.">
+                                <PageMeta title="Create an Army Playing Card" heading="Create an Army Playing Card" description="Design your own custom playing-card-format Heroscape army card.">
                                     <MakeCardPC />
                                 </PageMeta>
                             } />
                             <Route path="/army-cards/printing" element={
-                                <PageMeta title="Printing Heroscape Cards" description="Recommended print services and settings for printing your custom Heroscape army cards.">
+                                <PageMeta title="Printing Heroscape Cards" heading="Printing Heroscape Cards" description="Recommended print services and settings for printing your custom Heroscape army cards.">
                                     <Printing />
                                 </PageMeta>
                             } />
                             <Route path="/data" element={
-                                <PageMeta title="Heroscape Unit Data" description="Browse stats and abilities for every Heroscape unit." canonicalPath="/data/unit-data">
+                                <PageMeta title="Heroscape Unit Data" heading="Heroscape Unit Data" description="Browse stats and abilities for every Heroscape unit." canonicalPath="/data/unit-data">
                                     <UnitData />
                                 </PageMeta>
                             } />
                             <Route path="/data/unit-data" element={
-                                <PageMeta title="Heroscape Unit Data" description="Browse stats and abilities for every Heroscape unit.">
+                                <PageMeta title="Heroscape Unit Data" heading="Heroscape Unit Data" description="Browse stats and abilities for every Heroscape unit.">
                                     <UnitData/>
                                 </PageMeta>
                             } />
@@ -141,12 +141,12 @@ const App: React.FC = () => {
                             <Route path="/sets" element={<GroupIndexPage kind="sets" />} />
                             <Route path="/sets/:slug" element={<GroupPage kind="sets" />} />
                             <Route path="/game-play" element={
-                                <PageMeta title="Heroscape Game Play Calculator" description="Calculate recommended points and game length for your Heroscape game based on player count and playtime." canonicalPath="/game-play/game-play-calc">
+                                <PageMeta title="Heroscape Game Play Calculator" heading="Heroscape Game Play Calculator" description="Calculate recommended points and game length for your Heroscape game based on player count and playtime." canonicalPath="/game-play/game-play-calc">
                                     <GamePlayCalc />
                                 </PageMeta>
                             } />
                             <Route path="/game-play/game-play-calc" element={
-                                <PageMeta title="Heroscape Game Play Calculator" description="Calculate recommended points and game length for your Heroscape game based on player count and playtime.">
+                                <PageMeta title="Heroscape Game Play Calculator" heading="Heroscape Game Play Calculator" description="Calculate recommended points and game length for your Heroscape game based on player count and playtime.">
                                     <GamePlayCalc />
                                 </PageMeta>
                             } />

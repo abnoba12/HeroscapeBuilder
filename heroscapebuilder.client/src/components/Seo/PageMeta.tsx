@@ -13,6 +13,8 @@ interface PageMetaProps {
     noindex?: boolean;
     /** Absolute URL of the image link previews should show. Defaults to the site logo. */
     image?: string;
+    /** Adds a screen-reader/crawler-visible h1 for pages whose own content has no top-level heading. */
+    heading?: string;
     children: React.ReactNode;
 }
 
@@ -26,7 +28,7 @@ function setMetaTag(attr: "name" | "property", key: string, content: string): vo
     el.setAttribute("content", content);
 }
 
-const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, noindex, image, children }) => {
+const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, noindex, image, heading, children }) => {
     useEffect(() => {
         const fullTitle = `${title} | ${SITE_NAME}`;
         document.title = fullTitle;
@@ -56,7 +58,12 @@ const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, 
         canonicalEl.setAttribute("href", canonicalHref);
     }, [title, description, canonicalPath, noindex, image]);
 
-    return <>{children}</>;
+    return (
+        <>
+            {heading && <h1 className="visually-hidden">{heading}</h1>}
+            {children}
+        </>
+    );
 };
 
 export default PageMeta;
