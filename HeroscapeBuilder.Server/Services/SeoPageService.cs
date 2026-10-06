@@ -198,11 +198,24 @@ namespace HeroscapeBuilder.Server.Services
             if (PointsFor(unit) is { } points) stats.Add($"{points} points");
             if (stats.Count > 0) parts.Add(string.Join(", ", stats) + ".");
 
-            if (unit.Set != null) parts.Add($"Comes in {unit.Set.Name}.");
-            parts.Add("Full abilities and free printable army cards.");
+            // Search engines show ~160 characters, so drop the optional parts until the text fits.
+            var set = unit.Set != null ? $"Comes in {unit.Set.Name}." : null;
+            var candidates = new[]
+            {
+                string.Join(" ", parts.Append(set).Append("Full abilities and free printable army cards.")),
+                string.Join(" ", parts.Append(set).Append("Free printable army card.")),
+                string.Join(" ", parts.Append("Free printable army card.")),
+            };
+            return FitDescription(candidates.FirstOrDefault(c => c.Length <= MaxDescriptionLength) ?? candidates[^1]);
+        }
 
-            var text = string.Join(" ", parts);
-            return text.Length <= 300 ? text : text[..297] + "...";
+        private const int MaxDescriptionLength = 160;
+
+        private static string FitDescription(string text)
+        {
+            if (text.Length <= MaxDescriptionLength) return text;
+            var cut = text.LastIndexOf(' ', MaxDescriptionLength - 4);
+            return text[..(cut > 0 ? cut : MaxDescriptionLength - 3)].TrimEnd(',', '.', ' ') + "...";
         }
 
         private static SeoPageContent UnitPage(UnitEntity unit)
@@ -278,9 +291,14 @@ namespace HeroscapeBuilder.Server.Services
                 "generals" => $"{group.Name} Heroscape Units - Army Stats & Cards",
                 _ => $"{group.Name} - Heroscape Set Contents, Units & Cards",
             };
-            var names = string.Join(", ", group.Units.Select(u => u.Name).Take(8));
-            var description = $"All {group.Units.Count} Heroscape units for the {group.Name} {noun}, including {names}. Stats, abilities and free printable army cards.";
-            if (description.Length > 300) description = description[..297] + "...";
+            var description = "";
+            for (var take = 8; take >= 0; take--)
+            {
+                var names = take > 0 ? $", including {string.Join(", ", group.Units.Select(u => u.Name).Take(take))}" : "";
+                description = $"All {group.Units.Count} Heroscape units for the {group.Name} {noun}{names}. Stats, abilities and free army cards.";
+                if (description.Length <= MaxDescriptionLength) break;
+            }
+            description = FitDescription(description);
 
             var body = new StringBuilder($"<h1>{H(title)}</h1><p>{H(description)}</p><ul>");
             foreach (var unit in group.Units)
@@ -324,7 +342,7 @@ namespace HeroscapeBuilder.Server.Services
 
             var leaders = string.Join(", ", top.Take(3).Select(entry => entry.Unit.Name));
             var description = top.Count > 0
-                ? $"Which Heroscape units are the most powerful? The community ranks every unit one matchup at a time. Right now {leaders} lead the list."
+                ? FitDescription($"Which Heroscape units are the most powerful? The community ranks them matchup by matchup. Right now {leaders} lead.")
                 : "Which Heroscape units are the most powerful? See the community's power ranking of every unit, from the strongest to the weakest.";
 
             var body = new StringBuilder($"<h1>Heroscape Power Ranking</h1><p>{H(description)}</p><ol>");
