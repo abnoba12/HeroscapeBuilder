@@ -56,7 +56,7 @@ const PowerRanking: React.FC = () => {
                                             <div className="power-tower-row-inner">
                                                 <span className="power-tower-rank">#{rank}</span>
                                                 <span className="power-tower-art">
-                                                    {image && <img src={image} alt="" loading="lazy" decoding="async" />}
+                                                    {image && <img src={image} alt={`${unit.name} army card`} loading="lazy" decoding="async" />}
                                                 </span>
                                                 <span className="power-tower-info">
                                                     <Link to={unitPath(unit)} className="power-tower-name">{unit.name}</Link>

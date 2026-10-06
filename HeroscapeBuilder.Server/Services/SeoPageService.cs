@@ -119,23 +119,39 @@ namespace HeroscapeBuilder.Server.Services
         public async Task<string> BuildSitemap()
         {
             var catalog = await GetCatalog();
-            var paths = new List<(string Path, string Priority)>();
+            var paths = new List<(string Path, string Priority, DateTime? LastMod)>();
 
-            paths.AddRange(SitemapStaticPaths.Select(path => (path, path == "/" ? "1.0" : "0.7")));
-            paths.AddRange(catalog.Species.Keys.OrderBy(k => k).Select(slug => ($"/species/{slug}", "0.6")));
-            paths.AddRange(catalog.Generals.Keys.OrderBy(k => k).Select(slug => ($"/generals/{slug}", "0.6")));
-            paths.AddRange(catalog.Sets.Keys.OrderBy(k => k).Select(slug => ($"/sets/{slug}", "0.6")));
-            paths.AddRange(catalog.Units.Select(unit => ($"/units/{unit.Slug}", "0.8")));
+            // lastmod comes from real data: a unit changes when a card file is added, a group when any of its units
+            // does, and fixed pages when the site was last built.
+            var deployed = DeployedAt();
+            paths.AddRange(SitemapStaticPaths.Select(path => (path, path == "/" ? "1.0" : "0.7", deployed)));
+            paths.AddRange(catalog.Species.OrderBy(g => g.Key).Select(g => ($"/species/{g.Key}", "0.6", GroupLastMod(g.Value))));
+            paths.AddRange(catalog.Generals.OrderBy(g => g.Key).Select(g => ($"/generals/{g.Key}", "0.6", GroupLastMod(g.Value))));
+            paths.AddRange(catalog.Sets.OrderBy(g => g.Key).Select(g => ($"/sets/{g.Key}", "0.6", GroupLastMod(g.Value))));
+            paths.AddRange(catalog.Units.Select(unit => ($"/units/{unit.Slug}", "0.8", UnitLastMod(unit))));
 
             var xml = new StringBuilder();
             xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             xml.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
-            foreach (var (path, priority) in paths)
+            foreach (var (path, priority, lastMod) in paths)
             {
-                xml.AppendLine($"  <url><loc>{H(BaseUrl + path)}</loc><changefreq>monthly</changefreq><priority>{priority}</priority></url>");
+                var lastModTag = lastMod is { } date ? $"<lastmod>{date:yyyy-MM-dd}</lastmod>" : "";
+                xml.AppendLine($"  <url><loc>{H(BaseUrl + path)}</loc>{lastModTag}<changefreq>monthly</changefreq><priority>{priority}</priority></url>");
             }
             xml.AppendLine("</urlset>");
             return xml.ToString();
+        }
+
+        private static DateTime? UnitLastMod(UnitEntity unit) =>
+            unit.Files.Count > 0 ? unit.Files.Max(file => file.CreatedAt) : null;
+
+        private static DateTime? GroupLastMod(SeoGroup group) =>
+            group.Units.Select(UnitLastMod).Max();
+
+        private static DateTime? DeployedAt()
+        {
+            var location = typeof(SeoPageService).Assembly.Location;
+            return string.IsNullOrEmpty(location) ? null : File.GetLastWriteTimeUtc(location);
         }
 
         // ---------- Page content ----------
