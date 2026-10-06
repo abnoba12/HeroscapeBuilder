@@ -210,6 +210,7 @@ namespace HeroscapeBuilder.Server.Services
         }
 
         private const int MaxDescriptionLength = 160;
+        private const int MaxTitleLength = 70;
 
         private static string FitDescription(string text)
         {
@@ -221,7 +222,7 @@ namespace HeroscapeBuilder.Server.Services
         private static SeoPageContent UnitPage(UnitEntity unit)
         {
             var name = unit.Name ?? "Heroscape Unit";
-            var title = $"{name} - Heroscape Unit Stats & Army Cards";
+            var title = $"{name} - Heroscape Unit Stats & Cards";
             var description = UnitDescription(unit);
             var image = CardImage(unit) ?? DefaultImage;
 
@@ -287,9 +288,9 @@ namespace HeroscapeBuilder.Server.Services
             var noun = kind == "species" ? "species" : kind == "generals" ? "general" : "set";
             var title = kind switch
             {
-                "species" => $"{group.Name} Heroscape Units - All {group.Name} Stats & Cards",
+                "species" => $"{group.Name} Heroscape Units - Stats & Cards",
                 "generals" => $"{group.Name} Heroscape Units - Army Stats & Cards",
-                _ => $"{group.Name} - Heroscape Set Contents, Units & Cards",
+                _ => $"{group.Name} - Heroscape Set Contents & Cards",
             };
             var description = "";
             for (var take = 8; take >= 0; take--)
@@ -411,7 +412,10 @@ namespace HeroscapeBuilder.Server.Services
         /// </summary>
         public static string RenderShell(string template, SeoPageContent page)
         {
+            // Search engines truncate titles past ~70 characters, so only append the site name when it fits.
             var fullTitle = $"{page.Title} | {SiteName}";
+            if (fullTitle.Length > MaxTitleLength) fullTitle = page.Title;
+            if (fullTitle.Length > MaxTitleLength) fullTitle = fullTitle[..(fullTitle.LastIndexOf(' ', MaxTitleLength - 3) is > 0 and var cut ? cut : MaxTitleLength - 3)].TrimEnd(',', '-', ' ') + "...";
             var url = BaseUrl + page.CanonicalPath;
 
             var head = new StringBuilder();

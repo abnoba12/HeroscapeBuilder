@@ -102,7 +102,26 @@ try
 
     app.MapSeoEndpoints();
 
-    app.MapFallbackToFile("/index.html");
+    // Unknown URLs still get the SPA shell (so React can render its not-found page) but with a real 404 status,
+    // otherwise search engines treat every made-up URL as a valid page.
+    var spaRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "army-cards", "data", "units", "power-ranking", "species", "generals", "sets",
+        "game-play", "user", "battlegroup", "my-heroscape"
+    };
+    app.Use(async (context, next) =>
+    {
+        var segments = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+        if (segments.Length > 0 && !spaRoots.Contains(segments[0]) && !segments[0].Contains('.'))
+            context.Items["SpaNotFound"] = true;
+        await next();
+    });
+    app.MapFallback(async context =>
+    {
+        if (context.Items.ContainsKey("SpaNotFound")) context.Response.StatusCode = StatusCodes.Status404NotFound;
+        context.Response.ContentType = "text/html; charset=utf-8";
+        await context.Response.SendFileAsync(app.Environment.WebRootFileProvider.GetFileInfo("index.html"));
+    });
 
     app.Run();
 }
