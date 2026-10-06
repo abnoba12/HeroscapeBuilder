@@ -12,7 +12,7 @@ namespace HeroscapeBuilder.Server.Program
         /// </summary>
         public static WebApplication MapSeoEndpoints(this WebApplication app)
         {
-            app.MapGet("/sitemap.xml", async (SeoPageService seo) =>
+            app.MapMethods("/sitemap.xml", new[] { "GET", "HEAD" }, async (SeoPageService seo) =>
                 Results.Content(await seo.BuildSitemap(), "application/xml"));
 
             foreach (var staticPage in SeoPageService.StaticPages)
