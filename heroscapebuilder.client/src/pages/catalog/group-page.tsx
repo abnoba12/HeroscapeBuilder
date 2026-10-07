@@ -13,6 +13,7 @@ import {
     UnitGroup,
     average,
     describeGroup,
+    metaDescribeGroup,
     getPrimaryImage,
     groupPath,
     pickSpelling,
@@ -33,7 +34,7 @@ const KINDS: Record<GroupKind, KindInfo> = {
         accent: 'green',
         singular: 'Species',
         plural: 'Species',
-        title: name => `${name} Heroscape Units - All ${name} Stats & Cards`,
+        title: name => `${name} Heroscape Units - Stats & Cards`,
     },
     generals: {
         accent: 'purple',
@@ -45,7 +46,7 @@ const KINDS: Record<GroupKind, KindInfo> = {
         accent: 'orange',
         singular: 'Set',
         plural: 'Sets',
-        title: name => `${name} - Heroscape Set Contents, Units & Cards`,
+        title: name => `${name} - Heroscape Set Contents & Cards`,
     },
 };
 
@@ -195,7 +196,7 @@ const GroupPage: React.FC<{ kind: GroupKind }> = ({ kind }) => {
     return (
         <PageMeta
             title={info.title(group.name)}
-            description={describeGroup(kind, group)}
+            description={metaDescribeGroup(kind, group)}
             canonicalPath={`/${kind}/${group.slug}`}
             image={group.units.map(getPrimaryImage).find(Boolean)}
         >

@@ -12,6 +12,7 @@ import {
     Catalog,
     average,
     describeUnit,
+    metaDescribeUnit,
     getCardFile,
     getHitboxImage,
     getPrimaryImage,
@@ -281,11 +282,11 @@ const UnitPage: React.FC = () => {
         );
     }
 
-    const description = describeUnit(unit, pointsFor(unit));
+    const description = metaDescribeUnit(unit, pointsFor(unit));
     return (
         <PageMeta
-            title={`${unit.name} - Heroscape Unit Stats & Army Cards`}
-            description={description.length > 300 ? `${description.slice(0, 297)}...` : description}
+            title={`${unit.name} - Heroscape Unit Stats & Cards`}
+            description={description}
             canonicalPath={unitPath(unit)}
             image={getPrimaryImage(unit)}
         >

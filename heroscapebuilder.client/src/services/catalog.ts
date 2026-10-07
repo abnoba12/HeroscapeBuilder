@@ -201,6 +201,52 @@ export const describeGroup = (kind: GroupKind, group: UnitGroup): string => {
     return `All ${plural(group.units.length, 'Heroscape unit')} for the ${group.name} ${noun}, including ${names}. Stats, abilities and free printable army cards.`;
 };
 
+// Search engines show roughly 160 characters of description and 70 of title; keep meta text inside that.
+export const MAX_DESCRIPTION_LENGTH = 160;
+export const MAX_TITLE_LENGTH = 70;
+
+export const fitText = (text: string, max: number): string => {
+    if (text.length <= max) return text;
+    const cut = text.lastIndexOf(' ', max - 3);
+    return `${text.slice(0, cut > 0 ? cut : max - 3).replace(/[,.\- ]+$/, '')}...`;
+};
+
+/** Short meta description for a unit (mirrors the server-rendered one): optional parts are dropped until it fits. */
+export const metaDescribeUnit = (unit: Unit, points?: number): string => {
+    const identity = [unit.race, unit.role].filter(Boolean).join(' ');
+    const intro = identity ? `${unit.name} is a ${identity} Heroscape unit.` : `${unit.name} Heroscape unit.`;
+    const stats = [
+        unit.life != null && `Life ${unit.life}`,
+        unit.advMove != null && `Move ${unit.advMove}`,
+        unit.advRange != null && `Range ${unit.advRange}`,
+        unit.advAttack != null && `Attack ${unit.advAttack}`,
+        unit.advDefense != null && `Defense ${unit.advDefense}`,
+        points != null && `${points} points`,
+    ].filter(Boolean);
+    const statsText = stats.length ? `${stats.join(', ')}.` : null;
+    const set = unit.set ? `Comes in ${unit.set.name}.` : null;
+    const build = (...parts: Array<string | null>) => parts.filter(Boolean).join(' ');
+
+    const candidates = [
+        build(intro, statsText, set, 'Full abilities and free printable army cards.'),
+        build(intro, statsText, set, 'Free printable army card.'),
+        build(intro, statsText, 'Free printable army card.'),
+    ];
+    return fitText(candidates.find(c => c.length <= MAX_DESCRIPTION_LENGTH) ?? candidates[2], MAX_DESCRIPTION_LENGTH);
+};
+
+/** Short meta description for a group page: the list of example units shrinks until it fits. */
+export const metaDescribeGroup = (kind: GroupKind, group: UnitGroup): string => {
+    const noun = kind === 'species' ? 'species' : kind === 'generals' ? 'general' : 'set';
+    let description = '';
+    for (let take = 8; take >= 0; take--) {
+        const names = take > 0 ? `, including ${group.units.slice(0, take).map(unit => unit.name).join(', ')}` : '';
+        description = `All ${group.units.length} Heroscape units for the ${group.name} ${noun}${names}. Stats, abilities and free army cards.`;
+        if (description.length <= MAX_DESCRIPTION_LENGTH) break;
+    }
+    return fitText(description, MAX_DESCRIPTION_LENGTH);
+};
+
 export const average = (values: Array<number | null | undefined>): number | undefined => {
     const numbers = values.filter((v): v is number => typeof v === 'number');
     return numbers.length ? numbers.reduce((sum, v) => sum + v, 0) / numbers.length : undefined;

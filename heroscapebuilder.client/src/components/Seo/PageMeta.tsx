@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { fitText, MAX_DESCRIPTION_LENGTH, MAX_TITLE_LENGTH } from "../../services/catalog";
 
 const SITE_NAME = "Heroscape Builder";
 const BASE_URL = "https://heroscapebuilder.com";
@@ -30,21 +31,24 @@ function setMetaTag(attr: "name" | "property", key: string, content: string): vo
 
 const PageMeta: React.FC<PageMetaProps> = ({ title, description, canonicalPath, noindex, image, heading, children }) => {
     useEffect(() => {
-        const fullTitle = `${title} | ${SITE_NAME}`;
+        // Only append the site name when the title still fits in the ~70 characters search engines show.
+        const withSite = `${title} | ${SITE_NAME}`;
+        const fullTitle = fitText(withSite.length <= MAX_TITLE_LENGTH ? withSite : title, MAX_TITLE_LENGTH);
+        const fullDescription = fitText(description, MAX_DESCRIPTION_LENGTH);
         document.title = fullTitle;
 
-        setMetaTag("name", "description", description);
+        setMetaTag("name", "description", fullDescription);
         setMetaTag("name", "robots", noindex ? "noindex, nofollow" : "index, follow");
 
         setMetaTag("property", "og:site_name", SITE_NAME);
         setMetaTag("property", "og:title", fullTitle);
-        setMetaTag("property", "og:description", description);
+        setMetaTag("property", "og:description", fullDescription);
         setMetaTag("property", "og:type", "website");
         setMetaTag("property", "og:image", image ?? DEFAULT_IMAGE);
         setMetaTag("name", "twitter:image", image ?? DEFAULT_IMAGE);
         setMetaTag("name", "twitter:card", image ? "summary_large_image" : "summary");
         setMetaTag("name", "twitter:title", fullTitle);
-        setMetaTag("name", "twitter:description", description);
+        setMetaTag("name", "twitter:description", fullDescription);
 
         const canonicalHref = `${BASE_URL}${canonicalPath ?? window.location.pathname}`;
         setMetaTag("property", "og:url", canonicalHref);
