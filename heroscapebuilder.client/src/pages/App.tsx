@@ -19,6 +19,7 @@ import DownloadThreeByFive from "./army-cards/threebyfive/download-threebyfive";
 import MakeCard3x5 from "./army-cards/threebyfive/make-card-3x5";
 import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
 import UnitData from "./data/unit-data/unit-data";
+import UploadMap from "./maps/upload-map";
 import PrivateRoute from "../components/Auth/PrivateRoute";
 import AdminRoute from "../components/Auth/AdminRoute";
 import Login from "../pages/user/Login";
@@ -131,6 +132,13 @@ const App: React.FC = () => {
                                 <AdminRoute>
                                     <PageMeta title="Power vs. Points" description="Admin report comparing the power ranking with unit points." noindex>
                                         <PowerBalance />
+                                    </PageMeta>
+                                </AdminRoute>
+                            } />
+                            <Route path="/maps/upload" element={
+                                <AdminRoute>
+                                    <PageMeta title="Upload Map" description="Admin tool for uploading map PDFs." noindex>
+                                        <UploadMap />
                                     </PageMeta>
                                 </AdminRoute>
                             } />

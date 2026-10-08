@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace HeroscapeBuilder.Server.Data.Entities;
@@ -7,7 +7,12 @@ public partial class Creator
 {
     public long Id { get; set; }
 
-    public string Creator1 { get; set; } = null!;
+    /// <summary>Short unique code (C3V, Heroscape, ...). army_card.Creator and set.creator store this value.</summary>
+    public string Abbreviation { get; set; } = null!;
+
+    public string Name { get; set; } = null!;
+
+    public string? Description { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

@@ -107,7 +107,7 @@ try
     var spaRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "army-cards", "data", "units", "power-ranking", "species", "generals", "sets",
-        "game-play", "user", "battlegroup", "my-heroscape"
+        "game-play", "user", "battlegroup", "my-heroscape", "maps"
     };
     app.Use(async (context, next) =>
     {

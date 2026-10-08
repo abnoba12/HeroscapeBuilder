@@ -31,6 +31,16 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<Creator> Creators { get; set; }
 
+    public virtual DbSet<Map> Maps { get; set; }
+
+    public virtual DbSet<MapTile> MapTiles { get; set; }
+
+    public virtual DbSet<TerrainType> TerrainTypes { get; set; }
+
+    public virtual DbSet<TerrainSize> TerrainSizes { get; set; }
+
+    public virtual DbSet<TerrainTypeSize> TerrainTypeSizes { get; set; }
+
     public virtual DbSet<Set> Sets { get; set; }
 
     public virtual DbSet<SetTerrain> SetTerrains { get; set; }
@@ -71,7 +81,7 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Id).HasColumnName("id");
 
             entity.HasOne(d => d.CreatorNavigation).WithMany(p => p.ArmyCards)
-                .HasPrincipalKey(p => p.Creator1)
+                .HasPrincipalKey(p => p.Abbreviation)
                 .HasForeignKey(d => d.Creator)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("army_card_Creator_fkey");
@@ -163,21 +173,98 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<Creator>(entity =>
         {
-            entity.HasKey(e => new { e.Id, e.Creator1 }).HasName("Creator_pkey");
+            entity.HasKey(e => e.Id).HasName("PK_creator");
 
             entity.ToTable("creator");
 
-            entity.HasIndex(e => e.Creator1, "AK_creator_Creator").IsUnique();
-
-            entity.HasIndex(e => e.Creator1, "Creator_Creator_key").IsUnique();
+            entity.HasIndex(e => e.Abbreviation, "UQ_creator_abbreviation").IsUnique();
 
             entity.Property(e => e.Id)
                 .ValueGeneratedOnAdd()
                 .HasColumnName("id");
-            entity.Property(e => e.Creator1).HasColumnName("Creator");
+            entity.Property(e => e.Abbreviation).HasColumnName("abbreviation");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Description).HasColumnName("description");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnName("created_at");
+        });
+
+        modelBuilder.Entity<TerrainType>(entity =>
+        {
+            entity.ToTable("terrain_type");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<TerrainSize>(entity =>
+        {
+            entity.ToTable("terrain_size");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(50);
+            entity.Property(e => e.Spaces).HasColumnName("spaces");
+        });
+
+        modelBuilder.Entity<TerrainTypeSize>(entity =>
+        {
+            entity.ToTable("terrain_type_size");
+
+            entity.HasKey(e => new { e.TerrainTypeId, e.TerrainSizeId }).HasName("PK_terrain_type_size");
+
+            entity.Property(e => e.TerrainTypeId).HasColumnName("terrain_type_id");
+            entity.Property(e => e.TerrainSizeId).HasColumnName("terrain_size_id");
+        });
+
+        modelBuilder.Entity<Map>(entity =>
+        {
+            entity.ToTable("map");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(200);
+            entity.Property(e => e.CreatorId).HasColumnName("creator_id");
+            entity.Property(e => e.CustomerName).HasColumnName("customer_name").HasMaxLength(200);
+            entity.Property(e => e.PlayerCount).HasColumnName("player_count");
+            entity.Property(e => e.FilePath).HasColumnName("file_path").HasMaxLength(500);
+            entity.Property(e => e.ThumbnailPath).HasColumnName("thumbnail_path").HasMaxLength(500);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(sysutcdatetime())")
+                .HasColumnName("created_at");
+
+            entity.HasOne(d => d.Creator)
+                .WithMany()
+                .HasForeignKey(d => d.CreatorId)
+                .HasConstraintName("FK_map_creator");
+        });
+
+        modelBuilder.Entity<MapTile>(entity =>
+        {
+            entity.ToTable("map_tile");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.MapId).HasColumnName("map_id");
+            entity.Property(e => e.TerrainTypeId).HasColumnName("terrain_type_id");
+            entity.Property(e => e.TerrainSizeId).HasColumnName("terrain_size_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+
+            entity.HasIndex(e => new { e.MapId, e.TerrainTypeId, e.TerrainSizeId }, "UQ_map_tile_map_type_size").IsUnique();
+
+            entity.HasOne(d => d.Map)
+                .WithMany(p => p.Tiles)
+                .HasForeignKey(d => d.MapId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_map_tile_map");
+
+            entity.HasOne(d => d.TerrainType)
+                .WithMany()
+                .HasForeignKey(d => d.TerrainTypeId)
+                .HasConstraintName("FK_map_tile_terrain_type");
+
+            entity.HasOne(d => d.TerrainSize)
+                .WithMany()
+                .HasForeignKey(d => d.TerrainSizeId)
+                .HasConstraintName("FK_map_tile_terrain_size");
         });
 
         modelBuilder.Entity<Set>(entity =>
@@ -202,7 +289,7 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Wave).HasColumnName("wave");
 
             entity.HasOne(d => d.CreatorNavigation).WithMany(p => p.Sets)
-                .HasPrincipalKey(p => p.Creator1)
+                .HasPrincipalKey(p => p.Abbreviation)
                 .HasForeignKey(d => d.Creator)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("set_creator_fkey");

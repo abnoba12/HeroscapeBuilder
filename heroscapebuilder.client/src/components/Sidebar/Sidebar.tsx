@@ -8,6 +8,7 @@ const isDataPath = (path: string) => ["/data", "/units", "/species", "/generals"
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false); // Tracks if sidebar is open
     const [activeMenu, setActiveMenu] = useState<string | null>(null); // Tracks which menu is expanded
+    const [mapsOpen, setMapsOpen] = useState<boolean>(false); // Maps sub-menu inside Game Play
     const location = useLocation(); // Get the current location
     const [hasArmyUnits, setHasArmyUnits] = useState<boolean>(false); // Battlegroups need at least one unit in My Army
     const [armyVersion, setArmyVersion] = useState<number>(0); // Bumped when My Army is saved
@@ -42,7 +43,7 @@ const Sidebar: React.FC = () => {
         if (isDataPath(location.pathname)) {
             return "blue";
         }
-        if (location.pathname.startsWith("/game-play")) {
+        if (location.pathname.startsWith("/game-play") || location.pathname.startsWith("/maps")) {
             return "purple";
         }
         if (location.pathname.startsWith("/my-heroscape")) {
@@ -57,8 +58,11 @@ const Sidebar: React.FC = () => {
             setActiveMenu("army-cards");
         } else if (isDataPath(location.pathname)) {
             setActiveMenu("data");
-        } else if (location.pathname.startsWith("/game-play")) {
+        } else if (location.pathname.startsWith("/game-play") || location.pathname.startsWith("/maps")) {
             setActiveMenu("game-play");
+            if (location.pathname.startsWith("/maps")) {
+                setMapsOpen(true);
+            }
         } else if (location.pathname.startsWith("/my-heroscape")) {
             setActiveMenu("my-heroscape");
         }
@@ -164,6 +168,16 @@ const Sidebar: React.FC = () => {
                                 {activeMenu === 'game-play' && (
                                     <ul className="submenu">
                                         <li><Link to="/game-play/game-play-calc" onClick={toggleSidebar}>Game Play Calculator</Link></li>
+                                        {hasRole("Admin") && (
+                                            <li>
+                                                <a href="#!" onClick={() => setMapsOpen(open => !open)}>Maps</a>
+                                                {mapsOpen && (
+                                                    <ul className="submenu" style={{ paddingLeft: "1rem" }}>
+                                                        <li><Link to="/maps/upload" onClick={toggleSidebar}>Upload Map</Link></li>
+                                                    </ul>
+                                                )}
+                                            </li>
+                                        )}
                                     </ul>
                                 )}
                             </li>
