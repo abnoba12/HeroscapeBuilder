@@ -168,15 +168,18 @@ const Sidebar: React.FC = () => {
                                 {activeMenu === 'game-play' && (
                                     <ul className="submenu">
                                         <li><Link to="/game-play/game-play-calc" onClick={toggleSidebar}>Game Play Calculator</Link></li>
-                                        {hasRole("Admin") && (
+                                        {hasRole("Admin") ? (
                                             <li>
                                                 <a href="#!" onClick={() => setMapsOpen(open => !open)}>Maps</a>
                                                 {mapsOpen && (
                                                     <ul className="submenu" style={{ paddingLeft: "1rem" }}>
+                                                        <li><Link to="/maps" onClick={toggleSidebar}>Browse Maps</Link></li>
                                                         <li><Link to="/maps/upload" onClick={toggleSidebar}>Upload Map</Link></li>
                                                     </ul>
                                                 )}
                                             </li>
+                                        ) : (
+                                            <li><Link to="/maps" onClick={toggleSidebar}>Maps</Link></li>
                                         )}
                                     </ul>
                                 )}

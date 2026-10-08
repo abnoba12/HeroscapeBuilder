@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MapOptions, MapTileInput, TerrainTypeOption } from "../../models/map";
-import { addMap, getMapErrors, getMapOptions } from "../../services/map-service";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { MapOptions, MapSummary, MapTileInput, TerrainTypeOption } from "../../models/map";
+import { addMap, getMap, getMapErrors, getMapOptions, updateMap } from "../../services/map-service";
 
 /** Value of the creator dropdown that switches to the free-text author name. */
 const CUSTOMER = "customer";
@@ -19,7 +20,12 @@ const parseQuantity = (value: string | undefined): number => {
     return Number.isInteger(quantity) && quantity >= 0 ? quantity : NaN;
 };
 
+/** Upload form; at /maps/:id/edit the same form edits an existing map and the PDF and thumbnail become optional. */
 const UploadMap: React.FC = () => {
+    const { id } = useParams();
+    const editId = id === undefined ? null : Number(id);
+    const navigate = useNavigate();
+    const [existing, setExisting] = useState<MapSummary | null>(null);
     const [options, setOptions] = useState<MapOptions | null>(null);
     const [loadError, setLoadError] = useState<string>("");
     const [name, setName] = useState<string>("");
@@ -40,6 +46,24 @@ const UploadMap: React.FC = () => {
             .then(setOptions)
             .catch(() => setLoadError("Unable to load creators and terrain options."));
     }, []);
+
+    useEffect(() => {
+        if (editId === null) return;
+        if (!Number.isInteger(editId)) {
+            setLoadError("Map not found.");
+            return;
+        }
+        getMap(editId)
+            .then(map => {
+                setExisting(map);
+                setName(map.name);
+                setCreator(map.creatorId !== null ? String(map.creatorId) : CUSTOMER);
+                setCustomerName(map.customerName ?? "");
+                setPlayerCount(String(map.playerCount));
+                setQuantities(Object.fromEntries(map.tiles.map(t => [cellKey(t.terrainTypeId, t.terrainSizeId), String(t.quantity)])));
+            })
+            .catch(() => setLoadError("Unable to load the map."));
+    }, [editId]);
 
     const setQuantity = (terrainTypeId: number, terrainSizeId: number, value: string) => {
         setQuantities(current => ({ ...current, [cellKey(terrainTypeId, terrainSizeId)]: value }));
@@ -96,8 +120,8 @@ const UploadMap: React.FC = () => {
             current.terrainSizes.some(size => Number.isNaN(quantityOf(type.id, size.id))));
         if (hasInvalidQuantity) problems.push("Tile quantities must be whole numbers of 0 or more.");
         else if (buildTiles(current).length === 0) problems.push("Enter a quantity for at least one tile.");
-        if (!pdfFile) problems.push("Select a PDF to upload.");
-        if (!thumbnailFile) problems.push("Select a thumbnail image to upload.");
+        if (editId === null && !pdfFile) problems.push("Select a PDF to upload.");
+        if (editId === null && !thumbnailFile) problems.push("Select a thumbnail image to upload.");
         return problems;
     };
 
@@ -108,32 +132,38 @@ const UploadMap: React.FC = () => {
 
         const problems = validate(options);
         setErrors(problems);
-        if (problems.length > 0 || !pdfFile || !thumbnailFile) return;
+        if (problems.length > 0) return;
+
+        const fields = {
+            name: name.trim(),
+            creatorId: creator === CUSTOMER ? null : Number(creator),
+            customerName: customerName.trim(),
+            playerCount: Number(playerCount),
+            tiles: buildTiles(options),
+        };
 
         setUploading(true);
         try {
-            const saved = await addMap({
-                name: name.trim(),
-                creatorId: creator === CUSTOMER ? null : Number(creator),
-                customerName: customerName.trim(),
-                playerCount: Number(playerCount),
-                tiles: buildTiles(options),
-                file: pdfFile,
-                thumbnail: thumbnailFile,
-            });
+            if (editId !== null) {
+                await updateMap(editId, { ...fields, file: pdfFile, thumbnail: thumbnailFile });
+                navigate("/maps");
+                return;
+            }
+
+            const saved = await addMap({ ...fields, file: pdfFile!, thumbnail: thumbnailFile! });
             setStatus(`Map "${saved.name}" uploaded successfully.`);
             setErrors([]);
             resetForm();
         } catch (uploadError) {
             const serverErrors = getMapErrors(uploadError);
-            setErrors(serverErrors.length > 0 ? serverErrors : ["Failed to upload the map. Please try again."]);
+            setErrors(serverErrors.length > 0 ? serverErrors : [`Failed to ${editId !== null ? "save" : "upload"} the map. Please try again.`]);
         } finally {
             setUploading(false);
         }
     };
 
     if (loadError) return <div className="alert alert-danger" role="alert">{loadError}</div>;
-    if (!options) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
+    if (!options || (editId !== null && !existing)) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
     const { terrainTypes, terrainSizes } = options;
     const allCells = terrainTypes.flatMap(type => terrainSizes.map((size): [number, number] => [type.id, size.id]));
@@ -142,7 +172,7 @@ const UploadMap: React.FC = () => {
         <div className="container-fluid">
             <div className="row">
                 <div className="col-12 col-xl-10">
-                    <h2 className="mb-4">Upload Map</h2>
+                    <h2 className="mb-4">{editId !== null ? "Edit Map" : "Upload Map"}</h2>
                     <form className="row g-3" onSubmit={handleUpload}>
                         <div className="col-12">
                             <label htmlFor="mapName" className="form-label">Map Name <span className="text-danger">*</span></label>
@@ -236,13 +266,19 @@ const UploadMap: React.FC = () => {
                         </div>
 
                         <div className="col-12">
-                            <label htmlFor="mapPdf" className="form-label">Map PDF <span className="text-danger">*</span></label>
+                            <label htmlFor="mapPdf" className="form-label">
+                                Map PDF {editId === null && <span className="text-danger">*</span>}
+                                {existing && <span className="text-muted ms-2">Current file: <a href={existing.filePath} target="_blank" rel="noopener noreferrer">view PDF</a>. Choose a file only to replace it.</span>}
+                            </label>
                             <input ref={fileInputRef} id="mapPdf" type="file" className="form-control" accept="application/pdf"
                                 onChange={e => setPdfFile(e.target.files?.[0] ?? null)} />
                         </div>
 
                         <div className="col-12">
-                            <label htmlFor="mapThumbnail" className="form-label">Thumbnail Image <span className="text-danger">*</span></label>
+                            <label htmlFor="mapThumbnail" className="form-label">
+                                Thumbnail Image {editId === null && <span className="text-danger">*</span>}
+                                {existing && <span className="text-muted ms-2">Choose an image only to replace the current one.</span>}
+                            </label>
                             <input ref={thumbnailInputRef} id="mapThumbnail" type="file" className="form-control" accept="image/png,image/jpeg"
                                 onChange={e => setThumbnailFile(e.target.files?.[0] ?? null)} />
                         </div>
@@ -263,8 +299,9 @@ const UploadMap: React.FC = () => {
                         )}
                         <div className="col-12">
                             <button className="btn btn-primary" type="submit" disabled={uploading}>
-                                {uploading ? "Uploading..." : "Upload Map"}
+                                {editId !== null ? (uploading ? "Saving..." : "Save Changes") : (uploading ? "Uploading..." : "Upload Map")}
                             </button>
+                            {editId !== null && <Link to="/maps" className="btn btn-outline-secondary ms-2">Cancel</Link>}
                         </div>
                     </form>
                 </div>

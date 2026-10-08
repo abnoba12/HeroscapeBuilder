@@ -1,6 +1,9 @@
 namespace HeroscapeBuilder.Server.Domain.Requests
 {
-    /// <summary>Multipart form posted when an administrator uploads a map.</summary>
+    /// <summary>
+    /// Multipart form posted when an administrator uploads or edits a map. On an edit the PDF and thumbnail are
+    /// optional: leaving one out keeps the stored file.
+    /// </summary>
     public class MapUploadRequest
     {
         public string? Name { get; set; }

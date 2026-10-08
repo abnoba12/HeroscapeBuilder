@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HeroscapeBuilder.Server.Controllers
 {
-    /// <summary>Map management. Administrators only; viewing and downloading maps is a separate feature.</summary>
+    /// <summary>Browsing maps is public; uploading, editing and deleting them is for administrators.</summary>
     [Route("api/[controller]/[action]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
@@ -19,11 +19,28 @@ namespace HeroscapeBuilder.Server.Controllers
             _mapService = mapService;
         }
 
-        /// <summary>Creators, terrain types and terrain sizes that the upload form offers.</summary>
+        /// <summary>Creators, terrain types and terrain sizes that the map list filters and the upload form offer.</summary>
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetOptions()
         {
             return Ok(await _mapService.GetOptions());
+        }
+
+        /// <summary>Every map with its tiles. The list is small, so the page filters and sorts it client-side.</summary>
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetMaps()
+        {
+            return Ok(await _mapService.GetMaps());
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetMap(int id)
+        {
+            var map = await _mapService.GetMap(id);
+            return map == null ? NotFound() : Ok(map);
         }
 
         [RequestSizeLimit(100 * 1024 * 1024)] // 100 MB limit
@@ -39,6 +56,29 @@ namespace HeroscapeBuilder.Server.Controllers
             {
                 return BadRequest(new { errors = ex.Errors });
             }
+        }
+
+        /// <summary>Same form as AddMap; the PDF and thumbnail are optional and keep the stored file when left out.</summary>
+        [RequestSizeLimit(100 * 1024 * 1024)] // 100 MB limit
+        [RequestFormLimits(MultipartBodyLengthLimit = 100 * 1024 * 1024)]
+        [HttpPut]
+        public async Task<IActionResult> UpdateMap(int id, [FromForm] MapUploadRequest request)
+        {
+            try
+            {
+                var map = await _mapService.UpdateMap(id, request);
+                return map == null ? NotFound() : Ok(map);
+            }
+            catch (MapException ex)
+            {
+                return BadRequest(new { errors = ex.Errors });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMap(int id)
+        {
+            return await _mapService.DeleteMap(id) ? NoContent() : NotFound();
         }
     }
 }

@@ -35,6 +35,122 @@ namespace HeroscapeBuilder.Server.Services
 
         public async Task<MapEntity> AddMap(MapUploadRequest request)
         {
+            var valid = await Validate(request, filesRequired: true);
+
+            var (filePath, thumbnailPath) = NewPaths(valid.Name);
+            await StoreFiles(valid.FileData!, filePath, valid.ThumbnailData!, thumbnailPath);
+
+            try
+            {
+                var map = await _mapRepository.AddMap(new Map
+                {
+                    Name = valid.Name,
+                    CreatorId = valid.CreatorId,
+                    CustomerName = valid.CustomerName,
+                    PlayerCount = request.PlayerCount,
+                    FilePath = filePath,
+                    ThumbnailPath = thumbnailPath,
+                    Tiles = valid.Tiles.Select(ToTile).ToList()
+                });
+
+                return (await _mapRepository.GetMapEntity(map.Id))!;
+            }
+            catch
+            {
+                // Don't leave orphaned files in storage when the database save fails.
+                await DeleteQuietly(filePath);
+                await DeleteQuietly(thumbnailPath);
+                throw;
+            }
+        }
+
+        public Task<List<MapEntity>> GetMaps() => _mapRepository.GetMaps();
+
+        public Task<MapEntity?> GetMap(int id) => _mapRepository.GetMapEntity(id);
+
+        /// <summary>Returns null when the map doesn't exist. A PDF or thumbnail that isn't supplied is left as it was.</summary>
+        public async Task<MapEntity?> UpdateMap(int id, MapUploadRequest request)
+        {
+            var map = await _mapRepository.GetMapForUpdate(id);
+            if (map == null) return null;
+
+            var valid = await Validate(request, filesRequired: false);
+
+            var oldFilePath = map.FilePath;
+            var oldThumbnailPath = map.ThumbnailPath;
+            var newFilePath = oldFilePath;
+            var newThumbnailPath = oldThumbnailPath;
+            var uploaded = new List<string>();
+
+            try
+            {
+                // New files get new names (the old ones stay in place until the save succeeds), so a failed edit
+                // never leaves the map pointing at a half-replaced file.
+                var paths = NewPaths(valid.Name);
+                if (valid.FileData != null)
+                {
+                    newFilePath = paths.FilePath;
+                    await _blobStorage.UploadAsync(valid.FileData, newFilePath);
+                    uploaded.Add(newFilePath);
+                }
+
+                if (valid.ThumbnailData != null)
+                {
+                    newThumbnailPath = paths.ThumbnailPath;
+                    await _blobStorage.UploadAsync(valid.ThumbnailData, newThumbnailPath);
+                    uploaded.Add(newThumbnailPath);
+                }
+
+                map.Name = valid.Name;
+                map.CreatorId = valid.CreatorId;
+                map.CustomerName = valid.CustomerName;
+                map.PlayerCount = request.PlayerCount;
+                map.FilePath = newFilePath;
+                map.ThumbnailPath = newThumbnailPath;
+
+                await _mapRepository.UpdateMap(map, valid.Tiles.Select(ToTile).ToList());
+            }
+            catch
+            {
+                foreach (var path in uploaded) await DeleteQuietly(path);
+                throw;
+            }
+
+            if (newFilePath != oldFilePath) await DeleteQuietly(oldFilePath);
+            if (newThumbnailPath != oldThumbnailPath) await DeleteQuietly(oldThumbnailPath);
+
+            return await _mapRepository.GetMapEntity(id);
+        }
+
+        /// <summary>Returns false when the map doesn't exist. The row goes first; stored files are removed best-effort afterwards.</summary>
+        public async Task<bool> DeleteMap(int id)
+        {
+            var map = await _mapRepository.GetMapForUpdate(id);
+            if (map == null) return false;
+
+            var filePath = map.FilePath;
+            var thumbnailPath = map.ThumbnailPath;
+
+            await _mapRepository.DeleteMap(map);
+
+            await DeleteQuietly(filePath);
+            await DeleteQuietly(thumbnailPath);
+            return true;
+        }
+
+        private sealed class ValidatedMap
+        {
+            public string Name { get; init; } = null!;
+            public long? CreatorId { get; init; }
+            public string? CustomerName { get; init; }
+            public List<MapTileRequest> Tiles { get; init; } = new();
+            public byte[]? FileData { get; init; }
+            public byte[]? ThumbnailData { get; init; }
+        }
+
+        /// <summary>Checks the form and reads its files, throwing a <see cref="MapException"/> listing every problem found.</summary>
+        private async Task<ValidatedMap> Validate(MapUploadRequest request, bool filesRequired)
+        {
             var errors = new List<string>();
 
             var name = request.Name?.Trim();
@@ -69,7 +185,7 @@ namespace HeroscapeBuilder.Server.Services
             byte[]? fileData = null;
             if (request.File == null || request.File.Length == 0)
             {
-                errors.Add("A map PDF is required.");
+                if (filesRequired) errors.Add("A map PDF is required.");
             }
             else
             {
@@ -82,7 +198,7 @@ namespace HeroscapeBuilder.Server.Services
             byte[]? thumbnailData = null;
             if (request.Thumbnail == null || request.Thumbnail.Length == 0)
             {
-                errors.Add("A thumbnail image is required.");
+                if (filesRequired) errors.Add("A thumbnail image is required.");
             }
             else
             {
@@ -108,51 +224,45 @@ namespace HeroscapeBuilder.Server.Services
 
             if (errors.Count > 0) throw new MapException(errors.ToArray());
 
-            // The random suffix keeps two maps with the same name from overwriting each other's PDF.
+            return new ValidatedMap
+            {
+                Name = name!,
+                CreatorId = creatorId,
+                CustomerName = customerName,
+                Tiles = tiles,
+                FileData = fileData,
+                ThumbnailData = thumbnailData
+            };
+        }
+
+        /// <summary>The random suffix keeps two maps with the same name from overwriting each other's PDF.</summary>
+        private static (string FilePath, string ThumbnailPath) NewPaths(string name)
+        {
             var slug = SlugHelper.Slugify(name);
             var baseName = $"{(slug.Length > 0 ? slug : "map")}-{Guid.NewGuid().ToString("N")[..8]}";
-            var filePath = $"/{MapsBucket}/{baseName}.pdf";
-            var thumbnailPath = $"/{MapsBucket}/thumbs/{baseName}.webp";
+            return ($"/{MapsBucket}/{baseName}.pdf", $"/{MapsBucket}/thumbs/{baseName}.webp");
+        }
 
-            await _blobStorage.UploadAsync(fileData!, filePath);
+        private async Task StoreFiles(byte[] fileData, string filePath, byte[] thumbnailData, string thumbnailPath)
+        {
+            await _blobStorage.UploadAsync(fileData, filePath);
             try
             {
-                await _blobStorage.UploadAsync(thumbnailData!, thumbnailPath);
+                await _blobStorage.UploadAsync(thumbnailData, thumbnailPath);
             }
             catch
             {
                 await DeleteQuietly(filePath);
-                throw;
-            }
-
-            try
-            {
-                var map = await _mapRepository.AddMap(new Map
-                {
-                    Name = name!,
-                    CreatorId = creatorId,
-                    CustomerName = customerName,
-                    PlayerCount = request.PlayerCount,
-                    FilePath = filePath,
-                    ThumbnailPath = thumbnailPath,
-                    Tiles = tiles.Select(t => new MapTile
-                    {
-                        TerrainTypeId = t.TerrainTypeId,
-                        TerrainSizeId = t.TerrainSizeId,
-                        Quantity = t.Quantity
-                    }).ToList()
-                });
-
-                return new MapEntity { Id = map.Id, Name = map.Name, PlayerCount = map.PlayerCount, FilePath = map.FilePath, ThumbnailPath = map.ThumbnailPath };
-            }
-            catch
-            {
-                // Don't leave orphaned files in storage when the database save fails.
-                await DeleteQuietly(filePath);
-                await DeleteQuietly(thumbnailPath);
                 throw;
             }
         }
+
+        private static MapTile ToTile(MapTileRequest t) => new()
+        {
+            TerrainTypeId = t.TerrainTypeId,
+            TerrainSizeId = t.TerrainSizeId,
+            Quantity = t.Quantity
+        };
 
         private async Task DeleteQuietly(string path)
         {

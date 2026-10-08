@@ -72,5 +72,72 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             await _context.SaveChangesAsync();
             return map;
         }
+
+        /// <summary>Every map with its creator and tiles, newest first. Not cached so an edit or delete shows up immediately.</summary>
+        public Task<List<MapEntity>> GetMaps() => ProjectMaps(_context.Maps.NotCacheable().AsNoTracking())
+            .OrderByDescending(m => m.CreatedAt)
+            .ThenBy(m => m.Name)
+            .ToListAsync();
+
+        public Task<MapEntity?> GetMapEntity(int id) => ProjectMaps(_context.Maps.NotCacheable().AsNoTracking().Where(m => m.Id == id))
+            .FirstOrDefaultAsync();
+
+        private static IQueryable<MapEntity> ProjectMaps(IQueryable<Map> maps) => maps.Select(m => new MapEntity
+        {
+            Id = m.Id,
+            Name = m.Name,
+            CreatorId = m.CreatorId,
+            CreatorName = m.Creator != null ? m.Creator.Name : null,
+            CreatorAbbreviation = m.Creator != null ? m.Creator.Abbreviation : null,
+            CustomerName = m.CustomerName,
+            PlayerCount = m.PlayerCount,
+            RawFilePath = m.FilePath,
+            RawThumbnailPath = m.ThumbnailPath,
+            CreatedAt = m.CreatedAt,
+            Tiles = m.Tiles.Select(t => new MapTileEntity
+            {
+                TerrainTypeId = t.TerrainTypeId,
+                TerrainSizeId = t.TerrainSizeId,
+                Spaces = t.TerrainSize.Spaces,
+                Quantity = t.Quantity
+            }).ToList()
+        });
+
+        /// <summary>The tracked map with its tiles, for editing or deleting.</summary>
+        public Task<Map?> GetMapForUpdate(int id) =>
+            _context.Maps.NotCacheable().Include(m => m.Tiles).FirstOrDefaultAsync(m => m.Id == id);
+
+        /// <summary>
+        /// Applies the edit and makes the stored tiles match <paramref name="tiles"/>. Existing rows are updated in
+        /// place (rather than deleted and re-added) so a repeated type/size never trips the unique index.
+        /// </summary>
+        public async Task UpdateMap(Map map, IReadOnlyCollection<MapTile> tiles)
+        {
+            var wanted = tiles.ToDictionary(t => (t.TerrainTypeId, t.TerrainSizeId));
+
+            foreach (var existing in map.Tiles.ToList())
+            {
+                if (wanted.TryGetValue((existing.TerrainTypeId, existing.TerrainSizeId), out var tile))
+                {
+                    existing.Quantity = tile.Quantity;
+                    wanted.Remove((existing.TerrainTypeId, existing.TerrainSizeId));
+                }
+                else
+                {
+                    _context.MapTiles.Remove(existing);
+                }
+            }
+
+            foreach (var tile in wanted.Values) map.Tiles.Add(tile);
+
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>Deletes the map; its tiles go with it through the foreign key's cascade.</summary>
+        public async Task DeleteMap(Map map)
+        {
+            _context.Maps.Remove(map);
+            await _context.SaveChangesAsync();
+        }
     }
 }

@@ -20,6 +20,8 @@ import MakeCard3x5 from "./army-cards/threebyfive/make-card-3x5";
 import GamePlayCalc from "./game-play/game-play-calc/game-play-calc";
 import UnitData from "./data/unit-data/unit-data";
 import UploadMap from "./maps/upload-map";
+import MapList from "./maps/map-list";
+import MapPage from "./maps/map-page";
 import PrivateRoute from "../components/Auth/PrivateRoute";
 import AdminRoute from "../components/Auth/AdminRoute";
 import Login from "../pages/user/Login";
@@ -135,6 +137,11 @@ const App: React.FC = () => {
                                     </PageMeta>
                                 </AdminRoute>
                             } />
+                            <Route path="/maps" element={
+                                <PageMeta title="Heroscape Maps" heading="Heroscape Maps" description="Browse custom Heroscape maps by creator, number of players and terrain, and download printable build guides.">
+                                    <MapList />
+                                </PageMeta>
+                            } />
                             <Route path="/maps/upload" element={
                                 <AdminRoute>
                                     <PageMeta title="Upload Map" description="Admin tool for uploading map PDFs." noindex>
@@ -142,6 +149,14 @@ const App: React.FC = () => {
                                     </PageMeta>
                                 </AdminRoute>
                             } />
+                            <Route path="/maps/:id/edit" element={
+                                <AdminRoute>
+                                    <PageMeta title="Edit Map" description="Admin tool for editing a map." noindex>
+                                        <UploadMap />
+                                    </PageMeta>
+                                </AdminRoute>
+                            } />
+                            <Route path="/maps/:idSlug" element={<MapPage />} />
                             <Route path="/species" element={<GroupIndexPage kind="species" />} />
                             <Route path="/species/:slug" element={<GroupPage kind="species" />} />
                             <Route path="/generals" element={<GroupIndexPage kind="generals" />} />
