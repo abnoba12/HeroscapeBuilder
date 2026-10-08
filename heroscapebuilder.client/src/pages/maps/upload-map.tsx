@@ -33,6 +33,10 @@ const UploadMap: React.FC = () => {
     const [customerName, setCustomerName] = useState<string>("");
     const [playerCount, setPlayerCount] = useState<string>("");
     const [quantities, setQuantities] = useState<Record<string, string>>({});
+    /** Terrain types that have a row in the grid, in the order they were added. */
+    const [addedTypeIds, setAddedTypeIds] = useState<number[]>([]);
+    const gridRef = useRef<HTMLDivElement | null>(null);
+    const typeToFocus = useRef<number | null>(null);
     const [pdfFile, setPdfFile] = useState<File | null>(null);
     const [errors, setErrors] = useState<string[]>([]);
     const [status, setStatus] = useState<string>("");
@@ -61,9 +65,35 @@ const UploadMap: React.FC = () => {
                 setCustomerName(map.customerName ?? "");
                 setPlayerCount(String(map.playerCount));
                 setQuantities(Object.fromEntries(map.tiles.map(t => [cellKey(t.terrainTypeId, t.terrainSizeId), String(t.quantity)])));
+                setAddedTypeIds(Array.from(new Set(map.tiles.map(t => t.terrainTypeId))));
             })
             .catch(() => setLoadError("Unable to load the map."));
     }, [editId]);
+
+    // After a type is added, put the cursor in its first quantity cell so the numbers can be typed straight away.
+    useEffect(() => {
+        const typeId = typeToFocus.current;
+        if (typeId === null) return;
+        typeToFocus.current = null;
+        gridRef.current?.querySelector<HTMLInputElement>(`input[data-type-id="${typeId}"]`)?.focus();
+    }, [addedTypeIds]);
+
+    const addType = (terrainTypeId: number) => {
+        typeToFocus.current = terrainTypeId;
+        setAddedTypeIds(current => (current.includes(terrainTypeId) ? current : [...current, terrainTypeId]));
+    };
+
+    /** Removing a type's row also clears its quantities, so nothing hidden is submitted. */
+    const removeType = (terrainTypeId: number) => {
+        setAddedTypeIds(current => current.filter(id => id !== terrainTypeId));
+        setQuantities(current => {
+            const next = { ...current };
+            for (const key of Object.keys(next)) {
+                if (key.startsWith(`${terrainTypeId}-`)) delete next[key];
+            }
+            return next;
+        });
+    };
 
     const setQuantity = (terrainTypeId: number, terrainSizeId: number, value: string) => {
         setQuantities(current => ({ ...current, [cellKey(terrainTypeId, terrainSizeId)]: value }));
@@ -85,6 +115,7 @@ const UploadMap: React.FC = () => {
         setCustomerName("");
         setPlayerCount("");
         setQuantities({});
+        setAddedTypeIds([]);
         setPdfFile(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -99,7 +130,7 @@ const UploadMap: React.FC = () => {
     const buildTiles = (current: MapOptions): MapTileInput[] => {
         const tiles: MapTileInput[] = [];
         for (const size of current.terrainSizes) {
-            for (const type of current.terrainTypes) {
+            for (const type of current.terrainTypes.filter(t => addedTypeIds.includes(t.id))) {
                 const quantity = quantityOf(type.id, size.id);
                 if (quantity > 0) {
                     tiles.push({ terrainTypeId: type.id, terrainSizeId: size.id, quantity });
@@ -117,9 +148,9 @@ const UploadMap: React.FC = () => {
         const players = Number(playerCount);
         if (!Number.isInteger(players) || players < 1) problems.push("Number of players must be a whole number of at least 1.");
         const hasInvalidQuantity = current.terrainTypes.some(type =>
-            current.terrainSizes.some(size => Number.isNaN(quantityOf(type.id, size.id))));
+            addedTypeIds.includes(type.id) && current.terrainSizes.some(size => Number.isNaN(quantityOf(type.id, size.id))));
         if (hasInvalidQuantity) problems.push("Tile quantities must be whole numbers of 0 or more.");
-        else if (buildTiles(current).length === 0) problems.push("Enter a quantity for at least one tile.");
+        else if (buildTiles(current).length === 0) problems.push("Add a terrain type and enter a quantity for at least one tile.");
         if (editId === null && !pdfFile) problems.push("Select a PDF to upload.");
         if (editId === null && !thumbnailFile) problems.push("Select a thumbnail image to upload.");
         return problems;
@@ -166,7 +197,11 @@ const UploadMap: React.FC = () => {
     if (!options || (editId !== null && !existing)) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
     const { terrainTypes, terrainSizes } = options;
-    const allCells = terrainTypes.flatMap(type => terrainSizes.map((size): [number, number] => [type.id, size.id]));
+    const addedTypes = addedTypeIds
+        .map(typeId => terrainTypes.find(type => type.id === typeId))
+        .filter((type): type is TerrainTypeOption => type !== undefined);
+    const availableTypes = terrainTypes.filter(type => !addedTypeIds.includes(type.id));
+    const allCells = addedTypes.flatMap(type => terrainSizes.map((size): [number, number] => [type.id, size.id]));
 
     return (
         <div className="container-fluid">
@@ -208,10 +243,21 @@ const UploadMap: React.FC = () => {
                         <div className="col-12">
                             <label className="form-label">
                                 Tiles Needed <span className="text-danger">*</span>
-                                <span className="text-muted ms-2">Type a quantity in each cell the map uses; leave the rest blank.</span>
+                                <span className="text-muted ms-2">Add each terrain type the map uses, then type a quantity in the sizes you need.</span>
                             </label>
-                            <div className="table-responsive">
-                                <table className="table table-sm table-bordered align-middle text-center mb-0">
+                            <select className="form-select mb-2" style={{ maxWidth: "20rem" }} aria-label="Add a terrain type"
+                                value="" disabled={availableTypes.length === 0}
+                                onChange={e => { if (e.target.value) addType(Number(e.target.value)); }}>
+                                <option value="">{availableTypes.length === 0 ? "All terrain types added" : "+ Add a terrain type"}</option>
+                                {availableTypes.map(type => (
+                                    <option key={type.id} value={type.id}>{type.name}</option>
+                                ))}
+                            </select>
+                            {addedTypes.length === 0 && (
+                                <div className="text-muted fst-italic">No terrain types added yet.</div>
+                            )}
+                            <div className="table-responsive" ref={gridRef} hidden={addedTypes.length === 0}>
+                                <table className="table table-sm table-striped table-bordered align-middle text-center mb-0">
                                     <thead>
                                         <tr>
                                             <th scope="col" className="text-start">Terrain</th>
@@ -219,16 +265,17 @@ const UploadMap: React.FC = () => {
                                                 <th scope="col" key={size.id}>{size.name}</th>
                                             ))}
                                             <th scope="col">Total</th>
+                                            <th scope="col"><span className="visually-hidden">Remove</span></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {terrainTypes.map(type => (
+                                        {addedTypes.map(type => (
                                             <tr key={type.id}>
                                                 <th scope="row" className="text-start fw-normal">{type.name}</th>
                                                 {terrainSizes.map(size => {
                                                     if (!isSizeAllowed(type, size.id)) {
                                                         return (
-                                                            <td key={size.id} className="bg-light text-muted" title={`${type.name} doesn't come in ${size.name}`}>
+                                                            <td key={size.id} className="text-muted" title={`${type.name} doesn't come in ${size.name}`}>
                                                                 &mdash;
                                                             </td>
                                                         );
@@ -237,7 +284,7 @@ const UploadMap: React.FC = () => {
                                                     const invalid = Number.isNaN(quantityOf(type.id, size.id));
                                                     return (
                                                         <td key={size.id} className="p-1">
-                                                            <input type="number" min={0} step={1}
+                                                            <input type="number" min={0} step={1} data-type-id={type.id}
                                                                 className={`form-control form-control-sm text-center ${invalid ? "is-invalid" : ""}`}
                                                                 style={{ minWidth: "4rem" }}
                                                                 aria-label={`${type.name}, ${size.name}`}
@@ -247,6 +294,11 @@ const UploadMap: React.FC = () => {
                                                     );
                                                 })}
                                                 <td className="fw-bold">{sumOf(terrainSizes.map((size): [number, number] => [type.id, size.id]))}</td>
+                                                <td className="p-1">
+                                                    <button type="button" className="btn btn-sm btn-outline-danger"
+                                                        aria-label={`Remove ${type.name}`} title={`Remove ${type.name}`}
+                                                        onClick={() => removeType(type.id)}>&times;</button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -255,10 +307,11 @@ const UploadMap: React.FC = () => {
                                             <th scope="row" className="text-start">Total</th>
                                             {terrainSizes.map(size => (
                                                 <td key={size.id} className="fw-bold">
-                                                    {sumOf(terrainTypes.map((type): [number, number] => [type.id, size.id]))}
+                                                    {sumOf(addedTypes.map((type): [number, number] => [type.id, size.id]))}
                                                 </td>
                                             ))}
                                             <td className="fw-bold">{sumOf(allCells)}</td>
+                                            <td></td>
                                         </tr>
                                     </tfoot>
                                 </table>

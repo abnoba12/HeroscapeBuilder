@@ -95,13 +95,22 @@ BEGIN
 END;
 GO
 
+-- Tree was renamed to Evergreen Tree 10. Rename in place so an existing database keeps the same id (and any map_tile rows stay linked).
+UPDATE dbo.terrain_type
+SET name = N'Evergreen Tree 10'
+WHERE name = N'Tree'
+  AND NOT EXISTS (SELECT 1 FROM dbo.terrain_type e WHERE e.name = N'Evergreen Tree 10');
+GO
+
 -- Seed data. Re-running only adds what is missing.
 INSERT INTO dbo.terrain_type (name)
 SELECT v.name
 FROM (VALUES
     (N'Grass'), (N'Sand'), (N'Rock'), (N'Swamp'), (N'Dungeon'), (N'Concrete'), (N'Asphalt'),
     (N'Lava Field'), (N'Snow'), (N'Swamp Water'), (N'Water'), (N'Wellspring Water'), (N'Molten Lava'),
-    (N'Ice'), (N'Shadow'), (N'Wall'), (N'Road'), (N'Fortress Wall'), (N'Fortress Base'), (N'Tree')
+    (N'Ice'), (N'Shadow'), (N'Wall'), (N'Road'), (N'Fortress Wall'), (N'Fortress Base'),
+    (N'Evergreen Tree 10'), (N'Evergreen Tree 11'), (N'Evergreen Tree 12'), (N'Evergreen Tree 15'),
+    (N'Fortress Column')
 ) AS v (name)
 WHERE NOT EXISTS (SELECT 1 FROM dbo.terrain_type t WHERE t.name = v.name);
 GO
@@ -137,8 +146,8 @@ GO
 --   Snow: single and double space.
 -- Other types:
 --   Road: single, double and 5 space (5 space exists only for road).
---   Tree: single and quad. Shadow: single and triple. Ice: single, triple and quad.
---   Swamp water, wellspring water, water, molten lava, fortress wall and fortress base: single only.
+--   Evergreen Tree 10, 11, 12 and 15: single and quad. Shadow: single and triple. Ice: single, triple and quad.
+--   Swamp water, wellspring water, water, molten lava, fortress wall, fortress base and fortress column: single only.
 -- Wall is listed explicitly with every size except 5 space (a type with no rows would otherwise be allowed in 5 space too).
 INSERT INTO dbo.terrain_type_size (terrain_type_id, terrain_size_id)
 SELECT t.id, s.id
@@ -149,10 +158,10 @@ JOIN dbo.terrain_size s
   OR (t.name = N'Sand' AND s.name IN (N'Single space', N'Double space', N'Triple space', N'7 space'))
   OR (t.name IN (N'Concrete', N'Asphalt', N'Lava Field') AND s.name IN (N'Single space', N'Double space', N'7 space'))
   OR (t.name = N'Snow' AND s.name IN (N'Single space', N'Double space'))
-  OR (t.name = N'Tree' AND s.name IN (N'Single space', N'Quad space'))
+  OR (t.name IN (N'Evergreen Tree 10', N'Evergreen Tree 11', N'Evergreen Tree 12', N'Evergreen Tree 15') AND s.name IN (N'Single space', N'Quad space'))
   OR (t.name = N'Shadow' AND s.name IN (N'Single space', N'Triple space'))
   OR (t.name = N'Ice' AND s.name IN (N'Single space', N'Triple space', N'Quad space'))
-  OR (t.name IN (N'Swamp Water', N'Wellspring Water', N'Water', N'Molten Lava', N'Fortress Wall', N'Fortress Base') AND s.name = N'Single space')
+  OR (t.name IN (N'Swamp Water', N'Wellspring Water', N'Water', N'Molten Lava', N'Fortress Wall', N'Fortress Base', N'Fortress Column') AND s.name = N'Single space')
   OR (t.name = N'Wall' AND s.name <> N'5 space')
   OR (t.name = N'Road' AND s.name IN (N'Single space', N'Double space', N'5 space'))
 WHERE NOT EXISTS (SELECT 1 FROM dbo.terrain_type_size x WHERE x.terrain_type_id = t.id AND x.terrain_size_id = s.id);
