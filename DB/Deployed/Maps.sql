@@ -41,12 +41,15 @@ GO
 IF OBJECT_ID(N'dbo.map', N'U') IS NULL
 BEGIN
     -- creator.id is BIGINT in prod but INT in some databases; a foreign key needs the exact same type.
-    DECLARE @creatorIdType NVARCHAR(20) = (
+    -- Falls back to BIGINT (prod) if the lookup finds nothing; a NULL here would make the CREATE TABLE silently do nothing.
+    DECLARE @creatorIdType NVARCHAR(20) = ISNULL((
         SELECT UPPER(t.name)
         FROM sys.columns c
         JOIN sys.types t ON t.user_type_id = c.user_type_id
-        WHERE c.object_id = OBJECT_ID(N'dbo.creator') AND c.name = N'id');
+        WHERE c.object_id = OBJECT_ID(N'dbo.creator') AND c.name = N'id'), N'BIGINT');
 
+    -- There is deliberately no foreign key to dbo.creator: prod's creator primary key is (id, abbreviation), so id alone
+    -- can't be referenced. Every database gets the same (FK-less) shape; creator_id is indexed and the app validates it.
     DECLARE @sql NVARCHAR(MAX) = N'
     CREATE TABLE dbo.map
     (
@@ -63,7 +66,6 @@ BEGIN
         created_at     DATETIME2         NOT NULL CONSTRAINT DF_map_created_at DEFAULT (SYSUTCDATETIME()),
 
         CONSTRAINT PK_map PRIMARY KEY (id),
-        CONSTRAINT FK_map_creator FOREIGN KEY (creator_id) REFERENCES dbo.creator (id),
         CONSTRAINT CK_map_player_count CHECK (player_count > 0),
         CONSTRAINT CK_map_creator_or_customer CHECK (
             (creator_id IS NOT NULL AND customer_name IS NULL)
@@ -73,6 +75,15 @@ BEGIN
 
     EXEC sys.sp_executesql @sql;
 END;
+GO
+
+IF OBJECT_ID(N'dbo.map', N'U') IS NULL
+    THROW 50000, N'dbo.map was not created - check the errors above.', 1;
+GO
+
+-- Databases where an earlier version of this script created the creator FK (e.g. dev) drop it so they match prod.
+IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_map_creator' AND parent_object_id = OBJECT_ID(N'dbo.map'))
+    ALTER TABLE dbo.map DROP CONSTRAINT FK_map_creator;
 GO
 
 IF OBJECT_ID(N'dbo.map_tile', N'U') IS NULL
