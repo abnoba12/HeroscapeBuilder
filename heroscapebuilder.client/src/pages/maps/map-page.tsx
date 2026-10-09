@@ -117,6 +117,13 @@ const MapPageContent: React.FC<{ map: MapSummary; maps: MapSummary[]; options: M
                 </div>
             </div>
 
+            {map.scenario && (
+                <>
+                    <SectionTitle>Scenario</SectionTitle>
+                    <p style={{ whiteSpace: 'pre-line' }}>{map.scenario}</p>
+                </>
+            )}
+
             {missing && (
                 <>
                     <SectionTitle>Your Terrain</SectionTitle>

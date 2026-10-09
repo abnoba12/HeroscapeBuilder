@@ -91,6 +91,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             CreatorAbbreviation = m.Creator != null ? m.Creator.Abbreviation : null,
             CustomerName = m.CustomerName,
             PlayerCount = m.PlayerCount,
+            Scenario = m.Scenario,
             RawFilePath = m.FilePath,
             RawThumbnailPath = m.ThumbnailPath,
             CreatedAt = m.CreatedAt,

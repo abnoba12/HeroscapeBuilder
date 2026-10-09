@@ -47,6 +47,8 @@ export interface MapUploadInput {
     /** Only used when creatorId is null. */
     customerName: string;
     playerCount: number;
+    /** Free text; empty when the map isn't made for a scenario. */
+    scenario: string;
     tiles: MapTileInput[];
     file: File;
     thumbnail: File;
@@ -70,6 +72,8 @@ export interface MapSummary {
     creatorAbbreviation: string | null;
     customerName: string | null;
     playerCount: number;
+    /** Free-text scenario the map was made for, if any. */
+    scenario: string | null;
     filePath: string;
     thumbnailPath: string;
     createdAt: string;

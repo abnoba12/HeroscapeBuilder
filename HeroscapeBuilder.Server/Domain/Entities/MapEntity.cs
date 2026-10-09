@@ -61,6 +61,9 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public int PlayerCount { get; set; }
 
+        /// <summary>Free-text scenario the map was made for, if any.</summary>
+        public string? Scenario { get; set; }
+
         public string RawFilePath { get; set; } = null!;
         public string FilePath
         {

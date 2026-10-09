@@ -230,6 +230,7 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.CreatorId).HasColumnName("creator_id");
             entity.Property(e => e.CustomerName).HasColumnName("customer_name").HasMaxLength(200);
             entity.Property(e => e.PlayerCount).HasColumnName("player_count");
+            entity.Property(e => e.Scenario).HasColumnName("scenario").HasMaxLength(2000);
             entity.Property(e => e.FilePath).HasColumnName("file_path").HasMaxLength(500);
             entity.Property(e => e.ThumbnailPath).HasColumnName("thumbnail_path").HasMaxLength(500);
             entity.Property(e => e.CreatedAt)

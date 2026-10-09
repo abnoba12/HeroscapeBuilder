@@ -15,6 +15,7 @@ namespace HeroscapeBuilder.Server.Services
         private const string MapsBucket = "map";
         private const int MaxNameLength = 200;
         private const int MaxPlayers = 99;
+        private const int MaxScenarioLength = 2000;
         private const int ThumbnailMaxWidth = 600;
         private const int ThumbnailMaxHeight = 600;
 
@@ -48,6 +49,7 @@ namespace HeroscapeBuilder.Server.Services
                     CreatorId = valid.CreatorId,
                     CustomerName = valid.CustomerName,
                     PlayerCount = request.PlayerCount,
+                    Scenario = valid.Scenario,
                     FilePath = filePath,
                     ThumbnailPath = thumbnailPath,
                     Tiles = valid.Tiles.Select(ToTile).ToList()
@@ -105,6 +107,7 @@ namespace HeroscapeBuilder.Server.Services
                 map.CreatorId = valid.CreatorId;
                 map.CustomerName = valid.CustomerName;
                 map.PlayerCount = request.PlayerCount;
+                map.Scenario = valid.Scenario;
                 map.FilePath = newFilePath;
                 map.ThumbnailPath = newThumbnailPath;
 
@@ -143,6 +146,7 @@ namespace HeroscapeBuilder.Server.Services
             public string Name { get; init; } = null!;
             public long? CreatorId { get; init; }
             public string? CustomerName { get; init; }
+            public string? Scenario { get; init; }
             public List<MapTileRequest> Tiles { get; init; } = new();
             public byte[]? FileData { get; init; }
             public byte[]? ThumbnailData { get; init; }
@@ -177,6 +181,10 @@ namespace HeroscapeBuilder.Server.Services
 
             if (request.PlayerCount < 1 || request.PlayerCount > MaxPlayers)
                 errors.Add($"Number of players must be between 1 and {MaxPlayers}.");
+
+            var scenario = request.Scenario?.Trim();
+            if (string.IsNullOrEmpty(scenario)) scenario = null;
+            else if (scenario.Length > MaxScenarioLength) errors.Add($"Scenario must be {MaxScenarioLength} characters or fewer.");
 
             var tiles = ParseTiles(request.Tiles, errors);
             if (tiles.Count == 0 && errors.Count == 0) errors.Add("Add at least one tile.");
@@ -229,6 +237,7 @@ namespace HeroscapeBuilder.Server.Services
                 Name = name!,
                 CreatorId = creatorId,
                 CustomerName = customerName,
+                Scenario = scenario,
                 Tiles = tiles,
                 FileData = fileData,
                 ThumbnailData = thumbnailData

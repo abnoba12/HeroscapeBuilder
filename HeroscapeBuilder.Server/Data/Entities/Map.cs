@@ -14,6 +14,9 @@ public partial class Map
 
     public int PlayerCount { get; set; }
 
+    /// <summary>Free-text scenario the map was made for. Null when the map isn't tied to one.</summary>
+    public string? Scenario { get; set; }
+
     /// <summary>Location of the PDF in file storage, including the bucket (e.g. /map/my-map-1a2b3c4d.pdf).</summary>
     public string FilePath { get; set; } = null!;
 

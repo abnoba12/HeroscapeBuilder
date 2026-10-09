@@ -17,6 +17,7 @@ function buildMapForm(input: MapUpdateInput): FormData {
         formData.append('customerName', input.customerName);
     }
     formData.append('playerCount', String(input.playerCount));
+    formData.append('scenario', input.scenario);
     formData.append('tiles', JSON.stringify(input.tiles));
     if (input.file) formData.append('file', input.file);
     if (input.thumbnail) formData.append('thumbnail', input.thumbnail);

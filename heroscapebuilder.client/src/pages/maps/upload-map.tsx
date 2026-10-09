@@ -32,6 +32,7 @@ const UploadMap: React.FC = () => {
     const [creator, setCreator] = useState<string>("");
     const [customerName, setCustomerName] = useState<string>("");
     const [playerCount, setPlayerCount] = useState<string>("");
+    const [scenario, setScenario] = useState<string>("");
     const [quantities, setQuantities] = useState<Record<string, string>>({});
     /** Terrain types that have a row in the grid, in the order they were added. */
     const [addedTypeIds, setAddedTypeIds] = useState<number[]>([]);
@@ -64,6 +65,7 @@ const UploadMap: React.FC = () => {
                 setCreator(map.creatorId !== null ? String(map.creatorId) : CUSTOMER);
                 setCustomerName(map.customerName ?? "");
                 setPlayerCount(String(map.playerCount));
+                setScenario(map.scenario ?? "");
                 setQuantities(Object.fromEntries(map.tiles.map(t => [cellKey(t.terrainTypeId, t.terrainSizeId), String(t.quantity)])));
                 setAddedTypeIds(Array.from(new Set(map.tiles.map(t => t.terrainTypeId))));
             })
@@ -114,6 +116,7 @@ const UploadMap: React.FC = () => {
         setCreator("");
         setCustomerName("");
         setPlayerCount("");
+        setScenario("");
         setQuantities({});
         setAddedTypeIds([]);
         setPdfFile(null);
@@ -170,6 +173,7 @@ const UploadMap: React.FC = () => {
             creatorId: creator === CUSTOMER ? null : Number(creator),
             customerName: customerName.trim(),
             playerCount: Number(playerCount),
+            scenario: scenario.trim(),
             tiles: buildTiles(options),
         };
 
@@ -238,6 +242,15 @@ const UploadMap: React.FC = () => {
                             <label htmlFor="playerCount" className="form-label">Number of Players <span className="text-danger">*</span></label>
                             <input id="playerCount" type="number" min={1} step={1} className="form-control"
                                 value={playerCount} onChange={e => setPlayerCount(e.target.value)} />
+                        </div>
+
+                        <div className="col-12">
+                            <label htmlFor="mapScenario" className="form-label">
+                                Scenario
+                                <span className="text-muted ms-2">Optional. Fill in if the map was made for a specific scenario.</span>
+                            </label>
+                            <textarea id="mapScenario" className="form-control" rows={4} maxLength={2000}
+                                value={scenario} onChange={e => setScenario(e.target.value)} />
                         </div>
 
                         <div className="col-12">

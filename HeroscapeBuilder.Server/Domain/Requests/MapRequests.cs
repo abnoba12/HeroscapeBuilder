@@ -16,6 +16,9 @@ namespace HeroscapeBuilder.Server.Domain.Requests
 
         public int PlayerCount { get; set; }
 
+        /// <summary>Free-text scenario the map was made for. Optional.</summary>
+        public string? Scenario { get; set; }
+
         /// <summary>JSON array of <see cref="MapTileRequest"/>.</summary>
         public string? Tiles { get; set; }
 
