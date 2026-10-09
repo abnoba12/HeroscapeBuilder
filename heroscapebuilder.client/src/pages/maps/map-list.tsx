@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "../../components/CardGallery/card-gallery.scss";
 import { getCreatorInfo } from "../../models/creator";
-import { getMapAuthor, MapOptions, MapSummary, mapPath } from "../../models/map";
+import { canBuildMap, describeMissingTile, getMapAuthor, getMissingTiles, MapOptions, MapSummary, mapPath } from "../../models/map";
 import { hasRole } from "../../services/authService";
 import ImageCache from "../../services/image-cache-service";
 import { deleteMap, getMapOptions, getMaps } from "../../services/map-service";
+import { useMyTerrain } from "../../services/use-my-terrain";
 import { useUrlParam } from "../../services/url-state";
 import "./map-list.scss";
 
@@ -42,6 +43,8 @@ const MapList: React.FC = () => {
     const [creator, setCreator] = useUrlParam("creator");
     const [players, setPlayers] = useUrlParam("players");
     const [terrain, setTerrain] = useUrlParam("terrain");
+    const [buildable, setBuildable] = useUrlParam("buildable");
+    const { signedIn, owned, allowSwap } = useMyTerrain();
     const [sortParam, setSort] = useUrlParam("sort", "newest");
     const sort: SortKey = sortParam in SORTS ? (sortParam as SortKey) : "newest";
     const isAdmin = hasRole("Admin");
@@ -55,6 +58,9 @@ const MapList: React.FC = () => {
             .catch(() => setError("Unable to load maps."))
             .finally(() => setLoading(false));
     }, []);
+
+    // Signed-in users can filter to maps their saved terrain covers.
+    const canBuild = (m: MapSummary) => !!owned && !!options && canBuildMap(m, owned, options, allowSwap);
 
     // Only offer creators, player counts and terrain that at least one map has, so no choice leads to an empty page.
     const creatorChoices = useMemo(() => {
@@ -77,15 +83,18 @@ const MapList: React.FC = () => {
             .filter(m => !creator || (creator === CUSTOM ? m.creatorId === null : String(m.creatorId) === creator))
             .filter(m => !players || String(m.playerCount) === players)
             .filter(m => !terrain || m.tiles.some(t => String(t.terrainTypeId) === terrain))
+            .filter(m => !buildable || canBuild(m))
             .sort(SORTERS[sort]);
-    }, [maps, search, creator, players, terrain, sort]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [maps, search, creator, players, terrain, buildable, owned, options, allowSwap, sort]);
 
-    const hasFilters = !!(search || creator || players || terrain);
+    const hasFilters = !!(search || creator || players || terrain || buildable);
     const clearFilters = () => {
         setSearch("");
         setCreator("");
         setPlayers("");
         setTerrain("");
+        setBuildable("");
     };
 
     const handleDelete = async (map: MapSummary) => {
@@ -131,6 +140,15 @@ const MapList: React.FC = () => {
                         {terrainChoices.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                     </select>
                 </div>
+                {signedIn && (
+                    <div className="col-6 col-md-6 col-xl-2">
+                        <label htmlFor="mapBuildableFilter" className="form-label">My Terrain</label>
+                        <select id="mapBuildableFilter" className="form-select" value={buildable} onChange={e => setBuildable(e.target.value)}>
+                            <option value="">All maps</option>
+                            <option value="1">{allowSwap ? "Maps I can build (tile swap on)" : "Maps I can build"}</option>
+                        </select>
+                    </div>
+                )}
                 <div className="col-6 col-md-6 col-xl-2">
                     <label htmlFor="mapSort" className="form-label">Sort By</label>
                     <select id="mapSort" className="form-select" value={sort} onChange={e => setSort(e.target.value)}>
@@ -145,7 +163,12 @@ const MapList: React.FC = () => {
                 {isAdmin && <Link to="/maps/upload" className="btn btn-primary btn-sm ms-2">Upload Map</Link>}
             </div>
 
-            {filtered.length === 0 && <p className="text-center">No maps match these filters.</p>}
+            {filtered.length === 0 && (
+                <p className="text-center">
+                    No maps match these filters.
+                    {buildable && owned && owned.size === 0 && <> You haven&apos;t saved any terrain yet &ndash; add it on <Link to="/my-heroscape/my-terrain">My Terrain</Link>.</>}
+                </p>
+            )}
 
             <div className="row pdf-gallery">
                 {filtered.map(map => {
@@ -165,6 +188,16 @@ const MapList: React.FC = () => {
                             <div className="map-stats" title={terrainList}>
                                 {plural(map.playerCount, "player")} &middot; {plural(map.tileCount, "tile")} &middot; {plural(map.spaceCount, "space")}
                             </div>
+                            {options && owned && (() => {
+                                const missing = getMissingTiles(map, owned, options, allowSwap);
+                                if (missing.length === 0) return <div className="map-buildable">You have the terrain to build this map</div>;
+                                return (
+                                    <details className="map-missing">
+                                        <summary>Missing {plural(missing.reduce((sum, t) => sum + t.missing, 0), "tile")}</summary>
+                                        <ul>{missing.map(t => <li key={`${t.terrainTypeId}:${t.terrainSizeId}`}>{describeMissingTile(t, options)}</li>)}</ul>
+                                    </details>
+                                );
+                            })()}
                             <div className="map-admin-actions">
                                 <a href={map.filePath} className="btn btn-sm btn-primary" target="_blank" rel="noopener noreferrer" download>Download</a>
                                 {isAdmin && (

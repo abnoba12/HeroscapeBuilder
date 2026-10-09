@@ -7,6 +7,11 @@ namespace HeroscapeBuilder.Server.Domain.Requests
         public PointSystem PointSystem { get; set; }
     }
 
+    public class SetAllowTileSwapRequest
+    {
+        public bool AllowTileSwap { get; set; }
+    }
+
     public class ChangePasswordRequest
     {
         public string? CurrentPassword { get; set; }

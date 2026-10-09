@@ -31,6 +31,12 @@ namespace HeroscapeBuilder.Server.Controllers
             return Run(userId => _profileService.SetPointSystem(userId, request));
         }
 
+        [HttpPut]
+        public Task<IActionResult> SetAllowTileSwap(SetAllowTileSwapRequest request)
+        {
+            return Run(userId => _profileService.SetAllowTileSwap(userId, request));
+        }
+
         [HttpPost]
         public Task<IActionResult> ChangePassword(ChangePasswordRequest request)
         {

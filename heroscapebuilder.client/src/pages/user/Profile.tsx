@@ -1,6 +1,7 @@
 import {
     Alert,
     Button,
+    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
@@ -20,7 +21,7 @@ import { usePointSystem } from '../../components/PointSystem/PointSystemContext'
 import { POINT_SYSTEMS, PointSystem } from '../../models/point-system';
 import { logout } from '../../services/authService';
 import { getErrorMessages } from '../../services/battlegroup-service';
-import { changePassword, deleteAccount, getProfile } from '../../services/profile-service';
+import { changePassword, deleteAccount, getProfile, setProfileAllowTileSwap } from '../../services/profile-service';
 
 const PointSystemSection: React.FC = () => {
     const { defaultPointSystem, saveDefaultPointSystem } = usePointSystem();
@@ -69,6 +70,52 @@ const PointSystemSection: React.FC = () => {
                 </RadioGroup>
             </Stack>
             <Snackbar open={saved} autoHideDuration={2500} onClose={() => setSaved(false)} message="Default point system saved" />
+        </Paper>
+    );
+};
+
+const TileSwapSection: React.FC<{ initial: boolean }> = ({ initial }) => {
+    const [allow, setAllow] = useState(initial);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [saved, setSaved] = useState(false);
+
+    const handleChange = async (value: boolean) => {
+        try {
+            setSaving(true);
+            setError(null);
+            setAllow((await setProfileAllowTileSwap(value)).allowTileSwap);
+            setSaved(true);
+        } catch (err) {
+            setError(getErrorMessages(err, 'Failed to save your tile swap setting.')[0]);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <Paper variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1}>
+                <Typography variant="h6">Terrain</Typography>
+                {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+                <FormControlLabel
+                    disabled={saving}
+                    control={<Checkbox checked={allow} onChange={event => handleChange(event.target.checked)} />}
+                    label={
+                        <span>
+                            <Typography component="span" variant="body1" sx={{ fontWeight: 600 }}>Allow tile swap</Typography>
+                            <Typography component="span" variant="body2" color="text.secondary" display="block">
+                                When you don't own enough of a terrain tile for a map, the "Maps I can build" filter counts spare tiles of
+                                the same size as a substitute, as long as the tile has no special rules. Water, molten lava, shadow, snow,
+                                roads and similar tiles are never swapped for other types. Single space water and swamp water can swap with
+                                each other, single space trees, pillars and fortress columns can swap with each other, and outcrops can swap with other outcrops of the same size.
+                            </Typography>
+                        </span>
+                    }
+                    sx={{ alignItems: 'flex-start', '& .MuiCheckbox-root': { pt: 0.5 } }}
+                />
+            </Stack>
+            <Snackbar open={saved} autoHideDuration={2500} onClose={() => setSaved(false)} message="Tile swap setting saved" />
         </Paper>
     );
 };
@@ -225,11 +272,15 @@ const DeleteAccountSection: React.FC = () => {
 /** The signed-in user's account settings. */
 const Profile: React.FC = () => {
     const [email, setEmail] = useState<string | null>(null);
+    const [allowTileSwap, setAllowTileSwap] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         getProfile()
-            .then(profile => setEmail(profile.email))
+            .then(profile => {
+                setAllowTileSwap(profile.allowTileSwap);
+                setEmail(profile.email);
+            })
             .catch(err => setLoadError(getErrorMessages(err, 'Failed to load your profile.')[0]));
     }, []);
 
@@ -250,6 +301,7 @@ const Profile: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">{email}</Typography>
                 </div>
                 <PointSystemSection />
+                <TileSwapSection initial={allowTileSwap} />
                 <ChangePasswordSection />
                 <DeleteAccountSection />
             </Stack>

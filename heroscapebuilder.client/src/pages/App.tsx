@@ -28,6 +28,7 @@ import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
 import MyArmy from "./my-heroscape/my-army";
+import MyTerrain from "./my-heroscape/my-terrain";
 import ArmyStats from "./my-heroscape/army-stats";
 import Profile from "./user/Profile";
 import PageMeta from "../components/Seo/PageMeta";
@@ -216,6 +217,13 @@ const App: React.FC = () => {
                                 <PrivateRoute>
                                     <PageMeta title="My Collection" description="Manage your personal Heroscape unit collection." noindex>
                                         <MyArmy />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
+                            <Route path="/my-heroscape/my-terrain" element={
+                                <PrivateRoute>
+                                    <PageMeta title="My Terrain" description="Record the Heroscape terrain you own." noindex>
+                                        <MyTerrain />
                                     </PageMeta>
                                 </PrivateRoute>
                             } />

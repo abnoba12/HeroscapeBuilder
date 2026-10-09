@@ -42,6 +42,15 @@ namespace HeroscapeBuilder.Server.Services
             return ToProfile(user);
         }
 
+        public async Task<ProfileEntity> SetAllowTileSwap(Guid userId, SetAllowTileSwapRequest request)
+        {
+            var user = await FindUser(userId);
+            user.AllowTileSwap = request.AllowTileSwap;
+            ThrowIfFailed(await _userManager.UpdateAsync(user));
+
+            return ToProfile(user);
+        }
+
         /// <summary>
         /// Changes the password and returns fresh tokens for this session. Rotating the refresh token
         /// signs out any other device once its current access token expires.
@@ -98,6 +107,7 @@ namespace HeroscapeBuilder.Server.Services
             {
                 Email = user.Email ?? string.Empty,
                 PointSystem = user.PointSystem,
+                AllowTileSwap = user.AllowTileSwap,
             };
         }
 

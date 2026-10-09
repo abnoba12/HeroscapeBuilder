@@ -11,6 +11,10 @@ namespace HeroscapeBuilder.Server.Data.Entities
         /// The point system pages default to for this user.
         /// </summary>
         public PointSystem PointSystem { get; set; } = PointSystemExtensions.Default;
+        /// <summary>
+        /// Lets the Maps page count a tile of the same size and swap group in place of a tile the user lacks.
+        /// </summary>
+        public bool AllowTileSwap { get; set; } = true;
         // Navigation property for UserCards
         public virtual ICollection<UserCard> UserCards { get; set; } = new List<UserCard>();
     }

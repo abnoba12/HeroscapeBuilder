@@ -41,6 +41,8 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<TerrainTypeSize> TerrainTypeSizes { get; set; }
 
+    public virtual DbSet<UserTerrain> UserTerrains { get; set; }
+
     public virtual DbSet<Set> Sets { get; set; }
 
     public virtual DbSet<SetTerrain> SetTerrains { get; set; }
@@ -196,6 +198,8 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100);
+            entity.Property(e => e.SwapGroup).HasColumnName("swap_group").HasMaxLength(30);
+            entity.Property(e => e.SingleSwapGroup).HasColumnName("single_swap_group").HasMaxLength(30);
         });
 
         modelBuilder.Entity<TerrainSize>(entity =>
@@ -265,6 +269,31 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(d => d.TerrainSizeId)
                 .HasConstraintName("FK_map_tile_terrain_size");
+        });
+
+        modelBuilder.Entity<UserTerrain>(entity =>
+        {
+            entity.ToTable("user_terrain");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnName("user_id").HasMaxLength(450);
+            entity.Property(e => e.TerrainTypeId).HasColumnName("terrain_type_id");
+            entity.Property(e => e.TerrainSizeId).HasColumnName("terrain_size_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+
+            entity.HasIndex(e => new { e.UserId, e.TerrainTypeId, e.TerrainSizeId }, "UQ_user_terrain_user_type_size").IsUnique();
+
+            entity.HasOne(d => d.TerrainType)
+                .WithMany()
+                .HasForeignKey(d => d.TerrainTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_user_terrain_terrain_type");
+
+            entity.HasOne(d => d.TerrainSize)
+                .WithMany()
+                .HasForeignKey(d => d.TerrainSizeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_user_terrain_terrain_size");
         });
 
         modelBuilder.Entity<Set>(entity =>

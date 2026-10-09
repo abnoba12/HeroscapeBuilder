@@ -31,7 +31,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                     .ToListAsync(),
                 TerrainTypes = await _context.TerrainTypes.NotCacheable().AsNoTracking()
                     .OrderBy(t => t.Name)
-                    .Select(t => new MapTerrainTypeOption { Id = t.Id, Name = t.Name })
+                    .Select(t => new MapTerrainTypeOption { Id = t.Id, Name = t.Name, SwapGroup = t.SwapGroup, SingleSwapGroup = t.SingleSwapGroup })
                     .ToListAsync(),
                 TerrainSizes = await _context.TerrainSizes.NotCacheable().AsNoTracking()
                     .OrderBy(s => s.Spaces)

@@ -3,9 +3,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CatalogLoading, CatalogMessage, CatalogShell, SectionTitle } from '../../components/Catalog/CatalogParts';
 import PageMeta from '../../components/Seo/PageMeta';
 import { getCreatorInfo } from '../../models/creator';
-import { getMapAuthor, MapOptions, MapSummary, mapPath } from '../../models/map';
+import { describeMissingTile, getMapAuthor, getMissingTiles, MapOptions, MapSummary, mapPath } from '../../models/map';
 import { hasRole } from '../../services/authService';
 import { deleteMap, getMapOptions, getMaps } from '../../services/map-service';
+import { useMyTerrain } from '../../services/use-my-terrain';
 
 import './map-page.scss';
 
@@ -43,6 +44,8 @@ const MapPageContent: React.FC<{ map: MapSummary; maps: MapSummary[]; options: M
     const isAdmin = hasRole('Admin');
     const creator = getCreatorInfo(map.creatorAbbreviation);
     const author = getMapAuthor(map);
+    const { owned, allowSwap } = useMyTerrain();
+    const missing = owned ? getMissingTiles(map, owned, options, allowSwap) : null;
 
     // Sizes and types this map actually uses; the grid skips the rest so it stays readable.
     const sizes = options.terrainSizes.filter(size => map.tiles.some(t => t.terrainSizeId === size.id));
@@ -113,6 +116,24 @@ const MapPageContent: React.FC<{ map: MapSummary; maps: MapSummary[]; options: M
                     </table>
                 </div>
             </div>
+
+            {missing && (
+                <>
+                    <SectionTitle>Your Terrain</SectionTitle>
+                    {missing.length === 0 ? (
+                        <p>You have the terrain to build this map{allowSwap ? ' (counting tile swaps)' : ''}.</p>
+                    ) : (
+                        <>
+                            <p>
+                                You are missing {plural(missing.reduce((sum, t) => sum + t.missing, 0), 'tile')} to build this map
+                                {allowSwap ? ' (after counting tile swaps)' : ''}:
+                            </p>
+                            <ul>{missing.map(t => <li key={`${t.terrainTypeId}:${t.terrainSizeId}`}>{describeMissingTile(t, options)}</li>)}</ul>
+                        </>
+                    )}
+                    <p><Link to="/my-heroscape/my-terrain">Update My Terrain</Link></p>
+                </>
+            )}
 
             <SectionTitle>Tiles Needed</SectionTitle>
             <div className="table-responsive">

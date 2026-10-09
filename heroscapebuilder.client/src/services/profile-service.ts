@@ -8,6 +8,8 @@ export interface Profile {
     email: string;
     /** The point system pages default to for this account. */
     pointSystem: PointSystem;
+    /** The Maps page may count a same-size tile of a swappable type in place of a missing one. */
+    allowTileSwap: boolean;
 }
 
 export const getProfile = async (): Promise<Profile> =>
@@ -15,6 +17,9 @@ export const getProfile = async (): Promise<Profile> =>
 
 export const setProfilePointSystem = async (pointSystem: PointSystem): Promise<Profile> =>
     (await api.put<Profile>(`/Profile/SetPointSystem`, { pointSystem })).data;
+
+export const setProfileAllowTileSwap = async (allowTileSwap: boolean): Promise<Profile> =>
+    (await api.put<Profile>(`/Profile/SetAllowTileSwap`, { allowTileSwap })).data;
 
 /** Changes the password. The server issues fresh tokens for this session, which are saved here. */
 export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {

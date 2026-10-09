@@ -8,5 +8,7 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         /// The point system pages default to for this user.
         /// </summary>
         public PointSystem PointSystem { get; set; }
+
+        public bool AllowTileSwap { get; set; }
     }
 }

@@ -24,6 +24,12 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public string Name { get; set; } = null!;
 
+        /// <summary>Same-size tiles of types sharing this group can stand in for each other. Null = never swapped.</summary>
+        public string? SwapGroup { get; set; }
+
+        /// <summary>Replaces SwapGroup for single space tiles only.</summary>
+        public string? SingleSwapGroup { get; set; }
+
         /// <summary>Sizes this type comes in. Empty means the type is allowed in every size.</summary>
         public List<int> AllowedSizeIds { get; set; } = new();
     }
