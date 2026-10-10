@@ -38,6 +38,8 @@ namespace HeroscapeBuilder.Server.Services
             new("/data/unit-data", "/data/unit-data", "Heroscape Unit Data", "Browse stats and abilities for every Heroscape unit."),
             new("/game-play", "/game-play/game-play-calc", "Heroscape Game Play Calculator", "Calculate recommended points and game length for your Heroscape game based on player count and playtime."),
             new("/game-play/game-play-calc", "/game-play/game-play-calc", "Heroscape Game Play Calculator", "Calculate recommended points and game length for your Heroscape game based on player count and playtime."),
+            new("/privacy", "/privacy", "Privacy Policy", "How Heroscape Builder collects, uses, and protects your information."),
+            new("/terms", "/terms", "Terms of Service", "The terms for using Heroscape Builder."),
         };
 
         /// <summary>Paths in the sitemap that aren't generated from unit data (aliases like /data are excluded).</summary>

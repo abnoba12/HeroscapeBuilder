@@ -41,6 +41,9 @@ import GroupPage from "./catalog/group-page";
 import { GroupIndexPage } from "./catalog/index-pages";
 import PowerRanking from "./catalog/power-ranking";
 import PowerBalance from "./catalog/power-balance";
+import CookieConsent from "../components/CookieConsent/CookieConsent";
+import Privacy from "./legal/Privacy";
+import Terms from "./legal/Terms";
 import { PointSystemProvider } from "../components/PointSystem/PointSystemContext";
 
 const App: React.FC = () => {
@@ -184,6 +187,16 @@ const App: React.FC = () => {
                                     <Register />
                                 </PageMeta>
                             } />
+                            <Route path="/privacy" element={
+                                <PageMeta title="Privacy Policy" description="How Heroscape Builder collects, uses, and protects your information.">
+                                    <Privacy />
+                                </PageMeta>
+                            } />
+                            <Route path="/terms" element={
+                                <PageMeta title="Terms of Service" description="The terms for using Heroscape Builder.">
+                                    <Terms />
+                                </PageMeta>
+                            } />
                             {/*Public, read-only view of a shared Battlegroup*/}
                             <Route path="/battlegroup/:shareId" element={
                                 <PageMeta title="Shared Army" description="A Heroscape army shared from Heroscape Builder." noindex>
@@ -266,6 +279,7 @@ const App: React.FC = () => {
                     </div>
                     <Footer />
                 </div>
+                <CookieConsent />
             </div>
             </PointSystemProvider>
         </Router>
