@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import TerrainName from "../../components/TerrainName";
 import { MapOptions, MapSummary, MapTileInput, TerrainTypeOption } from "../../models/map";
 import { addMap, getMap, getMapErrors, getMapOptions, updateMap } from "../../services/map-service";
 
@@ -284,7 +285,7 @@ const UploadMap: React.FC = () => {
                                     <tbody>
                                         {addedTypes.map(type => (
                                             <tr key={type.id}>
-                                                <th scope="row" className="text-start fw-normal">{type.name}</th>
+                                                <th scope="row" className="text-start fw-normal"><TerrainName type={type} /></th>
                                                 {terrainSizes.map(size => {
                                                     if (!isSizeAllowed(type, size.id)) {
                                                         return (

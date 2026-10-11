@@ -12,4 +12,7 @@ public partial class TerrainType
 
     /// <summary>Replaces SwapGroup for single space tiles only (water, trees, columns).</summary>
     public string? SingleSwapGroup { get; set; }
+
+    /// <summary>Short summary of the type's gameplay effect, shown on hover. Null = no special rules.</summary>
+    public string? SpecialRules { get; set; }
 }

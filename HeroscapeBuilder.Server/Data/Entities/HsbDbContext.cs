@@ -202,6 +202,7 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100);
             entity.Property(e => e.SwapGroup).HasColumnName("swap_group").HasMaxLength(30);
             entity.Property(e => e.SingleSwapGroup).HasColumnName("single_swap_group").HasMaxLength(30);
+            entity.Property(e => e.SpecialRules).HasColumnName("special_rules").HasMaxLength(1000);
         });
 
         modelBuilder.Entity<TerrainSize>(entity =>

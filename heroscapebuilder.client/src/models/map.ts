@@ -14,6 +14,8 @@ export interface TerrainTypeOption {
     swapGroup: string | null;
     /** Replaces swapGroup for single space tiles only (water, trees, columns). */
     singleSwapGroup: string | null;
+    /** Gameplay effect summary shown on hover. Null = no special rules. */
+    specialRules: string | null;
 }
 
 export interface TerrainSizeOption {
@@ -111,10 +113,52 @@ const SWAP_GROUP_LABELS: Record<string, string> = {
 };
 
 /**
+ * A Fortress Column set on a Fortress Base looks and plays as one Pillar, so a Pillar stands in for a base + column
+ * pair and a pair stands in for a Pillar. Maps list the base and column separately, which a 1:1 swap cannot cover.
+ * Returns owned with spare pieces converted to the other form where that closes a shortfall.
+ */
+const applyPillarPairs = (map: MapSummary, owned: Map<string, number>, options: MapOptions): Map<string, number> => {
+    const single = options.terrainSizes.find(s => s.spaces === 1);
+    const idOf = (name: string) => options.terrainTypes.find(t => t.name === name)?.id;
+    const baseId = idOf("Fortress Base"), columnId = idOf("Fortress Column"), pillarId = idOf("Pillar");
+    if (!single || baseId === undefined || columnId === undefined || pillarId === undefined) return owned;
+
+    const key = (typeId: number) => `${typeId}:${single.id}`;
+    const needOf = (typeId: number) => map.tiles.find(t => t.terrainTypeId === typeId && t.terrainSizeId === single.id)?.quantity ?? 0;
+    const result = new Map(owned);
+    const get = (typeId: number) => result.get(key(typeId)) ?? 0;
+    const add = (typeId: number, delta: number) => result.set(key(typeId), get(typeId) + delta);
+
+    // Spare Pillars cover base + column shortfalls.
+    const pillarsForPairs = Math.min(
+        Math.max(0, needOf(baseId) - get(baseId)),
+        Math.max(0, needOf(columnId) - get(columnId)),
+        Math.max(0, get(pillarId) - needOf(pillarId)));
+    if (pillarsForPairs > 0) {
+        add(pillarId, -pillarsForPairs);
+        add(baseId, pillarsForPairs);
+        add(columnId, pillarsForPairs);
+    }
+
+    // Spare base + column pairs cover Pillar shortfalls.
+    const pairsForPillars = Math.min(
+        Math.max(0, needOf(pillarId) - get(pillarId)),
+        Math.max(0, get(baseId) - needOf(baseId)),
+        Math.max(0, get(columnId) - needOf(columnId)));
+    if (pairsForPillars > 0) {
+        add(baseId, -pairsForPillars);
+        add(columnId, -pairsForPillars);
+        add(pillarId, pairsForPillars);
+    }
+    return result;
+};
+
+/**
  * The tiles the map needs beyond what the user owns (owned is keyed "typeId:sizeId"). Empty means the map can be built.
  * With allowSwap, a shortfall is first filled by spare tiles of the same size from another type in the same swap group.
  */
-export const getMissingTiles = (map: MapSummary, owned: Map<string, number>, options: MapOptions, allowSwap: boolean): MissingTile[] => {
+export const getMissingTiles = (map: MapSummary, ownedTiles: Map<string, number>, options: MapOptions, allowSwap: boolean): MissingTile[] => {
+    const owned = allowSwap ? applyPillarPairs(map, ownedTiles, options) : ownedTiles;
     const types = new Map(options.terrainTypes.map(t => [t.id, t]));
     const sizes = new Map(options.terrainSizes.map(s => [s.id, s]));
     const tileKey = (typeId: number, sizeId: number) => `${typeId}:${sizeId}`;

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CatalogLoading, CatalogMessage, CatalogShell, SectionTitle } from '../../components/Catalog/CatalogParts';
 import PageMeta from '../../components/Seo/PageMeta';
+import TerrainName from '../../components/TerrainName';
 import { getCreatorInfo } from '../../models/creator';
 import { describeMissingTile, getMapAuthor, getMissingTiles, MapOptions, MapSummary, mapPath } from '../../models/map';
 import { hasRole } from '../../services/authService';
@@ -155,7 +156,7 @@ const MapPageContent: React.FC<{ map: MapSummary; maps: MapSummary[]; options: M
                     <tbody>
                         {types.map(type => (
                             <tr key={type.id}>
-                                <th scope="row" className="text-start fw-normal">{type.name}</th>
+                                <th scope="row" className="text-start fw-normal"><TerrainName type={type} /></th>
                                 {sizes.map(size => {
                                     const count = quantity(type.id, size.id);
                                     return <td key={size.id} className={count ? '' : 'text-muted'}>{count || '—'}</td>;

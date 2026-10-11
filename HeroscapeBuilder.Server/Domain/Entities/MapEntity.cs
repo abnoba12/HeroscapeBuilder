@@ -30,6 +30,9 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         /// <summary>Replaces SwapGroup for single space tiles only.</summary>
         public string? SingleSwapGroup { get; set; }
 
+        /// <summary>Gameplay effect summary shown on hover. Null = no special rules.</summary>
+        public string? SpecialRules { get; set; }
+
         /// <summary>Sizes this type comes in. Empty means the type is allowed in every size.</summary>
         public List<int> AllowedSizeIds { get; set; } = new();
     }

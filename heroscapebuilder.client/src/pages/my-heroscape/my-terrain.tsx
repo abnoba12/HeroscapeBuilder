@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import TerrainName from "../../components/TerrainName";
 import { MapOptions, TerrainTypeOption } from "../../models/map";
 import { getMapOptions } from "../../services/map-service";
 import { getMyTerrain, setMyTerrain } from "../../services/my-terrain-service";
@@ -147,7 +148,7 @@ const MyTerrain: React.FC = () => {
                     <tbody>
                         {addedTypes.map(type => (
                             <tr key={type.id}>
-                                <th scope="row" className="text-start fw-normal">{type.name}</th>
+                                <th scope="row" className="text-start fw-normal"><TerrainName type={type} /></th>
                                 {options.terrainSizes.map(size => {
                                     const allowed = type.allowedSizeIds.length === 0 || type.allowedSizeIds.includes(size.id);
                                     if (!allowed) {
