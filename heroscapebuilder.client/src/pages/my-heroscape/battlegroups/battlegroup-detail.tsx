@@ -1,4 +1,4 @@
-import { Alert, Button, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Button, Chip, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Battlegroup } from '../../../models/battlegroup';
@@ -9,9 +9,12 @@ import {
     getErrorMessages,
     hideBattlegroup,
     isNotFound,
+    restoreBattlegroup,
+    retireBattlegroup,
     shareBattlegroup,
 } from '../../../services/battlegroup-service';
 import { BattlegroupView, ConfirmDeleteDialog, NeedsReviewChip } from './battlegroup-parts';
+import BattlegroupJournal from './battlegroup-journal';
 import BattlegroupRecord from './battlegroup-record';
 
 /** The owner's view of one Battlegroup, with edit / share / delete controls. */
@@ -88,13 +91,19 @@ const BattlegroupDetail: React.FC = () => {
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
                     <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
                         <Typography variant="h4">{battlegroup.name}</Typography>
-                        {battlegroup.needsReview && <NeedsReviewChip />}
+                        {battlegroup.needsReview && !battlegroup.isRetired && <NeedsReviewChip />}
+                        {battlegroup.isRetired && <Chip label="Retired" size="small" />}
                     </Stack>
                     <Stack direction="row" spacing={1}>
                         <Button component={Link} to="/my-heroscape/battlegroups">All armies</Button>
                         <Button variant="contained" component={Link} to={`/my-heroscape/battlegroups/${battlegroup.id}/edit`}>Edit</Button>
                         {!battlegroup.isShared && (
                             <Button variant="outlined" onClick={() => runShareChange(shareBattlegroup)} disabled={busy}>Share</Button>
+                        )}
+                        {battlegroup.isRetired ? (
+                            <Button onClick={() => runShareChange(restoreBattlegroup)} disabled={busy}>Restore</Button>
+                        ) : (
+                            <Button color="inherit" onClick={() => runShareChange(retireBattlegroup)} disabled={busy}>Retire</Button>
                         )}
                         <Button color="error" onClick={() => setConfirmDelete(true)} disabled={busy}>Delete</Button>
                     </Stack>
@@ -131,6 +140,8 @@ const BattlegroupDetail: React.FC = () => {
                 />
 
                 <BattlegroupView battlegroup={battlegroup} />
+
+                <BattlegroupJournal battlegroupId={battlegroup.id} />
             </Stack>
 
             <ConfirmDeleteDialog

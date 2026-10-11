@@ -99,6 +99,44 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .ToListAsync();
         }
 
+        // ---------- Journal ----------
+
+        public async Task<bool> OwnsBattlegroup(string userId, int id)
+        {
+            return await _context.Battlegroups
+                .NotCacheable()
+                .AnyAsync(x => x.UserId == userId && x.Id == id);
+        }
+
+        public async Task<List<BattlegroupJournalEntry>> GetJournal(int battlegroupId)
+        {
+            return await _context.BattlegroupJournalEntries
+                .NotCacheable()
+                .AsNoTracking()
+                .Where(x => x.BattlegroupId == battlegroupId)
+                .OrderByDescending(x => x.EntryDate)
+                .ThenByDescending(x => x.Id)
+                .ToListAsync();
+        }
+
+        /// <summary>The entry, only if it belongs to one of the user's armies.</summary>
+        public async Task<BattlegroupJournalEntry?> GetJournalEntry(string userId, int entryId)
+        {
+            return await _context.BattlegroupJournalEntries
+                .NotCacheable()
+                .FirstOrDefaultAsync(x => x.Id == entryId && x.Battlegroup.UserId == userId);
+        }
+
+        public void AddJournalEntry(BattlegroupJournalEntry entry)
+        {
+            _context.BattlegroupJournalEntries.Add(entry);
+        }
+
+        public void RemoveJournalEntry(BattlegroupJournalEntry entry)
+        {
+            _context.BattlegroupJournalEntries.Remove(entry);
+        }
+
         public void Add(Battlegroup battlegroup)
         {
             _context.Battlegroups.Add(battlegroup);

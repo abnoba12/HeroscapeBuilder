@@ -102,6 +102,8 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 ShareId = isOwner ? source.ShareId : null,
                 TotalPoints = totalPoints,
                 IsOwner = isOwner,
+                IsRetired = isOwner && source.IsRetired,
+                RetiredAt = isOwner ? source.RetiredAt : null,
                 NeedsReview = reasons.Count > 0,
                 ReviewReasons = reasons,
                 UpdatedAt = source.UpdatedAt,

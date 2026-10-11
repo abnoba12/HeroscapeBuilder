@@ -34,6 +34,11 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public bool IsOwner { get; set; }
 
+        /// <summary>Hidden from the owner's active list; shown in the collapsed Retired section instead.</summary>
+        public bool IsRetired { get; set; }
+
+        public DateTime? RetiredAt { get; set; }
+
         /// <summary>
         /// True when My Army no longer covers the battlegroup (or a point total no longer fits).
         /// Only evaluated for the owner.

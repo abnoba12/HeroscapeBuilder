@@ -31,6 +31,13 @@ public partial class Battlegroup
 
     public Guid ShareId { get; set; }
 
+    /// <summary>
+    /// A retired army is kept but hidden from the active list on My Armies.
+    /// </summary>
+    public bool IsRetired { get; set; }
+
+    public DateTime? RetiredAt { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

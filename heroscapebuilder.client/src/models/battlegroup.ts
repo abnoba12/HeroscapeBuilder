@@ -25,6 +25,9 @@ export interface Battlegroup {
     shareId?: string | null;
     totalPoints: number;
     isOwner: boolean;
+    /** Hidden from the active list on My Armies and shown under "Retired" instead. Owner only. */
+    isRetired: boolean;
+    retiredAt?: string | null;
     needsReview: boolean;
     reviewReasons: string[];
     updatedAt: string;
@@ -51,6 +54,24 @@ export interface ArmyGameRequest {
     /** How many identical results to record at once (for entering past results). */
     count?: number;
     note?: string | null;
+}
+
+/** One entry in the owner's private play journal for an army. */
+export interface JournalEntry {
+    id: number;
+    /** yyyy-MM-dd */
+    entryDate: string;
+    wentWell?: string | null;
+    wentPoorly?: string | null;
+    notes?: string | null;
+    updatedAt: string;
+}
+
+export interface JournalEntryRequest {
+    entryDate?: string | null;
+    wentWell?: string | null;
+    wentPoorly?: string | null;
+    notes?: string | null;
 }
 
 export interface BattlegroupSaveRequest {

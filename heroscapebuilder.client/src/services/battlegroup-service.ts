@@ -1,6 +1,14 @@
 import { isAxiosError } from 'axios';
 import AxiosSingletonService from './AxiosSingletonService';
-import { ArmyGame, ArmyGameRequest, ArmyTally, Battlegroup, BattlegroupSaveRequest } from '../models/battlegroup';
+import {
+    ArmyGame,
+    ArmyGameRequest,
+    ArmyTally,
+    Battlegroup,
+    BattlegroupSaveRequest,
+    JournalEntry,
+    JournalEntryRequest,
+} from '../models/battlegroup';
 
 const api = AxiosSingletonService.getInstance();
 
@@ -25,6 +33,26 @@ export const shareBattlegroup = async (id: number): Promise<Battlegroup> =>
 
 export const hideBattlegroup = async (id: number): Promise<Battlegroup> =>
     (await api.post<Battlegroup>(`/Battlegroup/HideBattlegroup`, null, { params: { id } })).data;
+
+/** Hides the army from the active list on My Armies. Nothing else about it changes. */
+export const retireBattlegroup = async (id: number): Promise<Battlegroup> =>
+    (await api.post<Battlegroup>(`/Battlegroup/RetireBattlegroup`, null, { params: { id } })).data;
+
+export const restoreBattlegroup = async (id: number): Promise<Battlegroup> =>
+    (await api.post<Battlegroup>(`/Battlegroup/RestoreBattlegroup`, null, { params: { id } })).data;
+
+export const getJournal = async (id: number): Promise<JournalEntry[]> =>
+    (await api.get<JournalEntry[]>(`/Battlegroup/GetJournal`, { params: { id } })).data;
+
+export const addJournalEntry = async (id: number, request: JournalEntryRequest): Promise<JournalEntry> =>
+    (await api.post<JournalEntry>(`/Battlegroup/AddJournalEntry`, request, { params: { id } })).data;
+
+export const updateJournalEntry = async (entryId: number, request: JournalEntryRequest): Promise<JournalEntry> =>
+    (await api.put<JournalEntry>(`/Battlegroup/UpdateJournalEntry`, request, { params: { entryId } })).data;
+
+export const deleteJournalEntry = async (entryId: number): Promise<void> => {
+    await api.delete(`/Battlegroup/DeleteJournalEntry`, { params: { entryId } });
+};
 
 export const getArmyGames = async (id: number): Promise<ArmyGame[]> =>
     (await api.get<ArmyGame[]>(`/Battlegroup/GetGames`, { params: { id } })).data;

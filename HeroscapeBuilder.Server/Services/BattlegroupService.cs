@@ -167,6 +167,24 @@ namespace HeroscapeBuilder.Server.Services
             return await GetMyBattlegroup(userId, battlegroupId);
         }
 
+        /// <summary>
+        /// Retires or restores an army. Retiring only hides it from the active list; nothing else about it changes.
+        /// </summary>
+        public async Task<BattlegroupEntity> SetRetired(Guid userId, int battlegroupId, bool isRetired)
+        {
+            var battlegroup = await _battlegroupRepository.GetForUser(userId.ToString(), battlegroupId, track: true)
+                ?? throw NotFound();
+
+            if (battlegroup.IsRetired != isRetired)
+            {
+                battlegroup.IsRetired = isRetired;
+                battlegroup.RetiredAt = isRetired ? DateTime.UtcNow : null;
+                await _battlegroupRepository.SaveChanges();
+            }
+
+            return await GetMyBattlegroup(userId, battlegroupId);
+        }
+
         // A tuple, not a nested type: everything in this namespace is auto-registered with DI (see RegisterService).
         private async Task<(string Name, int PointLimit, PointSystem PointSystem, string? Creator, string? Notes, Dictionary<int, int> Units)> Validate(string userId, BattlegroupSaveRequest request, int? excludeId)
         {

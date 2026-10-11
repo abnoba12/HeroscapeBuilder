@@ -15,11 +15,13 @@ namespace HeroscapeBuilder.Server.Controllers
     {
         private readonly BattlegroupService _battlegroupService;
         private readonly ArmyGameService _armyGameService;
+        private readonly BattlegroupJournalService _journalService;
 
-        public BattlegroupController(BattlegroupService battlegroupService, ArmyGameService armyGameService)
+        public BattlegroupController(BattlegroupService battlegroupService, ArmyGameService armyGameService, BattlegroupJournalService journalService)
         {
             _battlegroupService = battlegroupService;
             _armyGameService = armyGameService;
+            _journalService = journalService;
         }
 
         [HttpGet]
@@ -66,6 +68,46 @@ namespace HeroscapeBuilder.Server.Controllers
         public Task<IActionResult> HideBattlegroup(int id)
         {
             return Run(userId => _battlegroupService.SetShared(userId, id, false));
+        }
+
+        [HttpPost]
+        public Task<IActionResult> RetireBattlegroup(int id)
+        {
+            return Run(userId => _battlegroupService.SetRetired(userId, id, true));
+        }
+
+        [HttpPost]
+        public Task<IActionResult> RestoreBattlegroup(int id)
+        {
+            return Run(userId => _battlegroupService.SetRetired(userId, id, false));
+        }
+
+        [HttpGet]
+        public Task<IActionResult> GetJournal(int id)
+        {
+            return Run(userId => _journalService.GetJournal(userId, id));
+        }
+
+        [HttpPost]
+        public Task<IActionResult> AddJournalEntry(int id, JournalEntryRequest request)
+        {
+            return Run(userId => _journalService.AddEntry(userId, id, request));
+        }
+
+        [HttpPut]
+        public Task<IActionResult> UpdateJournalEntry(int entryId, JournalEntryRequest request)
+        {
+            return Run(userId => _journalService.UpdateEntry(userId, entryId, request));
+        }
+
+        [HttpDelete]
+        public Task<IActionResult> DeleteJournalEntry(int entryId)
+        {
+            return Run(async userId =>
+            {
+                await _journalService.DeleteEntry(userId, entryId);
+                return true;
+            });
         }
 
         [HttpGet]

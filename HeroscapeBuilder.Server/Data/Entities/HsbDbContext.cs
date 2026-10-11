@@ -21,6 +21,8 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<BattlegroupUnit> BattlegroupUnits { get; set; }
 
+    public virtual DbSet<BattlegroupJournalEntry> BattlegroupJournalEntries { get; set; }
+
     public virtual DbSet<ArmyCardAbility> ArmyCardAbilities { get; set; }
 
     public virtual DbSet<ArmyCardFile> ArmyCardFiles { get; set; }
@@ -421,6 +423,22 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(d => d.ArmyCardId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_battlegroup_unit_army_card");
+        });
+
+        modelBuilder.Entity<BattlegroupJournalEntry>(entity =>
+        {
+            entity.ToTable("battlegroup_journal");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.WentWell).HasMaxLength(4000);
+            entity.Property(e => e.WentPoorly).HasMaxLength(4000);
+            entity.Property(e => e.Notes).HasMaxLength(4000);
+
+            entity.HasOne(d => d.Battlegroup)
+                .WithMany()
+                .HasForeignKey(d => d.BattlegroupId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_battlegroup_journal_battlegroup");
         });
 
         modelBuilder.Entity<UnitDuelVote>(entity =>
