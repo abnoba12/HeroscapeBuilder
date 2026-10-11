@@ -94,14 +94,19 @@ export async function createHTMLImageElementFromBase64(base64: string, mimeType:
 
 export function getSizeToMax(maxWidth: number, maxHeight: number, image: HTMLImageElement) {
     try {
-        const heightAdj = maxHeight / image.height;
-        const widthAdj = maxWidth / image.width;
+        // Scale by the tighter of the two ratios so the image always fits. Comparing the scaled
+        // size against the max directly is unreliable: floating point can yield e.g. 28.000000000000004
+        // for a square image, which made both branches fail and the image silently disappear.
+        const scale = Math.min(maxWidth / image.width, maxHeight / image.height);
+        const width = image.width * scale;
+        const height = image.height * scale;
 
-        if ((image.width * heightAdj) <= maxWidth) {
-            return { height: image.height * heightAdj, width: image.width * heightAdj, wPadding: (maxWidth - (image.width * heightAdj)) / 2 };
-        } else if ((image.height * widthAdj) <= maxHeight) {
-            return { height: image.height * widthAdj, width: image.width * widthAdj, hPadding: (maxHeight - (image.height * widthAdj)) / 2 };
-        }
+        return {
+            height,
+            width,
+            wPadding: Math.max(0, (maxWidth - width) / 2),
+            hPadding: Math.max(0, (maxHeight - height) / 2),
+        };
     } catch (e) {
         const message = `Error determining max size for ${image.name}`;
         console.error(message, e);
