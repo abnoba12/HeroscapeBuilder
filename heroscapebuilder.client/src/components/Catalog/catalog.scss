@@ -326,6 +326,32 @@
     input { flex: 1 1 240px; }
 }
 
+.catalog-creator-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    margin: 0 0 18px;
+    padding: 0;
+    border: 0;
+
+    legend {
+        float: left;
+        width: auto;
+        margin: 0 4px 0 0;
+        font-size: .85rem;
+        font-weight: 600;
+    }
+
+    label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .9rem;
+        cursor: pointer;
+    }
+}
+
 .catalog-summary {
     display: grid;
     gap: 12px;

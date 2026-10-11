@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CatalogLoading, CatalogMessage, CatalogShell, SectionTitle, UnitGrid, UnitTile } from '../../components/Catalog/CatalogParts';
+import CreatorFilter from '../../components/Catalog/CreatorFilter';
 import { HubAccent } from '../../components/HubCards/HubCards';
 import PointSystemPicker from '../../components/PointSystem/PointSystemPicker';
 import { usePagePointSystem } from '../../components/PointSystem/PointSystemContext';
@@ -20,6 +21,7 @@ import {
     slugify,
     useCatalog,
 } from '../../services/catalog';
+import { useCreatorFilter } from '../../services/creator-filter';
 import { useUrlEnum } from '../../services/url-state';
 
 interface KindInfo {
@@ -77,27 +79,32 @@ const GroupContent: React.FC<{ kind: GroupKind; group: UnitGroup }> = ({ kind, g
     const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
     const [sort, setSort] = useUrlEnum<SortKey>('sort', SORT_KEYS, 'name');
 
+    const creatorFilter = useCreatorFilter(group.units);
+    const { apply } = creatorFilter;
+    // Everything below (grid, summary, related chips) reflects only the creators that aren't hidden.
+    const units = useMemo(() => apply(group.units), [group.units, apply]);
+
     const sorted = useMemo(() => {
-        const list = [...group.units];
+        const list = [...units];
         const desc = (value: (unit: Unit) => number | undefined | null) =>
             list.sort((a, b) => (value(b) ?? -1) - (value(a) ?? -1) || (a.name ?? '').localeCompare(b.name ?? ''));
         if (sort === 'points') return desc(unit => pointsFor(unit));
         if (sort === 'life') return desc(unit => unit.life);
         if (sort === 'attack') return desc(unit => unit.advAttack);
         return list;
-    }, [group.units, sort, pointsFor]);
+    }, [units, sort, pointsFor]);
 
-    const avgLife = average(group.units.map(unit => unit.life));
-    const avgPoints = average(group.units.map(unit => pointsFor(unit)));
-    const priciest = group.units.reduce<Unit | undefined>((best, unit) => ((pointsFor(unit) ?? -1) > (pointsFor(best) ?? -1) ? unit : best), undefined);
+    const avgLife = average(units.map(unit => unit.life));
+    const avgPoints = average(units.map(unit => pointsFor(unit)));
+    const priciest = units.reduce<Unit | undefined>((best, unit) => ((pointsFor(unit) ?? -1) > (pointsFor(best) ?? -1) ? unit : best), undefined);
 
     const sets = group.units.map(unit => unit.set).filter((set): set is NonNullable<Unit['set']> => !!set);
     const firstSet = sets[0];
     const creators = [...new Set(group.units.map(unit => unit.creator))];
 
-    const speciesCounts = kind !== 'species' ? countBy(group.units, unit => unit.race, speciesKey) : [];
-    const generalCounts = kind !== 'generals' ? countBy(group.units, unit => unit.general) : [];
-    const setCounts = kind !== 'sets' ? countBy(group.units, unit => unit.set?.name) : [];
+    const speciesCounts = kind !== 'species' ? countBy(units, unit => unit.race, speciesKey) : [];
+    const generalCounts = kind !== 'generals' ? countBy(units, unit => unit.general) : [];
+    const setCounts = kind !== 'sets' ? countBy(units, unit => unit.set?.name) : [];
 
     const intro = kind === 'sets' && firstSet
         ? [firstSet.type, firstSet.wave && `Wave ${firstSet.wave}`, firstSet.releaseDate && `Released ${firstSet.releaseDate.slice(0, 4)}`].filter(Boolean).join(' - ')
@@ -112,7 +119,7 @@ const GroupContent: React.FC<{ kind: GroupKind; group: UnitGroup }> = ({ kind, g
             crumbs={[{ label: 'Home', to: '/' }, { label: info.plural, to: `/${kind}` }, { label: group.name }]}
         >
             <div className="catalog-summary">
-                <div className="catalog-summary-item"><strong>{group.units.length}</strong><span>{kind === 'sets' ? 'Figures' : 'Units'}</span></div>
+                <div className="catalog-summary-item"><strong>{units.length}</strong><span>{kind === 'sets' ? 'Figures' : 'Units'}</span></div>
                 {avgLife != null && <div className="catalog-summary-item"><strong>{avgLife.toFixed(1)}</strong><span>Avg Life</span></div>}
                 {avgPoints != null && <div className="catalog-summary-item"><strong>{avgPoints.toFixed(0)}</strong><span>Avg {pointSystem} pts</span></div>}
                 {priciest && (
@@ -136,6 +143,7 @@ const GroupContent: React.FC<{ kind: GroupKind; group: UnitGroup }> = ({ kind, g
                 </label>
                 <PointSystemPicker value={pointSystem} onChange={setPointSystem} defaultValue={defaultPointSystem} />
             </div>
+            <CreatorFilter filter={creatorFilter} />
             <UnitGrid>
                 {sorted.map(unit => (
                     <UnitTile

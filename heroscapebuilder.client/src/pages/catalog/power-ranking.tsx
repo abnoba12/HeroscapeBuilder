@@ -2,10 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PowerDuelWidget from '../../components/PowerDuel/PowerDuelWidget';
 import { CatalogLoading, CatalogMessage, CatalogShell } from '../../components/Catalog/CatalogParts';
+import CreatorFilter from '../../components/Catalog/CreatorFilter';
 import PageMeta from '../../components/Seo/PageMeta';
 import { Unit } from '../../models/unit';
 import { UnitHover } from '../my-heroscape/battlegroups/battlegroup-parts';
 import { getPrimaryImage, unitPath, useCatalog } from '../../services/catalog';
+import { useCreatorFilter } from '../../services/creator-filter';
 import { usePowerRanking } from '../../services/power-ranking-service';
 
 const PAGE_SIZE = 50;
@@ -15,14 +17,18 @@ const PowerRanking: React.FC = () => {
     const ranking = usePowerRanking();
     const [shown, setShown] = useState(PAGE_SIZE);
 
+    const creatorFilter = useCreatorFilter(catalog?.units);
+    const { hidden } = creatorFilter;
+
+    // Hiding a creator drops its units from the list but they keep their overall rank number.
     const rows = useMemo(() => {
         if (!catalog || !ranking) return [];
         const byId = new Map<number, Unit>(catalog.units.map(unit => [unit.id, unit]));
         return ranking.units
-            .filter(entry => byId.has(entry.armyCardId))
+            .filter(entry => byId.has(entry.armyCardId) && !hidden.has(byId.get(entry.armyCardId)!.creator))
             .sort((a, b) => a.rank - b.rank)
             .map(entry => ({ rank: entry.rank, unit: byId.get(entry.armyCardId)! }));
-    }, [catalog, ranking]);
+    }, [catalog, ranking, hidden]);
 
     return (
         <PageMeta
@@ -37,6 +43,7 @@ const PowerRanking: React.FC = () => {
                 crumbs={[{ label: 'Home', to: '/' }, { label: 'Power Ranking' }]}
             >
                 <PowerDuelWidget />
+                <CreatorFilter filter={creatorFilter} />
 
                 {error ? (
                     <CatalogMessage title="Could not load the ranking.">Please try again in a moment.</CatalogMessage>
