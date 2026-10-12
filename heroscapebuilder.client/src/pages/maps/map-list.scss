@@ -18,6 +18,17 @@
             }
         }
 
+        // Reserve the thumbnail's space up front. Without it every not-yet-loaded <img> is 0px tall, so all 255 tiles
+        // sit inside the viewport and loading="lazy" fetches them all at once instead of as they scroll into view.
+        .thumbnail-image-link {
+            aspect-ratio: 4 / 3;
+
+            img {
+                height: 100%;
+                object-fit: contain;
+            }
+        }
+
         .map-author {
             display: flex;
             align-items: center;
