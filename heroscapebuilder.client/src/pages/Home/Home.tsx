@@ -26,11 +26,11 @@ const Home: React.FC = () => {
             accent: "blue"
         },
         {
-            to: "/game-play",
+            to: "/maps",
             title: "Game Play",
-            description: "Work out recommended points and game length for your group.",
+            description: "Browse custom maps and work out recommended points and game length for your group.",
             image: "/assets/img/game-play.webp",
-            imageAlt: "Heroscape Game Play Calculator",
+            imageAlt: "Heroscape Game Play",
             accent: "purple"
         }
     ];

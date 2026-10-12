@@ -47,7 +47,7 @@ const User: React.FC = () => {
                     </a>
                 </div>
                 <div className="col-md-4 site-area">
-                    <a href="/game-play" className="text-decoration-none text-dark">
+                    <a href="/maps" className="text-decoration-none text-dark">
                         <img src="/assets/img/game-play.webp" alt="Heroscape Data" className="img-fluid" />
                         <p className="text-center mt-2">Game Play</p>
                     </a>
