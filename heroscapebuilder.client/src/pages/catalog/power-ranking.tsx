@@ -5,7 +5,7 @@ import { CatalogLoading, CatalogMessage, CatalogShell } from '../../components/C
 import CreatorFilter from '../../components/Catalog/CreatorFilter';
 import PageMeta from '../../components/Seo/PageMeta';
 import { Unit } from '../../models/unit';
-import { UnitHover } from '../my-heroscape/battlegroups/battlegroup-parts';
+import { UnitHover } from '../my-heroscape/armybuilders/armybuilder-parts';
 import { getPrimaryImage, unitPath, useCatalog } from '../../services/catalog';
 import { useCreatorFilter } from '../../services/creator-filter';
 import { usePowerRanking } from '../../services/power-ranking-service';

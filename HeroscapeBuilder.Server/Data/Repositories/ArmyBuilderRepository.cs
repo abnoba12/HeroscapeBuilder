@@ -5,34 +5,34 @@ using Microsoft.EntityFrameworkCore;
 namespace HeroscapeBuilder.Server.Data.Repositories
 {
     /// <summary>
-    /// Battlegroup reads are marked NotCacheable so the owner always sees their latest edits,
+    /// Army builder reads are marked NotCacheable so the owner always sees their latest edits,
     /// share state, and My Army quantities instead of a cached result.
     /// </summary>
-    public class BattlegroupRepository
+    public class ArmyBuilderRepository
     {
         private readonly HsbDbContext _context;
 
-        public BattlegroupRepository(HsbDbContext context)
+        public ArmyBuilderRepository(HsbDbContext context)
         {
             _context = context;
         }
 
-        private IQueryable<Battlegroup> WithUnits()
+        private IQueryable<ArmyBuilder> WithUnits()
         {
-            return _context.Battlegroups
-                .Include(x => x.BattlegroupUnits)
+            return _context.ArmyBuilders
+                .Include(x => x.ArmyBuilderUnits)
                     .ThenInclude(unit => unit.ArmyCard)
                         .ThenInclude(card => card.SetNavigation)
-                .Include(x => x.BattlegroupUnits)
+                .Include(x => x.ArmyBuilderUnits)
                     .ThenInclude(unit => unit.ArmyCard)
                         .ThenInclude(card => card.PointValues)
-                .Include(x => x.BattlegroupUnits)
+                .Include(x => x.ArmyBuilderUnits)
                     .ThenInclude(unit => unit.ArmyCard)
                         .ThenInclude(card => card.ArmyCardAbilities)
                 .NotCacheable();
         }
 
-        public async Task<List<Battlegroup>> GetAllForUser(string userId)
+        public async Task<List<ArmyBuilder>> GetAllForUser(string userId)
         {
             return await WithUnits()
                 .Where(x => x.UserId == userId)
@@ -40,7 +40,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Battlegroup?> GetForUser(string userId, int id, bool track = false)
+        public async Task<ArmyBuilder?> GetForUser(string userId, int id, bool track = false)
         {
             var query = WithUnits().Where(x => x.UserId == userId && x.Id == id);
             if (!track)
@@ -50,7 +50,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<Battlegroup?> GetShared(Guid shareId)
+        public async Task<ArmyBuilder?> GetShared(Guid shareId)
         {
             return await WithUnits()
                 .Where(x => x.ShareId == shareId && x.IsShared)
@@ -60,7 +60,7 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 
         public async Task<bool> NameInUse(string userId, string name, int? excludeId)
         {
-            return await _context.Battlegroups
+            return await _context.ArmyBuilders
                 .NotCacheable()
                 .AnyAsync(x => x.UserId == userId && x.Name == name && x.Id != excludeId);
         }
@@ -101,60 +101,60 @@ namespace HeroscapeBuilder.Server.Data.Repositories
 
         // ---------- Journal ----------
 
-        public async Task<bool> OwnsBattlegroup(string userId, int id)
+        public async Task<bool> OwnsArmyBuilder(string userId, int id)
         {
-            return await _context.Battlegroups
+            return await _context.ArmyBuilders
                 .NotCacheable()
                 .AnyAsync(x => x.UserId == userId && x.Id == id);
         }
 
-        public async Task<List<BattlegroupJournalEntry>> GetJournal(int battlegroupId)
+        public async Task<List<ArmyBuilderJournalEntry>> GetJournal(int armyBuilderId)
         {
-            return await _context.BattlegroupJournalEntries
+            return await _context.ArmyBuilderJournalEntries
                 .NotCacheable()
                 .AsNoTracking()
-                .Where(x => x.BattlegroupId == battlegroupId)
+                .Where(x => x.ArmyBuilderId == armyBuilderId)
                 .OrderByDescending(x => x.EntryDate)
                 .ThenByDescending(x => x.Id)
                 .ToListAsync();
         }
 
         /// <summary>The entry, only if it belongs to one of the user's armies.</summary>
-        public async Task<BattlegroupJournalEntry?> GetJournalEntry(string userId, int entryId)
+        public async Task<ArmyBuilderJournalEntry?> GetJournalEntry(string userId, int entryId)
         {
-            return await _context.BattlegroupJournalEntries
+            return await _context.ArmyBuilderJournalEntries
                 .NotCacheable()
-                .FirstOrDefaultAsync(x => x.Id == entryId && x.Battlegroup.UserId == userId);
+                .FirstOrDefaultAsync(x => x.Id == entryId && x.ArmyBuilder.UserId == userId);
         }
 
-        public void AddJournalEntry(BattlegroupJournalEntry entry)
+        public void AddJournalEntry(ArmyBuilderJournalEntry entry)
         {
-            _context.BattlegroupJournalEntries.Add(entry);
+            _context.ArmyBuilderJournalEntries.Add(entry);
         }
 
-        public void RemoveJournalEntry(BattlegroupJournalEntry entry)
+        public void RemoveJournalEntry(ArmyBuilderJournalEntry entry)
         {
-            _context.BattlegroupJournalEntries.Remove(entry);
+            _context.ArmyBuilderJournalEntries.Remove(entry);
         }
 
-        public void Add(Battlegroup battlegroup)
+        public void Add(ArmyBuilder armyBuilder)
         {
-            _context.Battlegroups.Add(battlegroup);
+            _context.ArmyBuilders.Add(armyBuilder);
         }
 
-        public void Remove(Battlegroup battlegroup)
+        public void Remove(ArmyBuilder armyBuilder)
         {
-            _context.Battlegroups.Remove(battlegroup);
+            _context.ArmyBuilders.Remove(armyBuilder);
         }
 
-        public void AddUnit(BattlegroupUnit unit)
+        public void AddUnit(ArmyBuilderUnit unit)
         {
-            _context.BattlegroupUnits.Add(unit);
+            _context.ArmyBuilderUnits.Add(unit);
         }
 
-        public void RemoveUnit(BattlegroupUnit unit)
+        public void RemoveUnit(ArmyBuilderUnit unit)
         {
-            _context.BattlegroupUnits.Remove(unit);
+            _context.ArmyBuilderUnits.Remove(unit);
         }
 
         public async Task<int> SaveChanges()

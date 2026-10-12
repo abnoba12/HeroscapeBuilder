@@ -8,45 +8,45 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HeroscapeBuilder.Server.Services
 {
-    public class BattlegroupService
+    public class ArmyBuilderService
     {
         private const int MaxNameLength = 100;
         private const int MaxNotesLength = 10000;
         private const string UniqueRarity = "Unique";
 
-        private readonly BattlegroupRepository _battlegroupRepository;
+        private readonly ArmyBuilderRepository _armyBuilderRepository;
         private readonly ArmyGameRepository _gameRepository;
 
-        public BattlegroupService(BattlegroupRepository battlegroupRepository, ArmyGameRepository gameRepository)
+        public ArmyBuilderService(ArmyBuilderRepository armyBuilderRepository, ArmyGameRepository gameRepository)
         {
-            _battlegroupRepository = battlegroupRepository;
+            _armyBuilderRepository = armyBuilderRepository;
             _gameRepository = gameRepository;
         }
 
-        public async Task<List<BattlegroupEntity>> GetMyBattlegroups(Guid userId)
+        public async Task<List<ArmyBuilderEntity>> GetMyArmyBuilders(Guid userId)
         {
             var id = userId.ToString();
-            var battlegroups = await _battlegroupRepository.GetAllForUser(id);
-            var owned = await _battlegroupRepository.GetOwnedQuantities(id);
+            var armyBuilders = await _armyBuilderRepository.GetAllForUser(id);
+            var owned = await _armyBuilderRepository.GetOwnedQuantities(id);
             var tallies = await _gameRepository.GetTallies(id);
 
-            return battlegroups
-                .Select(x => WithTally(x.ToBattlegroupEntity(owned), tallies))
+            return armyBuilders
+                .Select(x => WithTally(x.ToArmyBuilderEntity(owned), tallies))
                 .OrderBy(x => x.Name)
                 .ToList();
         }
 
-        public async Task<BattlegroupEntity> GetMyBattlegroup(Guid userId, int battlegroupId)
+        public async Task<ArmyBuilderEntity> GetMyArmyBuilder(Guid userId, int armyBuilderId)
         {
             var id = userId.ToString();
-            var battlegroup = await _battlegroupRepository.GetForUser(id, battlegroupId)
+            var armyBuilder = await _armyBuilderRepository.GetForUser(id, armyBuilderId)
                 ?? throw NotFound();
 
-            var entity = battlegroup.ToBattlegroupEntity(await _battlegroupRepository.GetOwnedQuantities(id));
+            var entity = armyBuilder.ToArmyBuilderEntity(await _armyBuilderRepository.GetOwnedQuantities(id));
             return WithTally(entity, await _gameRepository.GetTallies(id));
         }
 
-        private static BattlegroupEntity WithTally(BattlegroupEntity entity, Dictionary<int, (int Wins, int Losses)> tallies)
+        private static ArmyBuilderEntity WithTally(ArmyBuilderEntity entity, Dictionary<int, (int Wins, int Losses)> tallies)
         {
             if (tallies.TryGetValue(entity.Id, out var tally))
             {
@@ -57,27 +57,27 @@ namespace HeroscapeBuilder.Server.Services
         }
 
         /// <summary>
-        /// Public lookup. Only battlegroups that are currently shared resolve. The owner (when signed in)
-        /// gets the owner view of their own battlegroup; everyone else gets a read-only view.
+        /// Public lookup. Only army builders that are currently shared resolve. The owner (when signed in)
+        /// gets the owner view of their own army builder; everyone else gets a read-only view.
         /// </summary>
-        public async Task<BattlegroupEntity> GetSharedBattlegroup(Guid shareId, Guid? viewerId)
+        public async Task<ArmyBuilderEntity> GetSharedArmyBuilder(Guid shareId, Guid? viewerId)
         {
-            var battlegroup = await _battlegroupRepository.GetShared(shareId)
+            var armyBuilder = await _armyBuilderRepository.GetShared(shareId)
                 ?? throw NotFound();
 
-            var isOwner = viewerId != null && battlegroup.UserId == viewerId.Value.ToString();
-            var owned = isOwner ? await _battlegroupRepository.GetOwnedQuantities(battlegroup.UserId) : null;
+            var isOwner = viewerId != null && armyBuilder.UserId == viewerId.Value.ToString();
+            var owned = isOwner ? await _armyBuilderRepository.GetOwnedQuantities(armyBuilder.UserId) : null;
 
-            return battlegroup.ToBattlegroupEntity(owned);
+            return armyBuilder.ToArmyBuilderEntity(owned);
         }
 
-        public async Task<BattlegroupEntity> CreateBattlegroup(Guid userId, BattlegroupSaveRequest request)
+        public async Task<ArmyBuilderEntity> CreateArmyBuilder(Guid userId, ArmyBuilderSaveRequest request)
         {
             var id = userId.ToString();
             var validated = await Validate(id, request, excludeId: null);
 
             var now = DateTime.UtcNow;
-            var battlegroup = new Battlegroup
+            var armyBuilder = new ArmyBuilder
             {
                 UserId = id,
                 Name = validated.Name,
@@ -89,36 +89,36 @@ namespace HeroscapeBuilder.Server.Services
                 ShareId = Guid.NewGuid(),
                 CreatedAt = now,
                 UpdatedAt = now,
-                BattlegroupUnits = validated.Units
-                    .Select(unit => new BattlegroupUnit { ArmyCardId = unit.Key, Quantity = unit.Value })
+                ArmyBuilderUnits = validated.Units
+                    .Select(unit => new ArmyBuilderUnit { ArmyCardId = unit.Key, Quantity = unit.Value })
                     .ToList(),
             };
 
-            _battlegroupRepository.Add(battlegroup);
+            _armyBuilderRepository.Add(armyBuilder);
             await Save(id, validated.Name, excludeId: null);
 
-            return await GetMyBattlegroup(userId, battlegroup.Id);
+            return await GetMyArmyBuilder(userId, armyBuilder.Id);
         }
 
-        public async Task<BattlegroupEntity> UpdateBattlegroup(Guid userId, int battlegroupId, BattlegroupSaveRequest request)
+        public async Task<ArmyBuilderEntity> UpdateArmyBuilder(Guid userId, int armyBuilderId, ArmyBuilderSaveRequest request)
         {
             var id = userId.ToString();
-            var battlegroup = await _battlegroupRepository.GetForUser(id, battlegroupId, track: true)
+            var armyBuilder = await _armyBuilderRepository.GetForUser(id, armyBuilderId, track: true)
                 ?? throw NotFound();
 
-            var validated = await Validate(id, request, excludeId: battlegroupId);
+            var validated = await Validate(id, request, excludeId: armyBuilderId);
 
-            battlegroup.Name = validated.Name;
-            battlegroup.PointLimit = validated.PointLimit;
-            battlegroup.PointSystem = validated.PointSystem;
-            battlegroup.Creator = validated.Creator;
-            battlegroup.Notes = validated.Notes;
-            battlegroup.UpdatedAt = DateTime.UtcNow;
+            armyBuilder.Name = validated.Name;
+            armyBuilder.PointLimit = validated.PointLimit;
+            armyBuilder.PointSystem = validated.PointSystem;
+            armyBuilder.Creator = validated.Creator;
+            armyBuilder.Notes = validated.Notes;
+            armyBuilder.UpdatedAt = DateTime.UtcNow;
 
-            var existing = battlegroup.BattlegroupUnits.ToDictionary(x => x.ArmyCardId);
+            var existing = armyBuilder.ArmyBuilderUnits.ToDictionary(x => x.ArmyCardId);
             foreach (var current in existing.Values.Where(x => !validated.Units.ContainsKey(x.ArmyCardId)).ToList())
             {
-                _battlegroupRepository.RemoveUnit(current);
+                _armyBuilderRepository.RemoveUnit(current);
             }
             foreach (var desired in validated.Units)
             {
@@ -128,65 +128,65 @@ namespace HeroscapeBuilder.Server.Services
                 }
                 else
                 {
-                    _battlegroupRepository.AddUnit(new BattlegroupUnit
+                    _armyBuilderRepository.AddUnit(new ArmyBuilderUnit
                     {
-                        BattlegroupId = battlegroup.Id,
+                        ArmyBuilderId = armyBuilder.Id,
                         ArmyCardId = desired.Key,
                         Quantity = desired.Value,
                     });
                 }
             }
 
-            await Save(id, validated.Name, excludeId: battlegroupId);
+            await Save(id, validated.Name, excludeId: armyBuilderId);
 
-            return await GetMyBattlegroup(userId, battlegroupId);
+            return await GetMyArmyBuilder(userId, armyBuilderId);
         }
 
-        public async Task DeleteBattlegroup(Guid userId, int battlegroupId)
+        public async Task DeleteArmyBuilder(Guid userId, int armyBuilderId)
         {
-            var battlegroup = await _battlegroupRepository.GetForUser(userId.ToString(), battlegroupId, track: true)
+            var armyBuilder = await _armyBuilderRepository.GetForUser(userId.ToString(), armyBuilderId, track: true)
                 ?? throw NotFound();
 
             // The results stay (they feed the power ranking); they just stop pointing at the deleted army.
-            await _gameRepository.DetachFromBattlegroup(userId.ToString(), battlegroupId);
-            _battlegroupRepository.Remove(battlegroup);
-            await _battlegroupRepository.SaveChanges();
+            await _gameRepository.DetachFromArmyBuilder(userId.ToString(), armyBuilderId);
+            _armyBuilderRepository.Remove(armyBuilder);
+            await _armyBuilderRepository.SaveChanges();
         }
 
         /// <summary>
-        /// Shares or hides a battlegroup. The share key never changes, so re-sharing restores the same link.
+        /// Shares or hides an army builder. The share key never changes, so re-sharing restores the same link.
         /// </summary>
-        public async Task<BattlegroupEntity> SetShared(Guid userId, int battlegroupId, bool isShared)
+        public async Task<ArmyBuilderEntity> SetShared(Guid userId, int armyBuilderId, bool isShared)
         {
-            var battlegroup = await _battlegroupRepository.GetForUser(userId.ToString(), battlegroupId, track: true)
+            var armyBuilder = await _armyBuilderRepository.GetForUser(userId.ToString(), armyBuilderId, track: true)
                 ?? throw NotFound();
 
-            battlegroup.IsShared = isShared;
-            await _battlegroupRepository.SaveChanges();
+            armyBuilder.IsShared = isShared;
+            await _armyBuilderRepository.SaveChanges();
 
-            return await GetMyBattlegroup(userId, battlegroupId);
+            return await GetMyArmyBuilder(userId, armyBuilderId);
         }
 
         /// <summary>
         /// Retires or restores an army. Retiring only hides it from the active list; nothing else about it changes.
         /// </summary>
-        public async Task<BattlegroupEntity> SetRetired(Guid userId, int battlegroupId, bool isRetired)
+        public async Task<ArmyBuilderEntity> SetRetired(Guid userId, int armyBuilderId, bool isRetired)
         {
-            var battlegroup = await _battlegroupRepository.GetForUser(userId.ToString(), battlegroupId, track: true)
+            var armyBuilder = await _armyBuilderRepository.GetForUser(userId.ToString(), armyBuilderId, track: true)
                 ?? throw NotFound();
 
-            if (battlegroup.IsRetired != isRetired)
+            if (armyBuilder.IsRetired != isRetired)
             {
-                battlegroup.IsRetired = isRetired;
-                battlegroup.RetiredAt = isRetired ? DateTime.UtcNow : null;
-                await _battlegroupRepository.SaveChanges();
+                armyBuilder.IsRetired = isRetired;
+                armyBuilder.RetiredAt = isRetired ? DateTime.UtcNow : null;
+                await _armyBuilderRepository.SaveChanges();
             }
 
-            return await GetMyBattlegroup(userId, battlegroupId);
+            return await GetMyArmyBuilder(userId, armyBuilderId);
         }
 
         // A tuple, not a nested type: everything in this namespace is auto-registered with DI (see RegisterService).
-        private async Task<(string Name, int PointLimit, PointSystem PointSystem, string? Creator, string? Notes, Dictionary<int, int> Units)> Validate(string userId, BattlegroupSaveRequest request, int? excludeId)
+        private async Task<(string Name, int PointLimit, PointSystem PointSystem, string? Creator, string? Notes, Dictionary<int, int> Units)> Validate(string userId, ArmyBuilderSaveRequest request, int? excludeId)
         {
             var errors = new List<string>();
 
@@ -199,9 +199,9 @@ namespace HeroscapeBuilder.Server.Services
             {
                 errors.Add($"Army names can be at most {MaxNameLength} characters.");
             }
-            else if (await _battlegroupRepository.NameInUse(userId, name, excludeId))
+            else if (await _armyBuilderRepository.NameInUse(userId, name, excludeId))
             {
-                throw new BattlegroupException(BattlegroupErrorKind.Conflict, $"You already have an army named \"{name}\". Army names must be unique.");
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.Conflict, $"You already have an army named \"{name}\". Army names must be unique.");
             }
 
             if (request.PointLimit <= 0)
@@ -225,7 +225,7 @@ namespace HeroscapeBuilder.Server.Services
             var allowedCreators = new List<string>();
             if (!string.IsNullOrWhiteSpace(request.Creator))
             {
-                var knownCreators = await _battlegroupRepository.GetCreators();
+                var knownCreators = await _armyBuilderRepository.GetCreators();
                 foreach (var requestedCreator in request.Creator.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
                     var match = knownCreators.FirstOrDefault(x => string.Equals(x, requestedCreator, StringComparison.OrdinalIgnoreCase));
@@ -241,7 +241,7 @@ namespace HeroscapeBuilder.Server.Services
             }
             var creator = allowedCreators.Count > 0 ? string.Join(",", allowedCreators) : null;
 
-            var requested = request.Units ?? new List<BattlegroupUnitRequest>();
+            var requested = request.Units ?? new List<ArmyBuilderUnitRequest>();
             if (requested.Any(x => x.Quantity <= 0))
             {
                 errors.Add("Unit quantities must be at least 1.");
@@ -252,8 +252,8 @@ namespace HeroscapeBuilder.Server.Services
                 .GroupBy(x => x.UnitId)
                 .ToDictionary(group => group.Key, group => group.Sum(x => x.Quantity));
 
-            var cards = (await _battlegroupRepository.GetArmyCards(units.Keys)).ToDictionary(x => x.Id);
-            var owned = await _battlegroupRepository.GetOwnedQuantities(userId);
+            var cards = (await _armyBuilderRepository.GetArmyCards(units.Keys)).ToDictionary(x => x.Id);
+            var owned = await _armyBuilderRepository.GetOwnedQuantities(userId);
 
             foreach (var (unitId, quantity) in units)
             {
@@ -303,7 +303,7 @@ namespace HeroscapeBuilder.Server.Services
 
             if (errors.Count > 0)
             {
-                throw new BattlegroupException(BattlegroupErrorKind.Validation, errors.ToArray());
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.Validation, errors.ToArray());
             }
 
             return (name, request.PointLimit, request.PointSystem, creator, notes, units);
@@ -322,21 +322,21 @@ namespace HeroscapeBuilder.Server.Services
         {
             try
             {
-                await _battlegroupRepository.SaveChanges();
+                await _armyBuilderRepository.SaveChanges();
             }
             catch (DbUpdateException)
             {
-                if (!await _battlegroupRepository.NameInUse(userId, name, excludeId))
+                if (!await _armyBuilderRepository.NameInUse(userId, name, excludeId))
                 {
                     throw;
                 }
-                throw new BattlegroupException(BattlegroupErrorKind.Conflict, $"You already have an army named \"{name}\". Army names must be unique.");
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.Conflict, $"You already have an army named \"{name}\". Army names must be unique.");
             }
         }
 
-        private static BattlegroupException NotFound()
+        private static ArmyBuilderException NotFound()
         {
-            return new BattlegroupException(BattlegroupErrorKind.NotFound, "Army not found.");
+            return new ArmyBuilderException(ArmyBuilderErrorKind.NotFound, "Army not found.");
         }
     }
 }

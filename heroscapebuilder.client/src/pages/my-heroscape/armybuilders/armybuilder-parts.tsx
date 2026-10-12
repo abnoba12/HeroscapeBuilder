@@ -23,7 +23,7 @@ import {
 import type { Instance } from '@popperjs/core';
 import React from 'react';
 import { Unit } from '../../../models/unit';
-import { Battlegroup } from '../../../models/battlegroup';
+import { ArmyBuilder } from '../../../models/armybuilder';
 import { getCreatorInfo } from '../../../models/creator';
 import { PointSystem, getUnitPoints } from '../../../models/point-system';
 
@@ -137,7 +137,7 @@ const pulse = keyframes`
     50% { box-shadow: 0 0 0 8px rgba(255, 23, 68, 0); }
 `;
 
-/** Loud, animated marker for a battlegroup that no longer fits the owner's My Army. */
+/** Loud, animated marker for an army builder that no longer fits the owner's My Army. */
 export const NeedsReviewChip: React.FC = () => (
     <Chip
         label="⚠ NEEDS REVIEW"
@@ -217,15 +217,15 @@ export const ConfirmDeleteDialog: React.FC<{
     </Dialog>
 );
 
-/** Read-only battlegroup: summary, restrictions and unit list. Used by the owner's detail page and the public page. */
-export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battlegroup }) => {
-    const showOwnerFlags = battlegroup.isOwner;
-    const unitCount = battlegroup.units.reduce((sum, item) => sum + item.quantity, 0);
+/** Read-only army builder: summary, restrictions and unit list. Used by the owner's detail page and the public page. */
+export const ArmyBuilderView: React.FC<{ armyBuilder: ArmyBuilder }> = ({ armyBuilder }) => {
+    const showOwnerFlags = armyBuilder.isOwner;
+    const unitCount = armyBuilder.units.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         <Stack spacing={2}>
-            {showOwnerFlags && battlegroup.needsReview && (
-                <NeedsReviewBanner reasons={battlegroup.reviewReasons}>
+            {showOwnerFlags && armyBuilder.needsReview && (
+                <NeedsReviewBanner reasons={armyBuilder.reviewReasons}>
                     <Typography variant="body2" sx={{ mt: 1, fontWeight: 600 }}>
                         Edit the army (or update My Collection) to clear this warning.
                     </Typography>
@@ -235,11 +235,11 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
             <Paper variant="outlined" sx={{ p: 2 }}>
                 <Stack spacing={1.5}>
                     <Typography variant="subtitle2" color="text.secondary">Criteria</Typography>
-                    <PointsMeter total={battlegroup.totalPoints} limit={battlegroup.pointLimit} />
+                    <PointsMeter total={armyBuilder.totalPoints} limit={armyBuilder.pointLimit} />
                     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                        <Chip label={`Point limit: ${battlegroup.pointLimit}`} size="small" variant="outlined" />
-                        <Chip label={`${battlegroup.pointSystem} points`} size="small" variant="outlined" />
-                        <Chip label={`Creator: ${creatorLabel(battlegroup.creator)}`} size="small" variant="outlined" />
+                        <Chip label={`Point limit: ${armyBuilder.pointLimit}`} size="small" variant="outlined" />
+                        <Chip label={`${armyBuilder.pointSystem} points`} size="small" variant="outlined" />
+                        <Chip label={`Creator: ${creatorLabel(armyBuilder.creator)}`} size="small" variant="outlined" />
                         <Chip label={`Units: ${unitCount}`} size="small" variant="outlined" />
                         <Chip label="Unique units: max 1 each" size="small" variant="outlined" />
                     </Stack>
@@ -261,20 +261,20 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {battlegroup.units.length === 0 && (
+                        {armyBuilder.units.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={8} align="center">
                                     <Typography variant="body2" color="text.secondary">No units yet.</Typography>
                                 </TableCell>
                             </TableRow>
                         )}
-                        {battlegroup.units.map(item => {
-                            const points = getUnitPoints(item.unit, battlegroup.pointSystem) ?? 0;
+                        {armyBuilder.units.map(item => {
+                            const points = getUnitPoints(item.unit, armyBuilder.pointSystem) ?? 0;
                             const flagged = showOwnerFlags && item.overAllocated;
                             return (
                                 <TableRow key={item.unit.id} sx={flagged ? { bgcolor: 'rgba(255, 23, 68, 0.12)' } : undefined}>
                                     <TableCell>
-                                        <UnitHover unit={item.unit} pointSystem={battlegroup.pointSystem}>
+                                        <UnitHover unit={item.unit} pointSystem={armyBuilder.pointSystem}>
                                             <Typography variant="body2" sx={{ fontWeight: 600, display: 'inline-block' }}>{item.unit.name}</Typography>
                                         </UnitHover>
                                         {flagged && (
@@ -297,12 +297,12 @@ export const BattlegroupView: React.FC<{ battlegroup: Battlegroup }> = ({ battle
                 </Table>
             </TableContainer>
 
-            {battlegroup.notes && (
+            {armyBuilder.notes && (
                 <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>How to play</Typography>
                     {/* Rendered as plain text (React escapes it); line breaks are kept. */}
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                        {battlegroup.notes}
+                        {armyBuilder.notes}
                     </Typography>
                 </Paper>
             )}

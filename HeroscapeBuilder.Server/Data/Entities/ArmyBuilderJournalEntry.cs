@@ -1,11 +1,11 @@
 namespace HeroscapeBuilder.Server.Data.Entities;
 
 /// <summary>One dated observation the owner wrote about an army. Private to the owner.</summary>
-public partial class BattlegroupJournalEntry
+public partial class ArmyBuilderJournalEntry
 {
     public int Id { get; set; }
 
-    public int BattlegroupId { get; set; }
+    public int ArmyBuilderId { get; set; }
 
     public DateOnly EntryDate { get; set; }
 
@@ -19,5 +19,5 @@ public partial class BattlegroupJournalEntry
 
     public DateTime UpdatedAt { get; set; }
 
-    public virtual Battlegroup Battlegroup { get; set; } = null!;
+    public virtual ArmyBuilder ArmyBuilder { get; set; } = null!;
 }

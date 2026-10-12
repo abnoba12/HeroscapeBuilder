@@ -11,75 +11,75 @@ namespace HeroscapeBuilder.Server.Controllers
     [Route("api/[controller]/[action]")]
     [ApiController]
     [Authorize(Roles = "Admin,User")]
-    public class BattlegroupController : ControllerBase
+    public class ArmyBuilderController : ControllerBase
     {
-        private readonly BattlegroupService _battlegroupService;
+        private readonly ArmyBuilderService _armyBuilderService;
         private readonly ArmyGameService _armyGameService;
-        private readonly BattlegroupJournalService _journalService;
+        private readonly ArmyBuilderJournalService _journalService;
 
-        public BattlegroupController(BattlegroupService battlegroupService, ArmyGameService armyGameService, BattlegroupJournalService journalService)
+        public ArmyBuilderController(ArmyBuilderService armyBuilderService, ArmyGameService armyGameService, ArmyBuilderJournalService journalService)
         {
-            _battlegroupService = battlegroupService;
+            _armyBuilderService = armyBuilderService;
             _armyGameService = armyGameService;
             _journalService = journalService;
         }
 
         [HttpGet]
-        public Task<IActionResult> GetMyBattlegroups()
+        public Task<IActionResult> GetMyArmyBuilders()
         {
-            return Run(userId => _battlegroupService.GetMyBattlegroups(userId));
+            return Run(userId => _armyBuilderService.GetMyArmyBuilders(userId));
         }
 
         [HttpGet]
-        public Task<IActionResult> GetBattlegroup(int id)
+        public Task<IActionResult> GetArmyBuilder(int id)
         {
-            return Run(userId => _battlegroupService.GetMyBattlegroup(userId, id));
+            return Run(userId => _armyBuilderService.GetMyArmyBuilder(userId, id));
         }
 
         [HttpPost]
-        public Task<IActionResult> CreateBattlegroup(BattlegroupSaveRequest request)
+        public Task<IActionResult> CreateArmyBuilder(ArmyBuilderSaveRequest request)
         {
-            return Run(userId => _battlegroupService.CreateBattlegroup(userId, request));
+            return Run(userId => _armyBuilderService.CreateArmyBuilder(userId, request));
         }
 
         [HttpPut]
-        public Task<IActionResult> UpdateBattlegroup(int id, BattlegroupSaveRequest request)
+        public Task<IActionResult> UpdateArmyBuilder(int id, ArmyBuilderSaveRequest request)
         {
-            return Run(userId => _battlegroupService.UpdateBattlegroup(userId, id, request));
+            return Run(userId => _armyBuilderService.UpdateArmyBuilder(userId, id, request));
         }
 
         [HttpDelete]
-        public Task<IActionResult> DeleteBattlegroup(int id)
+        public Task<IActionResult> DeleteArmyBuilder(int id)
         {
             return Run(async userId =>
             {
-                await _battlegroupService.DeleteBattlegroup(userId, id);
+                await _armyBuilderService.DeleteArmyBuilder(userId, id);
                 return true;
             });
         }
 
         [HttpPost]
-        public Task<IActionResult> ShareBattlegroup(int id)
+        public Task<IActionResult> ShareArmyBuilder(int id)
         {
-            return Run(userId => _battlegroupService.SetShared(userId, id, true));
+            return Run(userId => _armyBuilderService.SetShared(userId, id, true));
         }
 
         [HttpPost]
-        public Task<IActionResult> HideBattlegroup(int id)
+        public Task<IActionResult> HideArmyBuilder(int id)
         {
-            return Run(userId => _battlegroupService.SetShared(userId, id, false));
+            return Run(userId => _armyBuilderService.SetShared(userId, id, false));
         }
 
         [HttpPost]
-        public Task<IActionResult> RetireBattlegroup(int id)
+        public Task<IActionResult> RetireArmyBuilder(int id)
         {
-            return Run(userId => _battlegroupService.SetRetired(userId, id, true));
+            return Run(userId => _armyBuilderService.SetRetired(userId, id, true));
         }
 
         [HttpPost]
-        public Task<IActionResult> RestoreBattlegroup(int id)
+        public Task<IActionResult> RestoreArmyBuilder(int id)
         {
-            return Run(userId => _battlegroupService.SetRetired(userId, id, false));
+            return Run(userId => _armyBuilderService.SetRetired(userId, id, false));
         }
 
         [HttpGet]
@@ -129,19 +129,19 @@ namespace HeroscapeBuilder.Server.Controllers
         }
 
         /// <summary>
-        /// Public, read-only view of a shared battlegroup. Anyone with the link can call this without signing in;
+        /// Public, read-only view of a shared army builder. Anyone with the link can call this without signing in;
         /// a signed-in owner is recognised so the page can offer them edit controls.
         /// </summary>
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetSharedBattlegroup(Guid shareId)
+        public async Task<IActionResult> GetSharedArmyBuilder(Guid shareId)
         {
             try
             {
                 var viewerId = UserHelper.GetCurrentUserId(HttpContext);
-                return Ok(await _battlegroupService.GetSharedBattlegroup(shareId, viewerId));
+                return Ok(await _armyBuilderService.GetSharedArmyBuilder(shareId, viewerId));
             }
-            catch (BattlegroupException ex)
+            catch (ArmyBuilderException ex)
             {
                 return ToResult(ex);
             }
@@ -159,19 +159,19 @@ namespace HeroscapeBuilder.Server.Controllers
             {
                 return Ok(await action(userId.Value));
             }
-            catch (BattlegroupException ex)
+            catch (ArmyBuilderException ex)
             {
                 return ToResult(ex);
             }
         }
 
-        private IActionResult ToResult(BattlegroupException ex)
+        private IActionResult ToResult(ArmyBuilderException ex)
         {
             var body = new { errors = ex.Errors };
             return ex.Kind switch
             {
-                BattlegroupErrorKind.NotFound => NotFound(body),
-                BattlegroupErrorKind.Conflict => Conflict(body),
+                ArmyBuilderErrorKind.NotFound => NotFound(body),
+                ArmyBuilderErrorKind.Conflict => Conflict(body),
                 _ => BadRequest(body),
             };
         }

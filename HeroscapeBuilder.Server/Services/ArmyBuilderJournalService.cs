@@ -8,41 +8,41 @@ namespace HeroscapeBuilder.Server.Services
     /// <summary>
     /// The owner's private play journal for an army: dated notes on what went well and what went poorly.
     /// </summary>
-    public class BattlegroupJournalService
+    public class ArmyBuilderJournalService
     {
         private const int MaxFieldLength = 4000;
         private const int MaxEntriesPerArmy = 500;
 
-        private readonly BattlegroupRepository _battlegroupRepository;
+        private readonly ArmyBuilderRepository _armyBuilderRepository;
 
-        public BattlegroupJournalService(BattlegroupRepository battlegroupRepository)
+        public ArmyBuilderJournalService(ArmyBuilderRepository armyBuilderRepository)
         {
-            _battlegroupRepository = battlegroupRepository;
+            _armyBuilderRepository = armyBuilderRepository;
         }
 
-        public async Task<List<JournalEntryEntity>> GetJournal(Guid userId, int battlegroupId)
+        public async Task<List<JournalEntryEntity>> GetJournal(Guid userId, int armyBuilderId)
         {
-            await EnsureOwner(userId, battlegroupId);
+            await EnsureOwner(userId, armyBuilderId);
 
-            return (await _battlegroupRepository.GetJournal(battlegroupId))
+            return (await _armyBuilderRepository.GetJournal(armyBuilderId))
                 .Select(ToEntity)
                 .ToList();
         }
 
-        public async Task<JournalEntryEntity> AddEntry(Guid userId, int battlegroupId, JournalEntryRequest request)
+        public async Task<JournalEntryEntity> AddEntry(Guid userId, int armyBuilderId, JournalEntryRequest request)
         {
-            await EnsureOwner(userId, battlegroupId);
+            await EnsureOwner(userId, armyBuilderId);
 
             var (wentWell, wentPoorly, notes) = Validate(request);
-            if ((await _battlegroupRepository.GetJournal(battlegroupId)).Count >= MaxEntriesPerArmy)
+            if ((await _armyBuilderRepository.GetJournal(armyBuilderId)).Count >= MaxEntriesPerArmy)
             {
-                throw new BattlegroupException(BattlegroupErrorKind.Validation, $"An army can have at most {MaxEntriesPerArmy} journal entries.");
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.Validation, $"An army can have at most {MaxEntriesPerArmy} journal entries.");
             }
 
             var now = DateTime.UtcNow;
-            var entry = new BattlegroupJournalEntry
+            var entry = new ArmyBuilderJournalEntry
             {
-                BattlegroupId = battlegroupId,
+                ArmyBuilderId = armyBuilderId,
                 EntryDate = request.EntryDate ?? DateOnly.FromDateTime(now),
                 WentWell = wentWell,
                 WentPoorly = wentPoorly,
@@ -51,15 +51,15 @@ namespace HeroscapeBuilder.Server.Services
                 UpdatedAt = now,
             };
 
-            _battlegroupRepository.AddJournalEntry(entry);
-            await _battlegroupRepository.SaveChanges();
+            _armyBuilderRepository.AddJournalEntry(entry);
+            await _armyBuilderRepository.SaveChanges();
 
             return ToEntity(entry);
         }
 
         public async Task<JournalEntryEntity> UpdateEntry(Guid userId, int entryId, JournalEntryRequest request)
         {
-            var entry = await _battlegroupRepository.GetJournalEntry(userId.ToString(), entryId) ?? throw EntryNotFound();
+            var entry = await _armyBuilderRepository.GetJournalEntry(userId.ToString(), entryId) ?? throw EntryNotFound();
 
             var (wentWell, wentPoorly, notes) = Validate(request);
 
@@ -69,23 +69,23 @@ namespace HeroscapeBuilder.Server.Services
             entry.Notes = notes;
             entry.UpdatedAt = DateTime.UtcNow;
 
-            await _battlegroupRepository.SaveChanges();
+            await _armyBuilderRepository.SaveChanges();
             return ToEntity(entry);
         }
 
         public async Task DeleteEntry(Guid userId, int entryId)
         {
-            var entry = await _battlegroupRepository.GetJournalEntry(userId.ToString(), entryId) ?? throw EntryNotFound();
+            var entry = await _armyBuilderRepository.GetJournalEntry(userId.ToString(), entryId) ?? throw EntryNotFound();
 
-            _battlegroupRepository.RemoveJournalEntry(entry);
-            await _battlegroupRepository.SaveChanges();
+            _armyBuilderRepository.RemoveJournalEntry(entry);
+            await _armyBuilderRepository.SaveChanges();
         }
 
-        private async Task EnsureOwner(Guid userId, int battlegroupId)
+        private async Task EnsureOwner(Guid userId, int armyBuilderId)
         {
-            if (!await _battlegroupRepository.OwnsBattlegroup(userId.ToString(), battlegroupId))
+            if (!await _armyBuilderRepository.OwnsArmyBuilder(userId.ToString(), armyBuilderId))
             {
-                throw new BattlegroupException(BattlegroupErrorKind.NotFound, "Army not found.");
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.NotFound, "Army not found.");
             }
         }
 
@@ -117,7 +117,7 @@ namespace HeroscapeBuilder.Server.Services
 
             if (errors.Count > 0)
             {
-                throw new BattlegroupException(BattlegroupErrorKind.Validation, errors.ToArray());
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.Validation, errors.ToArray());
             }
 
             return (wentWell, wentPoorly, notes);
@@ -128,7 +128,7 @@ namespace HeroscapeBuilder.Server.Services
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
 
-        private static JournalEntryEntity ToEntity(BattlegroupJournalEntry entry)
+        private static JournalEntryEntity ToEntity(ArmyBuilderJournalEntry entry)
         {
             return new JournalEntryEntity
             {
@@ -141,9 +141,9 @@ namespace HeroscapeBuilder.Server.Services
             };
         }
 
-        private static BattlegroupException EntryNotFound()
+        private static ArmyBuilderException EntryNotFound()
         {
-            return new BattlegroupException(BattlegroupErrorKind.NotFound, "Journal entry not found.");
+            return new ArmyBuilderException(ArmyBuilderErrorKind.NotFound, "Journal entry not found.");
         }
     }
 }

@@ -4,7 +4,7 @@ import AxiosSingletonService from './AxiosSingletonService';
 
 const api = AxiosSingletonService.getInstance();
 
-/** Fired after My Army changes so the sidebar can show/hide the Battlegroups menu. */
+/** Fired after My Army changes so the sidebar can show/hide the Army builders menu. */
 export const MY_ARMY_CHANGED_EVENT = 'my-army-changed';
 
 const notifyMyArmyChanged = () => window.dispatchEvent(new Event(MY_ARMY_CHANGED_EVENT));

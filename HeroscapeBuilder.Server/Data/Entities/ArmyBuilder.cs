@@ -2,7 +2,7 @@ using HeroscapeBuilder.Server.Domain.Entities;
 
 namespace HeroscapeBuilder.Server.Data.Entities;
 
-public partial class Battlegroup
+public partial class ArmyBuilder
 {
     public int Id { get; set; }
 
@@ -13,17 +13,17 @@ public partial class Battlegroup
     public int PointLimit { get; set; }
 
     /// <summary>
-    /// Which point values the battlegroup is built with; totals and the point limit are measured in it.
+    /// Which point values the army builder is built with; totals and the point limit are measured in it.
     /// </summary>
     public PointSystem PointSystem { get; set; }
 
     /// <summary>
-    /// When set, every unit in the battlegroup must come from this creator. Null means any creator.
+    /// When set, every unit in the army builder must come from this creator. Null means any creator.
     /// </summary>
     public string? Creator { get; set; }
 
     /// <summary>
-    /// Free-form, plain-text notes from the owner on how to play the battlegroup.
+    /// Free-form, plain-text notes from the owner on how to play the army builder.
     /// </summary>
     public string? Notes { get; set; }
 
@@ -44,5 +44,5 @@ public partial class Battlegroup
 
     public virtual ApplicationUser User { get; set; } = null!;
 
-    public virtual ICollection<BattlegroupUnit> BattlegroupUnits { get; set; } = new List<BattlegroupUnit>();
+    public virtual ICollection<ArmyBuilderUnit> ArmyBuilderUnits { get; set; } = new List<ArmyBuilderUnit>();
 }

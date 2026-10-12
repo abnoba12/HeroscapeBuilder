@@ -17,11 +17,11 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<ArmyCard> ArmyCards { get; set; }
 
-    public virtual DbSet<Battlegroup> Battlegroups { get; set; }
+    public virtual DbSet<ArmyBuilder> ArmyBuilders { get; set; }
 
-    public virtual DbSet<BattlegroupUnit> BattlegroupUnits { get; set; }
+    public virtual DbSet<ArmyBuilderUnit> ArmyBuilderUnits { get; set; }
 
-    public virtual DbSet<BattlegroupJournalEntry> BattlegroupJournalEntries { get; set; }
+    public virtual DbSet<ArmyBuilderJournalEntry> ArmyBuilderJournalEntries { get; set; }
 
     public virtual DbSet<ArmyCardAbility> ArmyCardAbilities { get; set; }
 
@@ -383,9 +383,9 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
                 .HasConstraintName("FK_user_cards_AspNetUsers");
         });
 
-        modelBuilder.Entity<Battlegroup>(entity =>
+        modelBuilder.Entity<ArmyBuilder>(entity =>
         {
-            entity.ToTable("battlegroup");
+            entity.ToTable("armybuilder");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.UserId).HasMaxLength(450);
@@ -395,51 +395,51 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
-            entity.HasIndex(e => new { e.UserId, e.Name }, "UX_battlegroup_UserId_Name").IsUnique();
-            entity.HasIndex(e => e.ShareId, "UX_battlegroup_ShareId").IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.Name }, "UX_armybuilder_UserId_Name").IsUnique();
+            entity.HasIndex(e => e.ShareId, "UX_armybuilder_ShareId").IsUnique();
 
             entity.HasOne(d => d.User)
                 .WithMany()
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_battlegroup_AspNetUsers");
+                .HasConstraintName("FK_armybuilder_AspNetUsers");
         });
 
-        modelBuilder.Entity<BattlegroupUnit>(entity =>
+        modelBuilder.Entity<ArmyBuilderUnit>(entity =>
         {
-            entity.ToTable("battlegroup_unit");
+            entity.ToTable("armybuilder_unit");
 
             entity.Property(e => e.Id).HasColumnName("id");
 
-            entity.HasIndex(e => new { e.BattlegroupId, e.ArmyCardId }, "UX_battlegroup_unit_Battlegroup_ArmyCard").IsUnique();
+            entity.HasIndex(e => new { e.ArmyBuilderId, e.ArmyCardId }, "UX_armybuilder_unit_ArmyBuilder_ArmyCard").IsUnique();
 
-            entity.HasOne(d => d.Battlegroup)
-                .WithMany(p => p.BattlegroupUnits)
-                .HasForeignKey(d => d.BattlegroupId)
+            entity.HasOne(d => d.ArmyBuilder)
+                .WithMany(p => p.ArmyBuilderUnits)
+                .HasForeignKey(d => d.ArmyBuilderId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_battlegroup_unit_battlegroup");
+                .HasConstraintName("FK_armybuilder_unit_armybuilder");
 
             entity.HasOne(d => d.ArmyCard)
                 .WithMany()
                 .HasForeignKey(d => d.ArmyCardId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_battlegroup_unit_army_card");
+                .HasConstraintName("FK_armybuilder_unit_army_card");
         });
 
-        modelBuilder.Entity<BattlegroupJournalEntry>(entity =>
+        modelBuilder.Entity<ArmyBuilderJournalEntry>(entity =>
         {
-            entity.ToTable("battlegroup_journal");
+            entity.ToTable("armybuilder_journal");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.WentWell).HasMaxLength(4000);
             entity.Property(e => e.WentPoorly).HasMaxLength(4000);
             entity.Property(e => e.Notes).HasMaxLength(4000);
 
-            entity.HasOne(d => d.Battlegroup)
+            entity.HasOne(d => d.ArmyBuilder)
                 .WithMany()
-                .HasForeignKey(d => d.BattlegroupId)
+                .HasForeignKey(d => d.ArmyBuilderId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_battlegroup_journal_battlegroup");
+                .HasConstraintName("FK_armybuilder_journal_armybuilder");
         });
 
         modelBuilder.Entity<UnitDuelVote>(entity =>

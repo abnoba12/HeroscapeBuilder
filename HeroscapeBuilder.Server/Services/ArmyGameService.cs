@@ -16,30 +16,30 @@ namespace HeroscapeBuilder.Server.Services
         private const int MaxGamesPerUser = 5000;
         private const int RecentGamesShown = 25;
 
-        private readonly BattlegroupRepository _battlegroupRepository;
+        private readonly ArmyBuilderRepository _armyBuilderRepository;
         private readonly ArmyGameRepository _gameRepository;
 
-        public ArmyGameService(BattlegroupRepository battlegroupRepository, ArmyGameRepository gameRepository)
+        public ArmyGameService(ArmyBuilderRepository armyBuilderRepository, ArmyGameRepository gameRepository)
         {
-            _battlegroupRepository = battlegroupRepository;
+            _armyBuilderRepository = armyBuilderRepository;
             _gameRepository = gameRepository;
         }
 
-        public async Task<List<ArmyGameEntity>> GetRecentGames(Guid userId, int battlegroupId)
+        public async Task<List<ArmyGameEntity>> GetRecentGames(Guid userId, int armyBuilderId)
         {
             var id = userId.ToString();
-            _ = await _battlegroupRepository.GetForUser(id, battlegroupId) ?? throw NotFound();
+            _ = await _armyBuilderRepository.GetForUser(id, armyBuilderId) ?? throw NotFound();
 
-            return (await _gameRepository.GetRecent(id, battlegroupId, RecentGamesShown))
+            return (await _gameRepository.GetRecent(id, armyBuilderId, RecentGamesShown))
                 .Select(ToEntity)
                 .ToList();
         }
 
         /// <summary>Records one game, or several identical results at once, and returns the army's new tally.</summary>
-        public async Task<ArmyTally> LogGames(Guid userId, int battlegroupId, ArmyGameRequest request)
+        public async Task<ArmyTally> LogGames(Guid userId, int armyBuilderId, ArmyGameRequest request)
         {
             var id = userId.ToString();
-            var battlegroup = await _battlegroupRepository.GetForUser(id, battlegroupId) ?? throw NotFound();
+            var armyBuilder = await _armyBuilderRepository.GetForUser(id, armyBuilderId) ?? throw NotFound();
 
             var errors = new List<string>();
             if (request.Count < 1 || request.Count > MaxBatch)
@@ -60,8 +60,8 @@ namespace HeroscapeBuilder.Server.Services
                 errors.Add("A game cannot be dated in the future.");
             }
 
-            var units = battlegroup.BattlegroupUnits
-                .Select(unit => new { unit.ArmyCardId, unit.Quantity, Points = PointsFor(unit.ArmyCard, battlegroup.PointSystem) })
+            var units = armyBuilder.ArmyBuilderUnits
+                .Select(unit => new { unit.ArmyCardId, unit.Quantity, Points = PointsFor(unit.ArmyCard, armyBuilder.PointSystem) })
                 .ToList();
             if (units.Count == 0)
             {
@@ -75,7 +75,7 @@ namespace HeroscapeBuilder.Server.Services
 
             if (errors.Count > 0)
             {
-                throw new BattlegroupException(BattlegroupErrorKind.Validation, errors.ToArray());
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.Validation, errors.ToArray());
             }
 
             for (var i = 0; i < request.Count; i++)
@@ -83,7 +83,7 @@ namespace HeroscapeBuilder.Server.Services
                 _gameRepository.Add(new ArmyGame
                 {
                     UserId = id,
-                    BattlegroupId = battlegroupId,
+                    ArmyBuilderId = armyBuilderId,
                     Won = request.Won,
                     PlayedAt = playedAt,
                     Note = note,
@@ -95,25 +95,25 @@ namespace HeroscapeBuilder.Server.Services
             }
 
             await _gameRepository.SaveChanges();
-            return await GetTally(id, battlegroupId);
+            return await GetTally(id, armyBuilderId);
         }
 
         public async Task<ArmyTally> DeleteGame(Guid userId, int gameId)
         {
             var id = userId.ToString();
-            var game = await _gameRepository.GetOwned(id, gameId) ?? throw new BattlegroupException(BattlegroupErrorKind.NotFound, "Game not found.");
+            var game = await _gameRepository.GetOwned(id, gameId) ?? throw new ArmyBuilderException(ArmyBuilderErrorKind.NotFound, "Game not found.");
 
-            var battlegroupId = game.BattlegroupId;
+            var armyBuilderId = game.ArmyBuilderId;
             _gameRepository.Remove(game);
             await _gameRepository.SaveChanges();
 
-            return battlegroupId == null ? new ArmyTally() : await GetTally(id, battlegroupId.Value);
+            return armyBuilderId == null ? new ArmyTally() : await GetTally(id, armyBuilderId.Value);
         }
 
-        private async Task<ArmyTally> GetTally(string userId, int battlegroupId)
+        private async Task<ArmyTally> GetTally(string userId, int armyBuilderId)
         {
             var tallies = await _gameRepository.GetTallies(userId);
-            return tallies.TryGetValue(battlegroupId, out var tally)
+            return tallies.TryGetValue(armyBuilderId, out var tally)
                 ? new ArmyTally { Wins = tally.Wins, Losses = tally.Losses }
                 : new ArmyTally();
         }
@@ -129,9 +129,9 @@ namespace HeroscapeBuilder.Server.Services
             return new ArmyGameEntity { Id = game.Id, Won = game.Won, PlayedAt = game.PlayedAt, Note = game.Note };
         }
 
-        private static BattlegroupException NotFound()
+        private static ArmyBuilderException NotFound()
         {
-            return new BattlegroupException(BattlegroupErrorKind.NotFound, "Army not found.");
+            return new ArmyBuilderException(ArmyBuilderErrorKind.NotFound, "Army not found.");
         }
     }
 }

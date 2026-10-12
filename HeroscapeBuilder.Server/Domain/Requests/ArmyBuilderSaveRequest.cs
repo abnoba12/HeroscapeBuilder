@@ -2,7 +2,7 @@ using HeroscapeBuilder.Server.Domain.Entities;
 
 namespace HeroscapeBuilder.Server.Domain.Requests
 {
-    public class BattlegroupSaveRequest
+    public class ArmyBuilderSaveRequest
     {
         public string? Name { get; set; }
 
@@ -18,10 +18,10 @@ namespace HeroscapeBuilder.Server.Domain.Requests
 
         public string? Notes { get; set; }
 
-        public List<BattlegroupUnitRequest> Units { get; set; } = new List<BattlegroupUnitRequest>();
+        public List<ArmyBuilderUnitRequest> Units { get; set; } = new List<ArmyBuilderUnitRequest>();
     }
 
-    public class BattlegroupUnitRequest
+    public class ArmyBuilderUnitRequest
     {
         public int UnitId { get; set; }
 

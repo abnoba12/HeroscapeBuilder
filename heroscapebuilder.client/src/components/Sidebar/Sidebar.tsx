@@ -10,7 +10,7 @@ const Sidebar: React.FC = () => {
     const [activeMenu, setActiveMenu] = useState<string | null>(null); // Tracks which menu is expanded
     const [mapsOpen, setMapsOpen] = useState<boolean>(false); // Maps sub-menu inside Game Play
     const location = useLocation(); // Get the current location
-    const [hasArmyUnits, setHasArmyUnits] = useState<boolean>(false); // Battlegroups need at least one unit in My Army
+    const [hasArmyUnits, setHasArmyUnits] = useState<boolean>(false); // ArmyBuilders need at least one unit in My Army
     const [armyVersion, setArmyVersion] = useState<number>(0); // Bumped when My Army is saved
 
     useEffect(() => {
@@ -158,7 +158,7 @@ const Sidebar: React.FC = () => {
                                             <li><Link to="/my-heroscape/army-stats" onClick={toggleSidebar}>My Collection Stats</Link></li>
                                             <li><Link to="/my-heroscape/my-terrain" onClick={toggleSidebar}>My Terrain</Link></li>
                                             {hasArmyUnits && (
-                                                <li><Link to="/my-heroscape/battlegroups" onClick={toggleSidebar}>My Armies</Link></li>
+                                                <li><Link to="/my-heroscape/armybuilder" onClick={toggleSidebar}>My Armies</Link></li>
                                             )}
                                         </ul>
                                     )}

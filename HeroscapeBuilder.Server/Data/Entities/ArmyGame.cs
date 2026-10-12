@@ -8,7 +8,7 @@ public partial class ArmyGame
     public string UserId { get; set; } = null!;
 
     /// <summary>Null once the army was deleted; the result is kept.</summary>
-    public int? BattlegroupId { get; set; }
+    public int? ArmyBuilderId { get; set; }
 
     public bool Won { get; set; }
 

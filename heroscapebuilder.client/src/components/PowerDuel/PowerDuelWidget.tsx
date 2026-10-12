@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Unit } from '../../models/unit';
-import { UnitHover } from '../../pages/my-heroscape/battlegroups/battlegroup-parts';
+import { UnitHover } from '../../pages/my-heroscape/armybuilders/armybuilder-parts';
 import { getPrimaryImage, useCatalog } from '../../services/catalog';
 import { DuelPair, getNextDuel, submitDuelVote } from '../../services/power-ranking-service';
 import './power-duel.scss';

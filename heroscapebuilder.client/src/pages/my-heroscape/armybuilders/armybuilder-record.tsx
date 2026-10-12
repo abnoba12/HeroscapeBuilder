@@ -14,23 +14,23 @@ import {
     Typography,
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArmyGame, ArmyTally } from '../../../models/battlegroup';
-import { deleteArmyGame, getArmyGames, getErrorMessages, logArmyGames } from '../../../services/battlegroup-service';
+import { ArmyGame, ArmyTally } from '../../../models/armybuilder';
+import { deleteArmyGame, getArmyGames, getErrorMessages, logArmyGames } from '../../../services/armybuilder-service';
 
 const MAX_PAST_RESULTS = 200;
 
 const winRate = ({ wins, losses }: ArmyTally): string =>
     wins + losses === 0 ? '' : ` (${Math.round((wins / (wins + losses)) * 100)}% wins)`;
 
-interface BattlegroupRecordProps {
-    battlegroupId: number;
+interface ArmyBuilderRecordProps {
+    armyBuilderId: number;
     initial: ArmyTally;
     /** Called whenever the tally changes so the page can keep its copy in step. */
     onChange?: (tally: ArmyTally) => void;
 }
 
 /** The owner's win/loss log for one army: quick win/loss buttons, past results, and the recent games. */
-const BattlegroupRecord: React.FC<BattlegroupRecordProps> = ({ battlegroupId, initial, onChange }) => {
+const ArmyBuilderRecord: React.FC<ArmyBuilderRecordProps> = ({ armyBuilderId, initial, onChange }) => {
     const [tally, setTally] = useState<ArmyTally>(initial);
     const [games, setGames] = useState<ArmyGame[]>([]);
     const [note, setNote] = useState('');
@@ -48,11 +48,11 @@ const BattlegroupRecord: React.FC<BattlegroupRecordProps> = ({ battlegroupId, in
 
     const loadGames = useCallback(async () => {
         try {
-            setGames(await getArmyGames(battlegroupId));
+            setGames(await getArmyGames(armyBuilderId));
         } catch (err) {
             setError(getErrorMessages(err, 'Failed to load your recorded games.')[0]);
         }
-    }, [battlegroupId]);
+    }, [armyBuilderId]);
 
     useEffect(() => { void loadGames(); }, [loadGames]);
 
@@ -60,7 +60,7 @@ const BattlegroupRecord: React.FC<BattlegroupRecordProps> = ({ battlegroupId, in
         try {
             setBusy(true);
             setError(null);
-            applyTally(await logArmyGames(battlegroupId, { won, note: note.trim() || null }));
+            applyTally(await logArmyGames(armyBuilderId, { won, note: note.trim() || null }));
             setNote('');
             setMessage(won ? 'Win recorded' : 'Loss recorded');
             await loadGames();
@@ -98,8 +98,8 @@ const BattlegroupRecord: React.FC<BattlegroupRecordProps> = ({ battlegroupId, in
             setBusy(true);
             setError(null);
             let next = tally;
-            if (wins > 0) next = await logArmyGames(battlegroupId, { won: true, count: wins });
-            if (losses > 0) next = await logArmyGames(battlegroupId, { won: false, count: losses });
+            if (wins > 0) next = await logArmyGames(armyBuilderId, { won: true, count: wins });
+            if (losses > 0) next = await logArmyGames(armyBuilderId, { won: false, count: losses });
             applyTally(next);
             setPastOpen(false);
             setPastWins('');
@@ -198,4 +198,4 @@ const BattlegroupRecord: React.FC<BattlegroupRecordProps> = ({ battlegroupId, in
     );
 };
 
-export default BattlegroupRecord;
+export default ArmyBuilderRecord;

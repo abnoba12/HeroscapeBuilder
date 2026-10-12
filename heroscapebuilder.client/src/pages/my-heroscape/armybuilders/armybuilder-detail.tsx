@@ -1,27 +1,27 @@
 import { Alert, Button, Chip, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Battlegroup } from '../../../models/battlegroup';
+import { ArmyBuilder } from '../../../models/armybuilder';
 import {
     buildShareUrl,
-    deleteBattlegroup,
-    getBattlegroup,
+    deleteArmyBuilder,
+    getArmyBuilder,
     getErrorMessages,
-    hideBattlegroup,
+    hideArmyBuilder,
     isNotFound,
-    restoreBattlegroup,
-    retireBattlegroup,
-    shareBattlegroup,
-} from '../../../services/battlegroup-service';
-import { BattlegroupView, ConfirmDeleteDialog, NeedsReviewChip } from './battlegroup-parts';
-import BattlegroupJournal from './battlegroup-journal';
-import BattlegroupRecord from './battlegroup-record';
+    restoreArmyBuilder,
+    retireArmyBuilder,
+    shareArmyBuilder,
+} from '../../../services/armybuilder-service';
+import { ArmyBuilderView, ConfirmDeleteDialog, NeedsReviewChip } from './armybuilder-parts';
+import ArmyBuilderJournal from './armybuilder-journal';
+import ArmyBuilderRecord from './armybuilder-record';
 
-/** The owner's view of one Battlegroup, with edit / share / delete controls. */
-const BattlegroupDetail: React.FC = () => {
+/** The owner's view of one Army builder, with edit / share / delete controls. */
+const ArmyBuilderDetail: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [battlegroup, setBattlegroup] = useState<Battlegroup | null>(null);
+    const [armyBuilder, setArmyBuilder] = useState<ArmyBuilder | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -30,7 +30,7 @@ const BattlegroupDetail: React.FC = () => {
     useEffect(() => {
         const load = async () => {
             try {
-                setBattlegroup(await getBattlegroup(Number(id)));
+                setArmyBuilder(await getArmyBuilder(Number(id)));
             } catch (err) {
                 setError(isNotFound(err) ? 'Army not found.' : getErrorMessages(err, 'Failed to load the army.')[0]);
             }
@@ -38,11 +38,11 @@ const BattlegroupDetail: React.FC = () => {
         load();
     }, [id]);
 
-    const runShareChange = async (action: (id: number) => Promise<Battlegroup>) => {
-        if (!battlegroup) return;
+    const runShareChange = async (action: (id: number) => Promise<ArmyBuilder>) => {
+        if (!armyBuilder) return;
         try {
             setBusy(true);
-            setBattlegroup(await action(battlegroup.id));
+            setArmyBuilder(await action(armyBuilder.id));
         } catch (err) {
             setError(getErrorMessages(err)[0]);
         } finally {
@@ -51,11 +51,11 @@ const BattlegroupDetail: React.FC = () => {
     };
 
     const handleDelete = async () => {
-        if (!battlegroup) return;
+        if (!armyBuilder) return;
         try {
             setBusy(true);
-            await deleteBattlegroup(battlegroup.id);
-            navigate('/my-heroscape/battlegroups', { replace: true });
+            await deleteArmyBuilder(armyBuilder.id);
+            navigate('/my-heroscape/armybuilder', { replace: true });
         } catch (err) {
             setError(getErrorMessages(err, 'Failed to delete the army.')[0]);
             setConfirmDelete(false);
@@ -63,7 +63,7 @@ const BattlegroupDetail: React.FC = () => {
         }
     };
 
-    const shareUrl = battlegroup?.isShared && battlegroup.shareId ? buildShareUrl(battlegroup.shareId) : null;
+    const shareUrl = armyBuilder?.isShared && armyBuilder.shareId ? buildShareUrl(armyBuilder.shareId) : null;
 
     const copyLink = async () => {
         if (!shareUrl) return;
@@ -75,35 +75,35 @@ const BattlegroupDetail: React.FC = () => {
         }
     };
 
-    if (error && !battlegroup) {
+    if (error && !armyBuilder) {
         return (
             <div className="container-fluid">
                 <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-                <Button component={Link} to="/my-heroscape/battlegroups">Back to My Armies</Button>
+                <Button component={Link} to="/my-heroscape/armybuilder">Back to My Armies</Button>
             </div>
         );
     }
-    if (!battlegroup) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
+    if (!armyBuilder) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
     return (
         <div className="container-fluid">
             <Stack spacing={2}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
                     <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-                        <Typography variant="h4">{battlegroup.name}</Typography>
-                        {battlegroup.needsReview && !battlegroup.isRetired && <NeedsReviewChip />}
-                        {battlegroup.isRetired && <Chip label="Retired" size="small" />}
+                        <Typography variant="h4">{armyBuilder.name}</Typography>
+                        {armyBuilder.needsReview && !armyBuilder.isRetired && <NeedsReviewChip />}
+                        {armyBuilder.isRetired && <Chip label="Retired" size="small" />}
                     </Stack>
                     <Stack direction="row" spacing={1}>
-                        <Button component={Link} to="/my-heroscape/battlegroups">All armies</Button>
-                        <Button variant="contained" component={Link} to={`/my-heroscape/battlegroups/${battlegroup.id}/edit`}>Edit</Button>
-                        {!battlegroup.isShared && (
-                            <Button variant="outlined" onClick={() => runShareChange(shareBattlegroup)} disabled={busy}>Share</Button>
+                        <Button component={Link} to="/my-heroscape/armybuilder">All armies</Button>
+                        <Button variant="contained" component={Link} to={`/my-heroscape/armybuilder/${armyBuilder.id}/edit`}>Edit</Button>
+                        {!armyBuilder.isShared && (
+                            <Button variant="outlined" onClick={() => runShareChange(shareArmyBuilder)} disabled={busy}>Share</Button>
                         )}
-                        {battlegroup.isRetired ? (
-                            <Button onClick={() => runShareChange(restoreBattlegroup)} disabled={busy}>Restore</Button>
+                        {armyBuilder.isRetired ? (
+                            <Button onClick={() => runShareChange(restoreArmyBuilder)} disabled={busy}>Restore</Button>
                         ) : (
-                            <Button color="inherit" onClick={() => runShareChange(retireBattlegroup)} disabled={busy}>Retire</Button>
+                            <Button color="inherit" onClick={() => runShareChange(retireArmyBuilder)} disabled={busy}>Retire</Button>
                         )}
                         <Button color="error" onClick={() => setConfirmDelete(true)} disabled={busy}>Delete</Button>
                     </Stack>
@@ -126,7 +126,7 @@ const BattlegroupDetail: React.FC = () => {
                                     onFocus={event => event.target.select()}
                                 />
                                 <Button variant="contained" onClick={copyLink}>Copy link</Button>
-                                <Button variant="outlined" color="warning" onClick={() => runShareChange(hideBattlegroup)} disabled={busy}>
+                                <Button variant="outlined" color="warning" onClick={() => runShareChange(hideArmyBuilder)} disabled={busy}>
                                     Hide
                                 </Button>
                             </Stack>
@@ -134,19 +134,19 @@ const BattlegroupDetail: React.FC = () => {
                     </Paper>
                 )}
 
-                <BattlegroupRecord
-                    battlegroupId={battlegroup.id}
-                    initial={{ wins: battlegroup.wins, losses: battlegroup.losses }}
+                <ArmyBuilderRecord
+                    armyBuilderId={armyBuilder.id}
+                    initial={{ wins: armyBuilder.wins, losses: armyBuilder.losses }}
                 />
 
-                <BattlegroupView battlegroup={battlegroup} />
+                <ArmyBuilderView armyBuilder={armyBuilder} />
 
-                <BattlegroupJournal battlegroupId={battlegroup.id} />
+                <ArmyBuilderJournal armyBuilderId={armyBuilder.id} />
             </Stack>
 
             <ConfirmDeleteDialog
                 open={confirmDelete}
-                name={battlegroup.name}
+                name={armyBuilder.name}
                 busy={busy}
                 onCancel={() => setConfirmDelete(false)}
                 onConfirm={handleDelete}
@@ -156,4 +156,4 @@ const BattlegroupDetail: React.FC = () => {
     );
 };
 
-export default BattlegroupDetail;
+export default ArmyBuilderDetail;

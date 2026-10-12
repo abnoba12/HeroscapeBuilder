@@ -53,20 +53,20 @@ namespace HeroscapeBuilder.Server.Common.Mapping
         }
 
         /// <summary>
-        /// Maps a battlegroup for the API. <paramref name="ownedQuantities"/> (army card id -> quantity in My Army)
+        /// Maps an army builder for the API. <paramref name="ownedQuantities"/> (army card id -> quantity in My Army)
         /// is only supplied for the owner; it drives the "needs review" flags, which are never exposed publicly.
         /// </summary>
-        public static BattlegroupEntity ToBattlegroupEntity(this Battlegroup source, Dictionary<int, int>? ownedQuantities)
+        public static ArmyBuilderEntity ToArmyBuilderEntity(this ArmyBuilder source, Dictionary<int, int>? ownedQuantities)
         {
             var isOwner = ownedQuantities != null;
 
-            var units = source.BattlegroupUnits
+            var units = source.ArmyBuilderUnits
                 .Select(bgUnit =>
                 {
                     var owned = 0;
                     ownedQuantities?.TryGetValue(bgUnit.ArmyCardId, out owned);
 
-                    return new BattlegroupUnitEntity
+                    return new ArmyBuilderUnitEntity
                     {
                         Unit = bgUnit.ArmyCard.ToUnitEntity(),
                         Quantity = bgUnit.Quantity,
@@ -90,7 +90,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 reasons.Add($"Total {source.PointSystem} points ({totalPoints}) exceed the limit ({source.PointLimit}).");
             }
 
-            return new BattlegroupEntity
+            return new ArmyBuilderEntity
             {
                 Id = source.Id,
                 Name = source.Name,

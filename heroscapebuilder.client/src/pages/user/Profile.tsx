@@ -20,7 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { usePointSystem } from '../../components/PointSystem/PointSystemContext';
 import { POINT_SYSTEMS, PointSystem } from '../../models/point-system';
 import { logout } from '../../services/authService';
-import { getErrorMessages } from '../../services/battlegroup-service';
+import { getErrorMessages } from '../../services/armybuilder-service';
 import { changePassword, deleteAccount, getProfile, setProfileAllowTileSwap } from '../../services/profile-service';
 
 const PointSystemSection: React.FC = () => {

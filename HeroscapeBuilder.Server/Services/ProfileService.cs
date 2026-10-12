@@ -74,7 +74,7 @@ namespace HeroscapeBuilder.Server.Services
         }
 
         /// <summary>
-        /// Permanently deletes the account along with its My Army and Battlegroups.
+        /// Permanently deletes the account along with its My Army and Army builders.
         /// </summary>
         public async Task DeleteAccount(Guid userId, DeleteAccountRequest request)
         {
@@ -84,7 +84,7 @@ namespace HeroscapeBuilder.Server.Services
                 throw new ProfileException(ProfileErrorKind.Validation, "Your password is incorrect.");
             }
 
-            // Battlegroups (and their units) cascade in the database; My Army does not, so it is cleared first.
+            // Army builders (and their units) cascade in the database; My Army does not, so it is cleared first.
             // The context retries transient failures, so the transaction has to run inside its execution strategy.
             await _context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {

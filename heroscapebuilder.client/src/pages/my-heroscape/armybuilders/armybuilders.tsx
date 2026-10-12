@@ -1,23 +1,23 @@
 import { Alert, Box, Button, Card, CardActions, CardContent, Chip, Collapse, Snackbar, Stack, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Battlegroup } from '../../../models/battlegroup';
+import { ArmyBuilder } from '../../../models/armybuilder';
 import {
-    deleteBattlegroup,
+    deleteArmyBuilder,
     getErrorMessages,
-    getMyBattlegroups,
-    restoreBattlegroup,
-    retireBattlegroup,
-} from '../../../services/battlegroup-service';
+    getMyArmyBuilders,
+    restoreArmyBuilder,
+    retireArmyBuilder,
+} from '../../../services/armybuilder-service';
 import { getMyUnitCount } from '../../../services/my_army-service';
-import { ConfirmDeleteDialog, NeedsReviewChip, PointsMeter, creatorLabel } from './battlegroup-parts';
+import { ConfirmDeleteDialog, NeedsReviewChip, PointsMeter, creatorLabel } from './armybuilder-parts';
 
-const Battlegroups: React.FC = () => {
+const ArmyBuilders: React.FC = () => {
     const navigate = useNavigate();
-    const [battlegroups, setBattlegroups] = useState<Battlegroup[]>([]);
+    const [armyBuilders, setArmyBuilders] = useState<ArmyBuilder[]>([]);
     const [hasArmy, setHasArmy] = useState<boolean | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [pendingDelete, setPendingDelete] = useState<Battlegroup | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<ArmyBuilder | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [retiredOpen, setRetiredOpen] = useState(false);
     const [busyId, setBusyId] = useState<number | null>(null);
@@ -29,7 +29,7 @@ const Battlegroups: React.FC = () => {
                 const count = await getMyUnitCount();
                 setHasArmy(count > 0);
                 if (count > 0) {
-                    setBattlegroups(await getMyBattlegroups());
+                    setArmyBuilders(await getMyArmyBuilders());
                 }
             } catch (err) {
                 setError(getErrorMessages(err, 'Failed to load your armies.')[0]);
@@ -42,8 +42,8 @@ const Battlegroups: React.FC = () => {
         if (!pendingDelete) return;
         try {
             setDeleting(true);
-            await deleteBattlegroup(pendingDelete.id);
-            setBattlegroups(prev => prev.filter(x => x.id !== pendingDelete.id));
+            await deleteArmyBuilder(pendingDelete.id);
+            setArmyBuilders(prev => prev.filter(x => x.id !== pendingDelete.id));
             setPendingDelete(null);
         } catch (err) {
             setError(getErrorMessages(err, 'Failed to delete the army.')[0]);
@@ -53,11 +53,11 @@ const Battlegroups: React.FC = () => {
         }
     };
 
-    const changeRetired = async (bg: Battlegroup, retire: boolean) => {
+    const changeRetired = async (bg: ArmyBuilder, retire: boolean) => {
         try {
             setBusyId(bg.id);
-            const updated = await (retire ? retireBattlegroup(bg.id) : restoreBattlegroup(bg.id));
-            setBattlegroups(prev => prev.map(x => (x.id === bg.id ? updated : x)));
+            const updated = await (retire ? retireArmyBuilder(bg.id) : restoreArmyBuilder(bg.id));
+            setArmyBuilders(prev => prev.map(x => (x.id === bg.id ? updated : x)));
             setMessage(retire ? `${bg.name} retired` : `${bg.name} restored`);
         } catch (err) {
             setError(getErrorMessages(err, retire ? 'Failed to retire the army.' : 'Failed to restore the army.')[0]);
@@ -69,12 +69,12 @@ const Battlegroups: React.FC = () => {
     if (hasArmy === false) return <Navigate to="/my-heroscape/my-army" replace />;
     if (hasArmy === null && !error) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
-    const active = battlegroups.filter(x => !x.isRetired);
-    const retired = battlegroups.filter(x => x.isRetired);
+    const active = armyBuilders.filter(x => !x.isRetired);
+    const retired = armyBuilders.filter(x => x.isRetired);
     // Retired armies are out of play, so they don't count toward the review warning.
     const needsReviewCount = active.filter(x => x.needsReview).length;
 
-    const renderCard = (bg: Battlegroup) => (
+    const renderCard = (bg: ArmyBuilder) => (
         <div key={bg.id} className="col-md-6 col-xl-4">
             <Card
                 variant="outlined"
@@ -82,7 +82,7 @@ const Battlegroups: React.FC = () => {
             >
                 <CardContent>
                     <Stack spacing={1.5}>
-                        <Typography variant="h6" component={Link} to={`/my-heroscape/battlegroups/${bg.id}`} sx={{ textDecoration: 'none' }}>
+                        <Typography variant="h6" component={Link} to={`/my-heroscape/armybuilder/${bg.id}`} sx={{ textDecoration: 'none' }}>
                             {bg.name}
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -105,8 +105,8 @@ const Battlegroups: React.FC = () => {
                     </Stack>
                 </CardContent>
                 <CardActions>
-                    <Button size="small" component={Link} to={`/my-heroscape/battlegroups/${bg.id}`}>Open</Button>
-                    <Button size="small" component={Link} to={`/my-heroscape/battlegroups/${bg.id}/edit`}>Edit</Button>
+                    <Button size="small" component={Link} to={`/my-heroscape/armybuilder/${bg.id}`}>Open</Button>
+                    <Button size="small" component={Link} to={`/my-heroscape/armybuilder/${bg.id}/edit`}>Edit</Button>
                     {bg.isRetired ? (
                         <Button size="small" onClick={() => changeRetired(bg, false)} disabled={busyId === bg.id}>Restore</Button>
                     ) : (
@@ -122,7 +122,7 @@ const Battlegroups: React.FC = () => {
         <div className="container-fluid">
             <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
                 <Typography variant="h4">My Armies</Typography>
-                <Button variant="contained" onClick={() => navigate('/my-heroscape/battlegroups/new')}>
+                <Button variant="contained" onClick={() => navigate('/my-heroscape/armybuilder/new')}>
                     New Army
                 </Button>
             </Stack>
@@ -177,4 +177,4 @@ const Battlegroups: React.FC = () => {
     );
 };
 
-export default Battlegroups;
+export default ArmyBuilders;

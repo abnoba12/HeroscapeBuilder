@@ -20,25 +20,25 @@ namespace HeroscapeBuilder.Server.Data.Repositories
         {
             var rows = await _context.ArmyGames
                 .NotCacheable()
-                .Where(x => x.UserId == userId && x.BattlegroupId != null)
-                .GroupBy(x => x.BattlegroupId!.Value)
+                .Where(x => x.UserId == userId && x.ArmyBuilderId != null)
+                .GroupBy(x => x.ArmyBuilderId!.Value)
                 .Select(group => new
                 {
-                    BattlegroupId = group.Key,
+                    ArmyBuilderId = group.Key,
                     Wins = group.Count(x => x.Won),
                     Losses = group.Count(x => !x.Won),
                 })
                 .ToListAsync();
 
-            return rows.ToDictionary(x => x.BattlegroupId, x => (x.Wins, x.Losses));
+            return rows.ToDictionary(x => x.ArmyBuilderId, x => (x.Wins, x.Losses));
         }
 
-        public async Task<List<ArmyGame>> GetRecent(string userId, int battlegroupId, int take)
+        public async Task<List<ArmyGame>> GetRecent(string userId, int armyBuilderId, int take)
         {
             return await _context.ArmyGames
                 .NotCacheable()
                 .AsNoTracking()
-                .Where(x => x.UserId == userId && x.BattlegroupId == battlegroupId)
+                .Where(x => x.UserId == userId && x.ArmyBuilderId == armyBuilderId)
                 .OrderByDescending(x => x.PlayedAt)
                 .ThenByDescending(x => x.Id)
                 .Take(take)
@@ -71,11 +71,11 @@ namespace HeroscapeBuilder.Server.Data.Repositories
         /// Keeps the results of an army that is being deleted by unlinking them from it (see ArmyGames.sql for why
         /// the database does not do this itself).
         /// </summary>
-        public async Task DetachFromBattlegroup(string userId, int battlegroupId)
+        public async Task DetachFromArmyBuilder(string userId, int armyBuilderId)
         {
             await _context.ArmyGames
-                .Where(x => x.UserId == userId && x.BattlegroupId == battlegroupId)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.BattlegroupId, (int?)null));
+                .Where(x => x.UserId == userId && x.ArmyBuilderId == armyBuilderId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.ArmyBuilderId, (int?)null));
         }
 
         public async Task<int> SaveChanges()

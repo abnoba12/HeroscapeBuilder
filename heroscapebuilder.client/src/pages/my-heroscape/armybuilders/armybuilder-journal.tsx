@@ -14,14 +14,14 @@ import {
     Typography,
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
-import { JournalEntry, JournalEntryRequest } from '../../../models/battlegroup';
+import { JournalEntry, JournalEntryRequest } from '../../../models/armybuilder';
 import {
     addJournalEntry,
     deleteJournalEntry,
     getErrorMessages,
     getJournal,
     updateJournalEntry,
-} from '../../../services/battlegroup-service';
+} from '../../../services/armybuilder-service';
 
 const MAX_FIELD_LENGTH = 4000;
 
@@ -72,12 +72,12 @@ const EntrySection: React.FC<{ label: string; text?: string | null; color?: stri
     );
 };
 
-interface BattlegroupJournalProps {
-    battlegroupId: number;
+interface ArmyBuilderJournalProps {
+    armyBuilderId: number;
 }
 
 /** The owner's private play journal for one army: what it did well, what it did poorly, and anything else. */
-const BattlegroupJournal: React.FC<BattlegroupJournalProps> = ({ battlegroupId }) => {
+const ArmyBuilderJournal: React.FC<ArmyBuilderJournalProps> = ({ armyBuilderId }) => {
     const [entries, setEntries] = useState<JournalEntry[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
@@ -87,12 +87,12 @@ const BattlegroupJournal: React.FC<BattlegroupJournalProps> = ({ battlegroupId }
 
     const load = useCallback(async () => {
         try {
-            setEntries(await getJournal(battlegroupId));
+            setEntries(await getJournal(armyBuilderId));
         } catch (err) {
             setEntries([]);
             setError(getErrorMessages(err, 'Failed to load the journal.')[0]);
         }
-    }, [battlegroupId]);
+    }, [armyBuilderId]);
 
     useEffect(() => { void load(); }, [load]);
 
@@ -110,7 +110,7 @@ const BattlegroupJournal: React.FC<BattlegroupJournalProps> = ({ battlegroupId }
             setBusy(true);
             setError(null);
             if (editing.id === null) {
-                await addJournalEntry(battlegroupId, request);
+                await addJournalEntry(armyBuilderId, request);
             } else {
                 await updateJournalEntry(editing.id, request);
             }
@@ -260,4 +260,4 @@ const BattlegroupJournal: React.FC<BattlegroupJournalProps> = ({ battlegroupId }
     );
 };
 
-export default BattlegroupJournal;
+export default ArmyBuilderJournal;

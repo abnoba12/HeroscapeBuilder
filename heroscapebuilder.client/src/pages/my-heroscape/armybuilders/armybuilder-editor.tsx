@@ -26,20 +26,20 @@ import { AllCommunityModule, ColDef, GetQuickFilterTextParams, GetRowIdParams, I
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Ability } from '../../../models/ability';
-import { Battlegroup } from '../../../models/battlegroup';
+import { ArmyBuilder } from '../../../models/armybuilder';
 import { PointSystem, getUnitPoints } from '../../../models/point-system';
 import { Unit } from '../../../models/unit';
 import {
-    createBattlegroup,
-    getBattlegroup,
+    createArmyBuilder,
+    getArmyBuilder,
     getErrorMessages,
     isNotFound,
-    updateBattlegroup,
-} from '../../../services/battlegroup-service';
+    updateArmyBuilder,
+} from '../../../services/armybuilder-service';
 import { getMyUnits } from '../../../services/my_army-service';
 import { getUnits } from '../../../services/unit-service';
 import { useUrlFlag, useUrlParam } from '../../../services/url-state';
-import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit, parseCreators } from './battlegroup-parts';
+import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit, parseCreators } from './armybuilder-parts';
 import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
 import PointSystemSelect from '../../../components/PointSystem/PointSystemSelect';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -100,7 +100,7 @@ const AddCell: React.FC<ICellRendererParams<AvailableRow, unknown, GridContext>>
     );
 };
 
-const BattlegroupEditor: React.FC = () => {
+const ArmyBuilderEditor: React.FC = () => {
     const { id } = useParams();
     const isEdit = id !== undefined;
     const navigate = useNavigate();
@@ -111,7 +111,7 @@ const BattlegroupEditor: React.FC = () => {
     const [savedUnits, setSavedUnits] = useState<Unit[]>([]);
     const [name, setName] = useState('');
     const [pointLimitText, setPointLimitText] = useState('');
-    // New Battlegroups start on the account default; saved ones keep their own.
+    // New Army builders start on the account default; saved ones keep their own.
     const { defaultPointSystem } = usePointSystem();
     const [chosenPointSystem, setPointSystem] = useState<PointSystem | null>(null);
     const pointSystem = chosenPointSystem ?? defaultPointSystem;
@@ -136,7 +136,7 @@ const BattlegroupEditor: React.FC = () => {
                 setOwnedUnits(owned);
 
                 if (isEdit) {
-                    const bg: Battlegroup = await getBattlegroup(Number(id));
+                    const bg: ArmyBuilder = await getArmyBuilder(Number(id));
                     setName(bg.name);
                     setPointLimitText(String(bg.pointLimit));
                     setPointSystem(bg.pointSystem);
@@ -334,9 +334,9 @@ const BattlegroupEditor: React.FC = () => {
             setSaving(true);
             setServerErrors([]);
             const saved = isEdit
-                ? await updateBattlegroup(Number(id), request)
-                : await createBattlegroup(request);
-            navigate(`/my-heroscape/battlegroups/${saved.id}`);
+                ? await updateArmyBuilder(Number(id), request)
+                : await createArmyBuilder(request);
+            navigate(`/my-heroscape/armybuilder/${saved.id}`);
         } catch (err) {
             setServerErrors(getErrorMessages(err, 'Failed to save the army.'));
             setSaving(false);
@@ -404,13 +404,13 @@ const BattlegroupEditor: React.FC = () => {
         return (
             <div className="container-fluid">
                 <Alert severity="error" sx={{ mb: 2 }}>{loadError}</Alert>
-                <Button component={Link} to="/my-heroscape/battlegroups">Back to My Armies</Button>
+                <Button component={Link} to="/my-heroscape/armybuilder">Back to My Armies</Button>
             </div>
         );
     }
     if (ownedUnits.length === 0) return <Navigate to="/my-heroscape/my-army" replace />;
 
-    const cancelTarget = isEdit ? `/my-heroscape/battlegroups/${id}` : '/my-heroscape/battlegroups';
+    const cancelTarget = isEdit ? `/my-heroscape/armybuilder/${id}` : '/my-heroscape/armybuilder';
 
     return (
         <div className="container-fluid">
@@ -685,4 +685,4 @@ const BattlegroupEditor: React.FC = () => {
     );
 };
 
-export default BattlegroupEditor;
+export default ArmyBuilderEditor;

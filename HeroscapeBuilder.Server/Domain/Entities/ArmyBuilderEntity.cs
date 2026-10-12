@@ -1,6 +1,6 @@
 namespace HeroscapeBuilder.Server.Domain.Entities
 {
-    public class BattlegroupEntity
+    public class ArmyBuilderEntity
     {
         public int Id { get; set; }
 
@@ -9,17 +9,17 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public int PointLimit { get; set; }
 
         /// <summary>
-        /// The point values this battlegroup is built with. TotalPoints is measured in it.
+        /// The point values this army builder is built with. TotalPoints is measured in it.
         /// </summary>
         public PointSystem PointSystem { get; set; }
 
         /// <summary>
-        /// Null when the battlegroup can use units from any creator.
+        /// Null when the army builder can use units from any creator.
         /// </summary>
         public string? Creator { get; set; }
 
         /// <summary>
-        /// Owner's plain-text notes on how to play this battlegroup. Shown on the public page too.
+        /// Owner's plain-text notes on how to play this army builder. Shown on the public page too.
         /// </summary>
         public string? Notes { get; set; }
 
@@ -40,7 +40,7 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public DateTime? RetiredAt { get; set; }
 
         /// <summary>
-        /// True when My Army no longer covers the battlegroup (or a point total no longer fits).
+        /// True when My Army no longer covers the army builder (or a point total no longer fits).
         /// Only evaluated for the owner.
         /// </summary>
         public bool NeedsReview { get; set; }
@@ -54,10 +54,10 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public int Losses { get; set; }
 
-        public List<BattlegroupUnitEntity> Units { get; set; } = new List<BattlegroupUnitEntity>();
+        public List<ArmyBuilderUnitEntity> Units { get; set; } = new List<ArmyBuilderUnitEntity>();
     }
 
-    public class BattlegroupUnitEntity
+    public class ArmyBuilderUnitEntity
     {
         public UnitEntity Unit { get; set; } = null!;
 
@@ -69,7 +69,7 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public int OwnedQuantity { get; set; }
 
         /// <summary>
-        /// True when the battlegroup uses more copies than the owner has in My Army.
+        /// True when the army builder uses more copies than the owner has in My Army.
         /// </summary>
         public bool OverAllocated { get; set; }
     }

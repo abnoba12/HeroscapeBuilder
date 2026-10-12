@@ -4,72 +4,72 @@ import {
     ArmyGame,
     ArmyGameRequest,
     ArmyTally,
-    Battlegroup,
-    BattlegroupSaveRequest,
+    ArmyBuilder,
+    ArmyBuilderSaveRequest,
     JournalEntry,
     JournalEntryRequest,
-} from '../models/battlegroup';
+} from '../models/armybuilder';
 
 const api = AxiosSingletonService.getInstance();
 
-export const getMyBattlegroups = async (): Promise<Battlegroup[]> =>
-    (await api.get<Battlegroup[]>(`/Battlegroup/GetMyBattlegroups`)).data;
+export const getMyArmyBuilders = async (): Promise<ArmyBuilder[]> =>
+    (await api.get<ArmyBuilder[]>(`/ArmyBuilder/GetMyArmyBuilders`)).data;
 
-export const getBattlegroup = async (id: number): Promise<Battlegroup> =>
-    (await api.get<Battlegroup>(`/Battlegroup/GetBattlegroup`, { params: { id } })).data;
+export const getArmyBuilder = async (id: number): Promise<ArmyBuilder> =>
+    (await api.get<ArmyBuilder>(`/ArmyBuilder/GetArmyBuilder`, { params: { id } })).data;
 
-export const createBattlegroup = async (request: BattlegroupSaveRequest): Promise<Battlegroup> =>
-    (await api.post<Battlegroup>(`/Battlegroup/CreateBattlegroup`, request)).data;
+export const createArmyBuilder = async (request: ArmyBuilderSaveRequest): Promise<ArmyBuilder> =>
+    (await api.post<ArmyBuilder>(`/ArmyBuilder/CreateArmyBuilder`, request)).data;
 
-export const updateBattlegroup = async (id: number, request: BattlegroupSaveRequest): Promise<Battlegroup> =>
-    (await api.put<Battlegroup>(`/Battlegroup/UpdateBattlegroup`, request, { params: { id } })).data;
+export const updateArmyBuilder = async (id: number, request: ArmyBuilderSaveRequest): Promise<ArmyBuilder> =>
+    (await api.put<ArmyBuilder>(`/ArmyBuilder/UpdateArmyBuilder`, request, { params: { id } })).data;
 
-export const deleteBattlegroup = async (id: number): Promise<void> => {
-    await api.delete(`/Battlegroup/DeleteBattlegroup`, { params: { id } });
+export const deleteArmyBuilder = async (id: number): Promise<void> => {
+    await api.delete(`/ArmyBuilder/DeleteArmyBuilder`, { params: { id } });
 };
 
-export const shareBattlegroup = async (id: number): Promise<Battlegroup> =>
-    (await api.post<Battlegroup>(`/Battlegroup/ShareBattlegroup`, null, { params: { id } })).data;
+export const shareArmyBuilder = async (id: number): Promise<ArmyBuilder> =>
+    (await api.post<ArmyBuilder>(`/ArmyBuilder/ShareArmyBuilder`, null, { params: { id } })).data;
 
-export const hideBattlegroup = async (id: number): Promise<Battlegroup> =>
-    (await api.post<Battlegroup>(`/Battlegroup/HideBattlegroup`, null, { params: { id } })).data;
+export const hideArmyBuilder = async (id: number): Promise<ArmyBuilder> =>
+    (await api.post<ArmyBuilder>(`/ArmyBuilder/HideArmyBuilder`, null, { params: { id } })).data;
 
 /** Hides the army from the active list on My Armies. Nothing else about it changes. */
-export const retireBattlegroup = async (id: number): Promise<Battlegroup> =>
-    (await api.post<Battlegroup>(`/Battlegroup/RetireBattlegroup`, null, { params: { id } })).data;
+export const retireArmyBuilder = async (id: number): Promise<ArmyBuilder> =>
+    (await api.post<ArmyBuilder>(`/ArmyBuilder/RetireArmyBuilder`, null, { params: { id } })).data;
 
-export const restoreBattlegroup = async (id: number): Promise<Battlegroup> =>
-    (await api.post<Battlegroup>(`/Battlegroup/RestoreBattlegroup`, null, { params: { id } })).data;
+export const restoreArmyBuilder = async (id: number): Promise<ArmyBuilder> =>
+    (await api.post<ArmyBuilder>(`/ArmyBuilder/RestoreArmyBuilder`, null, { params: { id } })).data;
 
 export const getJournal = async (id: number): Promise<JournalEntry[]> =>
-    (await api.get<JournalEntry[]>(`/Battlegroup/GetJournal`, { params: { id } })).data;
+    (await api.get<JournalEntry[]>(`/ArmyBuilder/GetJournal`, { params: { id } })).data;
 
 export const addJournalEntry = async (id: number, request: JournalEntryRequest): Promise<JournalEntry> =>
-    (await api.post<JournalEntry>(`/Battlegroup/AddJournalEntry`, request, { params: { id } })).data;
+    (await api.post<JournalEntry>(`/ArmyBuilder/AddJournalEntry`, request, { params: { id } })).data;
 
 export const updateJournalEntry = async (entryId: number, request: JournalEntryRequest): Promise<JournalEntry> =>
-    (await api.put<JournalEntry>(`/Battlegroup/UpdateJournalEntry`, request, { params: { entryId } })).data;
+    (await api.put<JournalEntry>(`/ArmyBuilder/UpdateJournalEntry`, request, { params: { entryId } })).data;
 
 export const deleteJournalEntry = async (entryId: number): Promise<void> => {
-    await api.delete(`/Battlegroup/DeleteJournalEntry`, { params: { entryId } });
+    await api.delete(`/ArmyBuilder/DeleteJournalEntry`, { params: { entryId } });
 };
 
 export const getArmyGames = async (id: number): Promise<ArmyGame[]> =>
-    (await api.get<ArmyGame[]>(`/Battlegroup/GetGames`, { params: { id } })).data;
+    (await api.get<ArmyGame[]>(`/ArmyBuilder/GetGames`, { params: { id } })).data;
 
 /** Records one result (or `count` identical past results) and returns the army's new tally. */
 export const logArmyGames = async (id: number, request: ArmyGameRequest): Promise<ArmyTally> =>
-    (await api.post<ArmyTally>(`/Battlegroup/LogGames`, request, { params: { id } })).data;
+    (await api.post<ArmyTally>(`/ArmyBuilder/LogGames`, request, { params: { id } })).data;
 
 /** Removes a logged result and returns the army's new tally. */
 export const deleteArmyGame = async (gameId: number): Promise<ArmyTally> =>
-    (await api.delete<ArmyTally>(`/Battlegroup/DeleteGame`, { params: { gameId } })).data;
+    (await api.delete<ArmyTally>(`/ArmyBuilder/DeleteGame`, { params: { gameId } })).data;
 
 /** Public endpoint - works without signing in. */
-export const getSharedBattlegroup = async (shareId: string): Promise<Battlegroup> =>
-    (await api.get<Battlegroup>(`/Battlegroup/GetSharedBattlegroup`, { params: { shareId } })).data;
+export const getSharedArmyBuilder = async (shareId: string): Promise<ArmyBuilder> =>
+    (await api.get<ArmyBuilder>(`/ArmyBuilder/GetSharedArmyBuilder`, { params: { shareId } })).data;
 
-export const buildShareUrl = (shareId: string): string => `${window.location.origin}/battlegroup/${shareId}`;
+export const buildShareUrl = (shareId: string): string => `${window.location.origin}/armybuilder/${shareId}`;
 
 /** Pulls the validation messages the API returns ({ errors: string[] }), falling back to a generic message. */
 export const getErrorMessages = (error: unknown, fallback = 'Something went wrong. Please try again.'): string[] => {

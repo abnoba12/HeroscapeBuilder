@@ -1,20 +1,20 @@
 import { Alert, Button, Stack, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Battlegroup } from '../../../models/battlegroup';
-import { getErrorMessages, getSharedBattlegroup, isNotFound } from '../../../services/battlegroup-service';
-import { BattlegroupView } from './battlegroup-parts';
+import { ArmyBuilder } from '../../../models/armybuilder';
+import { getErrorMessages, getSharedArmyBuilder, isNotFound } from '../../../services/armybuilder-service';
+import { ArmyBuilderView } from './armybuilder-parts';
 
-/** Public, read-only page for a shared Battlegroup. Only the signed-in owner sees edit controls. */
-const BattlegroupShared: React.FC = () => {
+/** Public, read-only page for a shared Army builder. Only the signed-in owner sees edit controls. */
+const ArmyBuilderShared: React.FC = () => {
     const { shareId } = useParams();
-    const [battlegroup, setBattlegroup] = useState<Battlegroup | null>(null);
+    const [armyBuilder, setArmyBuilder] = useState<ArmyBuilder | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const load = async () => {
             try {
-                setBattlegroup(await getSharedBattlegroup(shareId ?? ''));
+                setArmyBuilder(await getSharedArmyBuilder(shareId ?? ''));
             } catch (err) {
                 setError(isNotFound(err)
                     ? 'This army is not available. The link may be wrong, or the owner may have stopped sharing it.'
@@ -31,7 +31,7 @@ const BattlegroupShared: React.FC = () => {
             </div>
         );
     }
-    if (!battlegroup) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
+    if (!armyBuilder) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
     return (
         <div className="container-fluid">
@@ -39,19 +39,19 @@ const BattlegroupShared: React.FC = () => {
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
                     <div>
                         <Typography variant="overline" color="text.secondary">Shared Army</Typography>
-                        <Typography variant="h4">{battlegroup.name}</Typography>
+                        <Typography variant="h4">{armyBuilder.name}</Typography>
                     </div>
-                    {battlegroup.isOwner && (
+                    {armyBuilder.isOwner && (
                         <Stack direction="row" spacing={1}>
-                            <Button component={Link} to={`/my-heroscape/battlegroups/${battlegroup.id}`}>Manage</Button>
-                            <Button variant="contained" component={Link} to={`/my-heroscape/battlegroups/${battlegroup.id}/edit`}>Edit</Button>
+                            <Button component={Link} to={`/my-heroscape/armybuilder/${armyBuilder.id}`}>Manage</Button>
+                            <Button variant="contained" component={Link} to={`/my-heroscape/armybuilder/${armyBuilder.id}/edit`}>Edit</Button>
                         </Stack>
                     )}
                 </Stack>
-                <BattlegroupView battlegroup={battlegroup} />
+                <ArmyBuilderView armyBuilder={armyBuilder} />
             </Stack>
         </div>
     );
 };
 
-export default BattlegroupShared;
+export default ArmyBuilderShared;

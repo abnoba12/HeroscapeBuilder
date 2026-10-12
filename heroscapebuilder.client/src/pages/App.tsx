@@ -32,10 +32,10 @@ import MyTerrain from "./my-heroscape/my-terrain";
 import ArmyStats from "./my-heroscape/army-stats";
 import Profile from "./user/Profile";
 import PageMeta from "../components/Seo/PageMeta";
-import Battlegroups from "./my-heroscape/battlegroups/battlegroups";
-import BattlegroupDetail from "./my-heroscape/battlegroups/battlegroup-detail";
-import BattlegroupEditor from "./my-heroscape/battlegroups/battlegroup-editor";
-import BattlegroupShared from "./my-heroscape/battlegroups/battlegroup-shared";
+import ArmyBuilders from "./my-heroscape/armybuilders/armybuilders";
+import ArmyBuilderDetail from "./my-heroscape/armybuilders/armybuilder-detail";
+import ArmyBuilderEditor from "./my-heroscape/armybuilders/armybuilder-editor";
+import ArmyBuilderShared from "./my-heroscape/armybuilders/armybuilder-shared";
 import UnitPage from "./catalog/unit-page";
 import GroupPage from "./catalog/group-page";
 import { GroupIndexPage } from "./catalog/index-pages";
@@ -197,10 +197,10 @@ const App: React.FC = () => {
                                     <Terms />
                                 </PageMeta>
                             } />
-                            {/*Public, read-only view of a shared Battlegroup*/}
-                            <Route path="/battlegroup/:shareId" element={
+                            {/*Public, read-only view of a shared Army builder*/}
+                            <Route path="/armybuilder/:shareId" element={
                                 <PageMeta title="Shared Army" description="A Heroscape army shared from Heroscape Builder." noindex>
-                                    <BattlegroupShared />
+                                    <ArmyBuilderShared />
                                 </PageMeta>
                             } />
 
@@ -247,31 +247,31 @@ const App: React.FC = () => {
                                     </PageMeta>
                                 </PrivateRoute>
                             } />
-                            <Route path="/my-heroscape/battlegroups" element={
+                            <Route path="/my-heroscape/armybuilder" element={
                                 <PrivateRoute>
                                     <PageMeta title="My Armies" description="Build armies from your Heroscape collection within a point limit." noindex>
-                                        <Battlegroups />
+                                        <ArmyBuilders />
                                     </PageMeta>
                                 </PrivateRoute>
                             } />
-                            <Route path="/my-heroscape/battlegroups/new" element={
+                            <Route path="/my-heroscape/armybuilder/new" element={
                                 <PrivateRoute>
                                     <PageMeta title="New Army" description="Create a Heroscape army." noindex>
-                                        <BattlegroupEditor />
+                                        <ArmyBuilderEditor />
                                     </PageMeta>
                                 </PrivateRoute>
                             } />
-                            <Route path="/my-heroscape/battlegroups/:id" element={
+                            <Route path="/my-heroscape/armybuilder/:id" element={
                                 <PrivateRoute>
                                     <PageMeta title="Army" description="View a Heroscape army." noindex>
-                                        <BattlegroupDetail />
+                                        <ArmyBuilderDetail />
                                     </PageMeta>
                                 </PrivateRoute>
                             } />
-                            <Route path="/my-heroscape/battlegroups/:id/edit" element={
+                            <Route path="/my-heroscape/armybuilder/:id/edit" element={
                                 <PrivateRoute>
                                     <PageMeta title="Edit Army" description="Edit a Heroscape army." noindex>
-                                        <BattlegroupEditor />
+                                        <ArmyBuilderEditor />
                                     </PageMeta>
                                 </PrivateRoute>
                             } />

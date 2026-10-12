@@ -1,24 +1,24 @@
 import { PointSystem } from './point-system';
 import { Unit } from './unit';
 
-export interface BattlegroupUnit {
+export interface ArmyBuilderUnit {
     unit: Unit;
     quantity: number;
     /** Copies the owner has in My Army. Only meaningful for the owner. */
     ownedQuantity: number;
-    /** The battlegroup uses more copies than My Army currently holds. Only set for the owner. */
+    /** The army builder uses more copies than My Army currently holds. Only set for the owner. */
     overAllocated: boolean;
 }
 
-export interface Battlegroup {
+export interface ArmyBuilder {
     id: number;
     name: string;
     pointLimit: number;
-    /** The point values this Battlegroup is built with; totalPoints is measured in it. */
+    /** The point values this Army builder is built with; totalPoints is measured in it. */
     pointSystem: PointSystem;
     /** Null/undefined when units from any creator are allowed. */
     creator?: string | null;
-    /** The owner's plain-text notes on how to play this Battlegroup. */
+    /** The owner's plain-text notes on how to play this Army builder. */
     notes?: string | null;
     isShared: boolean;
     /** Only present for the owner. */
@@ -34,7 +34,7 @@ export interface Battlegroup {
     /** The owner's logged results with this army. Zero for anyone else. */
     wins: number;
     losses: number;
-    units: BattlegroupUnit[];
+    units: ArmyBuilderUnit[];
 }
 
 export interface ArmyTally {
@@ -74,7 +74,7 @@ export interface JournalEntryRequest {
     notes?: string | null;
 }
 
-export interface BattlegroupSaveRequest {
+export interface ArmyBuilderSaveRequest {
     name: string;
     pointLimit: number;
     pointSystem: PointSystem;

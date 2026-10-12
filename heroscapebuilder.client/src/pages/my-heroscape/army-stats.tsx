@@ -9,7 +9,7 @@ import { Set as UnitSet } from '../../models/set';
 import { speciesKey, speciesLabel } from '../../models/species';
 import { getMyUnits } from '../../services/my_army-service';
 import { getUnits } from '../../services/unit-service';
-import { creatorLabel } from './battlegroups/battlegroup-parts';
+import { creatorLabel } from './armybuilders/armybuilder-parts';
 
 type UnitWithQuantity = Unit & { quantity?: number };
 

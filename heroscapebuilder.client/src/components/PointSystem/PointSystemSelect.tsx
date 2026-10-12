@@ -10,7 +10,7 @@ interface PointSystemSelectProps {
     sx?: object;
 }
 
-/** Form dropdown for a saved point system setting (e.g. a Battlegroup's). */
+/** Form dropdown for a saved point system setting (e.g. a Army builder's). */
 const PointSystemSelect: React.FC<PointSystemSelectProps> = ({ value, onChange, label = 'Point system', size = 'small', sx }) => (
     <TextField
         select

@@ -1,19 +1,19 @@
 namespace HeroscapeBuilder.Server.Domain.Exceptions
 {
-    public enum BattlegroupErrorKind
+    public enum ArmyBuilderErrorKind
     {
         Validation,
         NotFound,
         Conflict,
     }
 
-    public class BattlegroupException : Exception
+    public class ArmyBuilderException : Exception
     {
-        public BattlegroupErrorKind Kind { get; }
+        public ArmyBuilderErrorKind Kind { get; }
 
         public IReadOnlyList<string> Errors { get; }
 
-        public BattlegroupException(BattlegroupErrorKind kind, params string[] errors)
+        public ArmyBuilderException(ArmyBuilderErrorKind kind, params string[] errors)
             : base(string.Join(" ", errors))
         {
             Kind = kind;
