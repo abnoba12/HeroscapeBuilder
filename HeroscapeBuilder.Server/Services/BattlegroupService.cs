@@ -221,16 +221,25 @@ namespace HeroscapeBuilder.Server.Services
                 errors.Add($"Notes can be at most {MaxNotesLength} characters (currently {notes.Length}).");
             }
 
-            string? creator = null;
+            // Stored comma-separated in the single Creator column; a lone value is the old single-creator format.
+            var allowedCreators = new List<string>();
             if (!string.IsNullOrWhiteSpace(request.Creator))
             {
-                var creators = await _battlegroupRepository.GetCreators();
-                creator = creators.FirstOrDefault(x => string.Equals(x, request.Creator.Trim(), StringComparison.OrdinalIgnoreCase));
-                if (creator == null)
+                var knownCreators = await _battlegroupRepository.GetCreators();
+                foreach (var requestedCreator in request.Creator.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
-                    errors.Add($"\"{request.Creator.Trim()}\" is not a known creator.");
+                    var match = knownCreators.FirstOrDefault(x => string.Equals(x, requestedCreator, StringComparison.OrdinalIgnoreCase));
+                    if (match == null)
+                    {
+                        errors.Add($"\"{requestedCreator}\" is not a known creator.");
+                    }
+                    else if (!allowedCreators.Contains(match, StringComparer.OrdinalIgnoreCase))
+                    {
+                        allowedCreators.Add(match);
+                    }
                 }
             }
+            var creator = allowedCreators.Count > 0 ? string.Join(",", allowedCreators) : null;
 
             var requested = request.Units ?? new List<BattlegroupUnitRequest>();
             if (requested.Any(x => x.Quantity <= 0))
@@ -257,16 +266,19 @@ namespace HeroscapeBuilder.Server.Services
                 var unitName = card.Name ?? $"Unit {unitId}";
                 owned.TryGetValue(unitId, out var ownedQuantity);
 
-                if (ownedQuantity == 0)
+                if (!request.AllowUnowned)
                 {
-                    errors.Add($"{unitName} is not in My Collection.");
-                }
-                else if (quantity > ownedQuantity)
-                {
-                    errors.Add($"You only own {ownedQuantity} of {unitName} but this army uses {quantity}.");
+                    if (ownedQuantity == 0)
+                    {
+                        errors.Add($"{unitName} is not in My Collection.");
+                    }
+                    else if (quantity > ownedQuantity)
+                    {
+                        errors.Add($"You only own {ownedQuantity} of {unitName} but this army uses {quantity}.");
+                    }
                 }
 
-                if (creator != null && !string.Equals(card.Creator, creator, StringComparison.OrdinalIgnoreCase))
+                if (allowedCreators.Count > 0 && !allowedCreators.Contains(card.Creator, StringComparer.OrdinalIgnoreCase))
                 {
                     errors.Add($"{unitName} is from {card.Creator}, but this army is restricted to {creator}.");
                 }

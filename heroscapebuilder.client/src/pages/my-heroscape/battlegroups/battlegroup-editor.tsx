@@ -5,9 +5,9 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    Checkbox,
     FormControlLabel,
     IconButton,
-    MenuItem,
     Paper,
     Snackbar,
     Stack,
@@ -37,8 +37,9 @@ import {
     updateBattlegroup,
 } from '../../../services/battlegroup-service';
 import { getMyUnits } from '../../../services/my_army-service';
+import { getUnits } from '../../../services/unit-service';
 import { useUrlFlag, useUrlParam } from '../../../services/url-state';
-import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit } from './battlegroup-parts';
+import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit, parseCreators } from './battlegroup-parts';
 import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
 import PointSystemSelect from '../../../components/PointSystem/PointSystemSelect';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -52,6 +53,7 @@ type AvailableRow = Unit & { owned: number; used: number };
 
 interface GridContext {
     pointSystem: PointSystem;
+    allowUnowned: boolean;
     onAdd: (unitId: number) => void;
     onShowAbilities: (unitId: number) => void;
 }
@@ -83,7 +85,7 @@ const NameCell: React.FC<ICellRendererParams<AvailableRow, string, GridContext>>
 
 const AddCell: React.FC<ICellRendererParams<AvailableRow, unknown, GridContext>> = ({ data, context }) => {
     if (!data) return null;
-    const capped = data.used >= data.owned || (isUniqueUnit(data.rarity) && data.used >= 1);
+    const capped = (!context.allowUnowned && data.used >= data.owned) || (isUniqueUnit(data.rarity) && data.used >= 1);
     // Stays clickable when capped so the user gets told why the unit can't be added.
     return (
         <Button
@@ -113,7 +115,7 @@ const BattlegroupEditor: React.FC = () => {
     const { defaultPointSystem } = usePointSystem();
     const [chosenPointSystem, setPointSystem] = useState<PointSystem | null>(null);
     const pointSystem = chosenPointSystem ?? defaultPointSystem;
-    const [creator, setCreator] = useState('');
+    const [creators, setCreators] = useState<string[]>([]);
     const [notes, setNotes] = useState('');
     const [selection, setSelection] = useState<Record<number, number>>({});
     const [notice, setNotice] = useState<string | null>(null);
@@ -121,6 +123,8 @@ const BattlegroupEditor: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [quickFilter, setQuickFilter] = useUrlParam('q');
     const [onlyAffordable, setOnlyAffordable] = useUrlFlag('affordable', true);
+    const [includeUnowned, setIncludeUnowned] = useUrlFlag('unowned', false);
+    const [allUnits, setAllUnits] = useState<Unit[] | null>(null);
     const [abilityUnitId, setAbilityUnitId] = useState<number | null>(null);
     const [reviewSelected, setReviewSelected] = useState(false);
     const gridSectionRef = useRef<HTMLDivElement>(null);
@@ -136,10 +140,15 @@ const BattlegroupEditor: React.FC = () => {
                     setName(bg.name);
                     setPointLimitText(String(bg.pointLimit));
                     setPointSystem(bg.pointSystem);
-                    setCreator((bg.creator ?? '').toUpperCase());
+                    setCreators(parseCreators(bg.creator));
                     setNotes(bg.notes ?? '');
                     setSavedUnits(bg.units.map(item => item.unit));
                     setSelection(Object.fromEntries(bg.units.map(item => [item.unit.id, item.quantity])));
+                    // A saved army that already uses units you don't own reopens with them enabled.
+                    const ownedQuantities = new Map(owned.map(unit => [unit.id, unit.quantity ?? 0]));
+                    if (bg.units.some(item => item.quantity > (ownedQuantities.get(item.unit.id) ?? 0))) {
+                        setIncludeUnowned(true);
+                    }
                 }
             } catch (err) {
                 setLoadError(isNotFound(err) ? 'Army not found.' : getErrorMessages(err, 'Failed to load the editor.')[0]);
@@ -148,22 +157,44 @@ const BattlegroupEditor: React.FC = () => {
             }
         };
         load();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, isEdit]);
+
+    // The full catalog is only fetched once someone wants to plan with units they don't own.
+    useEffect(() => {
+        if (!includeUnowned || allUnits !== null) return;
+        const loadAll = async () => {
+            try {
+                setAllUnits(await getUnits());
+            } catch {
+                setNotice('Could not load the full unit list.');
+                setIncludeUnowned(false);
+            }
+        };
+        loadAll();
+    }, [includeUnowned, allUnits, setIncludeUnowned]);
 
     const ownedById = useMemo(() => new Map(ownedUnits.map(unit => [unit.id, unit.quantity ?? 0])), [ownedUnits]);
 
     const unitById = useMemo(() => {
         const map = new Map<number, Unit>();
         savedUnits.forEach(unit => map.set(unit.id, unit));
+        (allUnits ?? []).forEach(unit => map.set(unit.id, unit));
         ownedUnits.forEach(unit => map.set(unit.id, unit));
         return map;
-    }, [ownedUnits, savedUnits]);
+    }, [ownedUnits, savedUnits, allUnits]);
+
+    // Units the table can list: everything when planning with unowned units, otherwise My Collection.
+    const listableUnits = useMemo<Unit[]>(
+        () => (includeUnowned && allUnits ? allUnits : ownedUnits),
+        [includeUnowned, allUnits, ownedUnits],
+    );
 
     const creatorOptions = useMemo(() => {
-        const set = new Set(ownedUnits.map(unit => unit.creator.toUpperCase()));
-        if (creator) set.add(creator);
+        const set = new Set(listableUnits.map(unit => unit.creator.toUpperCase()));
+        creators.forEach(creator => set.add(creator));
         return Array.from(set).sort();
-    }, [ownedUnits, creator]);
+    }, [listableUnits, creators]);
 
     const selectedList = useMemo(
         () => Object.entries(selection)
@@ -184,6 +215,8 @@ const BattlegroupEditor: React.FC = () => {
     const totalPoints = selectedList.reduce((sum, item) => sum + pointsOf(item.unit) * item.quantity, 0);
     const overLimit = pointLimit > 0 && totalPoints > pointLimit;
     const overAllocated = selectedList.filter(item => item.quantity > (ownedById.get(item.unit.id) ?? 0));
+    // With "include units I don't own" on, going past what you own is allowed (it's a purchase plan).
+    const blockingOverAllocated = includeUnowned ? [] : overAllocated;
 
     const remainingPoints = pointLimit - totalPoints;
     const abilityUnit = abilityUnitId !== null ? unitById.get(abilityUnitId) ?? null : null;
@@ -191,10 +224,10 @@ const BattlegroupEditor: React.FC = () => {
     const filterByPoints = onlyAffordable && pointLimit > 0;
 
     const creatorRows = useMemo<AvailableRow[]>(
-        () => ownedUnits
-            .filter(unit => !creator || unit.creator.toUpperCase() === creator)
-            .map(unit => ({ ...unit, owned: unit.quantity ?? 0, used: selection[unit.id] ?? 0 })),
-        [ownedUnits, creator, selection],
+        () => listableUnits
+            .filter(unit => creators.length === 0 || creators.includes(unit.creator.toUpperCase()))
+            .map(unit => ({ ...unit, owned: ownedById.get(unit.id) ?? 0, used: selection[unit.id] ?? 0 })),
+        [listableUnits, creators, ownedById, selection],
     );
 
     const availableRows = useMemo<AvailableRow[]>(() => {
@@ -209,8 +242,8 @@ const BattlegroupEditor: React.FC = () => {
     const addBlockedReason = (unit: Unit): string | null => {
         if (pointLimit <= 0) return 'Set a point limit before adding units.';
 
-        if (creator && unit.creator.toUpperCase() !== creator) {
-            return `${unit.name} is from ${unit.creator}, but this army is restricted to ${creator}.`;
+        if (creators.length > 0 && !creators.includes(unit.creator.toUpperCase())) {
+            return `${unit.name} is from ${unit.creator}, but this army is restricted to ${creators.join(' and ')}.`;
         }
 
         if (isUniqueUnit(unit.rarity)) {
@@ -220,7 +253,7 @@ const BattlegroupEditor: React.FC = () => {
 
         const owned = ownedById.get(unit.id) ?? 0;
         const used = selection[unit.id] ?? 0;
-        if (used >= owned) {
+        if (!includeUnowned && used >= owned) {
             return owned === 0
                 ? `${unit.name} is not in My Collection.`
                 : `You only own ${owned} of ${unit.name} - all of them are already in this army.`;
@@ -250,9 +283,10 @@ const BattlegroupEditor: React.FC = () => {
     addUnitRef.current = addUnit;
     const gridContext = useMemo<GridContext>(() => ({
         pointSystem,
+        allowUnowned: includeUnowned,
         onAdd: unitId => addUnitRef.current(unitId),
         onShowAbilities: unitId => setAbilityUnitId(unitId),
-    }), [pointSystem]);
+    }), [pointSystem, includeUnowned]);
 
     const decrementUnit = (unitId: number) => {
         setSelection(prev => {
@@ -271,25 +305,27 @@ const BattlegroupEditor: React.FC = () => {
         });
     };
 
-    const handleCreatorChange = (value: string) => {
-        const conflicting = value
-            ? selectedList.filter(item => item.unit.creator.toUpperCase() !== value)
+    const handleCreatorToggle = (value: string, checked: boolean) => {
+        const next = checked ? [...creators, value] : creators.filter(item => item !== value);
+        const conflicting = next.length > 0
+            ? selectedList.filter(item => !next.includes(item.unit.creator.toUpperCase()))
             : [];
         if (conflicting.length > 0) {
-            setNotice(`Can't restrict this army to ${value} while it contains ${conflicting.map(item => item.unit.name).join(', ')}. Remove them first.`);
+            setNotice(`Can't restrict this army to ${next.join(' and ')} while it contains ${conflicting.map(item => item.unit.name).join(', ')}. Remove them first.`);
             return;
         }
-        setCreator(value);
+        setCreators(next);
     };
 
-    const canSave = name.trim().length > 0 && pointLimit > 0 && !overLimit && overAllocated.length === 0 && !saving;
+    const canSave = name.trim().length > 0 && pointLimit > 0 && !overLimit && blockingOverAllocated.length === 0 && !saving;
 
     const handleSave = async () => {
         const request = {
             name: name.trim(),
             pointLimit,
             pointSystem,
-            creator: creator || null,
+            creator: creators.length > 0 ? creators.join(',') : null,
+            allowUnowned: includeUnowned,
             notes: notes.trim() || null,
             units: selectedList.map(item => ({ unitId: item.unit.id, quantity: item.quantity })),
         };
@@ -387,9 +423,9 @@ const BattlegroupEditor: React.FC = () => {
                     </Alert>
                 )}
 
-                {overAllocated.length > 0 && (
+                {blockingOverAllocated.length > 0 && (
                     <Alert severity="error" variant="filled" sx={{ fontWeight: 700 }}>
-                        {`⚠ My Collection doesn't have enough of: ${overAllocated.map(item => `${item.unit.name} (own ${ownedById.get(item.unit.id) ?? 0}, using ${item.quantity})`).join(', ')}. Lower or remove them to save.`}
+                        {`⚠ My Collection doesn't have enough of: ${blockingOverAllocated.map(item => `${item.unit.name} (own ${ownedById.get(item.unit.id) ?? 0}, using ${item.quantity})`).join(', ')}. Lower or remove them to save.`}
                     </Alert>
                 )}
 
@@ -418,20 +454,27 @@ const BattlegroupEditor: React.FC = () => {
                                 required
                             />
                             <PointSystemSelect value={pointSystem} onChange={setPointSystem} />
-                            <TextField
-                                select
-                                label="Restrict to creator"
-                                value={creator}
-                                onChange={event => handleCreatorChange(event.target.value)}
-                                size="small"
-                                sx={{ minWidth: 240 }}
-                            >
-                                <MenuItem value="">Any creator</MenuItem>
-                                {creatorOptions.map(option => (
-                                    <MenuItem key={option} value={option}>{creatorLabel(option)}</MenuItem>
-                                ))}
-                            </TextField>
                         </Stack>
+                        <div>
+                            <Typography variant="body2" color="text.secondary">
+                                Restrict to creator <Typography component="span" variant="caption">(none checked = any creator)</Typography>
+                            </Typography>
+                            <Stack direction="row" flexWrap="wrap">
+                                {creatorOptions.map(option => (
+                                    <FormControlLabel
+                                        key={option}
+                                        control={
+                                            <Checkbox
+                                                size="small"
+                                                checked={creators.includes(option)}
+                                                onChange={event => handleCreatorToggle(option, event.target.checked)}
+                                            />
+                                        }
+                                        label={creatorLabel(option)}
+                                    />
+                                ))}
+                            </Stack>
+                        </div>
                         {pointLimit > 0 && <PointsMeter total={totalPoints} limit={pointLimit} />}
                         <Typography variant="caption" color="text.secondary">
                             {`Points are counted using ${pointSystem} values. `}
@@ -462,16 +505,24 @@ const BattlegroupEditor: React.FC = () => {
                                 </Alert>
                             ) : (
                             <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap">
+                                <Stack>
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={includeUnowned} onChange={event => setIncludeUnowned(event.target.checked)} />}
+                                    label="Include units I don't own (plan future purchases)"
+                                />
                                 <FormControlLabel
                                     control={<Switch size="small" checked={onlyAffordable} onChange={event => setOnlyAffordable(event.target.checked)} />}
                                     label={pointLimit > 0
                                         ? `Only show units of ${Math.max(remainingPoints, 0)} points or less`
                                         : 'Only show units within the remaining points'}
                                 />
+                                </Stack>
                                 <Typography variant="caption" color="text.secondary">
-                                    {pointLimit > 0
-                                        ? `Showing ${availableRows.length} of ${creatorRows.length} units`
-                                        : 'Set a point limit to filter by remaining points'}
+                                    {includeUnowned && allUnits === null
+                                        ? 'Loading all units...'
+                                        : pointLimit > 0
+                                            ? `Showing ${availableRows.length} of ${creatorRows.length} units`
+                                            : 'Set a point limit to filter by remaining points'}
                                 </Typography>
                             </Stack>
                             )}
@@ -551,12 +602,12 @@ const BattlegroupEditor: React.FC = () => {
                                             const owned = ownedById.get(item.unit.id) ?? 0;
                                             const flagged = item.quantity > owned;
                                             return (
-                                                <TableRow key={item.unit.id} sx={flagged ? { bgcolor: 'rgba(255, 23, 68, 0.12)' } : undefined}>
+                                                <TableRow key={item.unit.id} sx={flagged ? { bgcolor: includeUnowned ? 'rgba(255, 193, 7, 0.15)' : 'rgba(255, 23, 68, 0.12)' } : undefined}>
                                                     <TableCell>
                                                         <UnitHover unit={item.unit} pointSystem={pointSystem}><span>{item.unit.name}</span></UnitHover>
                                                         {flagged && (
-                                                            <Typography variant="caption" display="block" sx={{ color: '#d50000', fontWeight: 700 }}>
-                                                                {`⚠ own ${owned}`}
+                                                            <Typography variant="caption" display="block" sx={{ color: includeUnowned ? 'warning.dark' : '#d50000', fontWeight: 700 }}>
+                                                                {includeUnowned ? `own ${owned}, need ${item.quantity - owned} more` : `⚠ own ${owned}`}
                                                             </Typography>
                                                         )}
                                                     </TableCell>

@@ -27,8 +27,16 @@ import { Battlegroup } from '../../../models/battlegroup';
 import { getCreatorInfo } from '../../../models/creator';
 import { PointSystem, getUnitPoints } from '../../../models/point-system';
 
-export const creatorLabel = (creator?: string | null): string =>
-    creator ? (getCreatorInfo(creator)?.label ?? creator.toUpperCase()) : 'Any creator';
+/** An army's creator restriction is one creator or several joined by commas. */
+export const parseCreators = (creator?: string | null): string[] =>
+    (creator ?? '').split(',').map(part => part.trim().toUpperCase()).filter(Boolean);
+
+const singleCreatorLabel = (creator: string): string => getCreatorInfo(creator)?.label ?? creator.toUpperCase();
+
+export const creatorLabel = (creator?: string | null): string => {
+    const creators = parseCreators(creator);
+    return creators.length > 0 ? creators.map(singleCreatorLabel).join(' + ') : 'Any creator';
+};
 
 export const isUniqueUnit = (rarity?: string | null): boolean => rarity?.toLowerCase() === 'unique';
 

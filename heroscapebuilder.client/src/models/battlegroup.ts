@@ -78,7 +78,10 @@ export interface BattlegroupSaveRequest {
     name: string;
     pointLimit: number;
     pointSystem: PointSystem;
+    /** One creator, or several joined by commas. */
     creator?: string | null;
+    /** Lets the army include units/quantities not in My Collection (planning future purchases). */
+    allowUnowned?: boolean;
     notes?: string | null;
     units: Array<{ unitId: number; quantity: number }>;
 }
