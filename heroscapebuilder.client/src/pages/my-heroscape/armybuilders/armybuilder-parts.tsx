@@ -22,8 +22,9 @@ import {
 } from '@mui/material';
 import type { Instance } from '@popperjs/core';
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Unit } from '../../../models/unit';
-import { ArmyBuilder } from '../../../models/armybuilder';
+import { ArmyBuilder, ArmyBuilderVariation } from '../../../models/armybuilder';
 import { getCreatorInfo } from '../../../models/creator';
 import { PointSystem, getUnitPoints } from '../../../models/point-system';
 
@@ -37,6 +38,53 @@ export const creatorLabel = (creator?: string | null): string => {
     const creators = parseCreators(creator);
     return creators.length > 0 ? creators.map(singleCreatorLabel).join(' + ') : 'Any creator';
 };
+
+/** A variation's own name, or - when it has none - what sets it apart (its limit, and its creator restriction). */
+export const variationName = (variation: Pick<ArmyBuilderVariation, 'label' | 'pointLimit' | 'creator'>): string => {
+    if (variation.label) return variation.label;
+    const creators = parseCreators(variation.creator);
+    return creators.length > 0
+        ? `${variation.pointLimit} pts, ${creators.map(singleCreatorLabel).join(' + ')}`
+        : `${variation.pointLimit} pts`;
+};
+
+/** Links to each variation of an army, the current one highlighted. */
+export const VariationSwitcher: React.FC<{
+    variations: ArmyBuilderVariation[];
+    currentId: number;
+    linkFor: (variationId: number) => string;
+    showReview?: boolean;
+}> = ({ variations, currentId, linkFor, showReview = false }) => (
+    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+        <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', mr: 0.5 }}>Variations</Typography>
+        {variations.map(variation => {
+            const current = variation.id === currentId;
+            return (
+                <Chip
+                    key={variation.id}
+                    component={Link}
+                    to={linkFor(variation.id)}
+                    clickable
+                    replace
+                    color="primary"
+                    variant={current ? 'filled' : 'outlined'}
+                    label={`${showReview && variation.needsReview ? '⚠ ' : ''}${variationName(variation)}`}
+                    sx={{
+                        height: 40,
+                        px: 1,
+                        borderRadius: 2,
+                        fontSize: '0.95rem',
+                        fontWeight: 700,
+                        borderWidth: 2,
+                        bgcolor: current ? undefined : 'background.paper',
+                        boxShadow: current ? 3 : 1,
+                        '&:hover': { boxShadow: 4 },
+                    }}
+                />
+            );
+        })}
+    </Stack>
+);
 
 export const isUniqueUnit = (rarity?: string | null): boolean => rarity?.toLowerCase() === 'unique';
 
@@ -202,12 +250,18 @@ export const ConfirmDeleteDialog: React.FC<{
     busy?: boolean;
     onCancel: () => void;
     onConfirm: () => void;
-}> = ({ open, name, busy, onCancel, onConfirm }) => (
+    /** How many variations go with it; more than one adds a warning. */
+    variationCount?: number;
+    /** Deleting one variation instead of the whole army. */
+    variationOnly?: boolean;
+}> = ({ open, name, busy, onCancel, onConfirm, variationCount = 1, variationOnly = false }) => (
     <Dialog open={open} onClose={onCancel}>
-        <DialogTitle>Delete army?</DialogTitle>
+        <DialogTitle>{variationOnly ? 'Delete variation?' : 'Delete army?'}</DialogTitle>
         <DialogContent>
             <DialogContentText>
-                {`"${name}" will be permanently deleted. If it is shared, its public link will stop working. Your units in My Collection are not affected.`}
+                {variationOnly
+                    ? `"${name}" will be permanently deleted, along with its results and journal. The rest of the army is not affected.`
+                    : `"${name}" will be permanently deleted${variationCount > 1 ? `, along with all ${variationCount} of its variations` : ''}. If it is shared, its public link will stop working. Your units in My Collection are not affected.`}
             </DialogContentText>
         </DialogContent>
         <DialogActions>

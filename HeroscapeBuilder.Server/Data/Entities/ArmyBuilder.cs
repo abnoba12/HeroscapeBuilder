@@ -42,6 +42,20 @@ public partial class ArmyBuilder
 
     public DateTime UpdatedAt { get; set; }
 
+    /// <summary>
+    /// Set on a variation (another version of the same army, free to differ in limit, creator, units, anything);
+    /// null on the army's primary version. Name is copied from the primary and kept in sync; sharing and
+    /// retiring are only read from the primary.
+    /// </summary>
+    public int? ParentArmyBuilderId { get; set; }
+
+    /// <summary>Optional name for this variation ("Tournament", "Casual"); null falls back to its point limit.</summary>
+    public string? VariationLabel { get; set; }
+
+    public virtual ArmyBuilder? Parent { get; set; }
+
+    public virtual ICollection<ArmyBuilder> Variations { get; set; } = new List<ArmyBuilder>();
+
     public virtual ApplicationUser User { get; set; } = null!;
 
     public virtual ICollection<ArmyBuilderUnit> ArmyBuilderUnits { get; set; } = new List<ArmyBuilderUnit>();

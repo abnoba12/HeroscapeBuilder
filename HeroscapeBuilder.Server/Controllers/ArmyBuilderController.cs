@@ -58,6 +58,13 @@ namespace HeroscapeBuilder.Server.Controllers
             });
         }
 
+        /// <summary>Deletes one point variation, leaving the rest of the army.</summary>
+        [HttpDelete]
+        public Task<IActionResult> DeleteVariation(int id)
+        {
+            return Run(userId => _armyBuilderService.DeleteVariation(userId, id));
+        }
+
         [HttpPost]
         public Task<IActionResult> ShareArmyBuilder(int id)
         {
@@ -134,12 +141,12 @@ namespace HeroscapeBuilder.Server.Controllers
         /// </summary>
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetSharedArmyBuilder(Guid shareId)
+        public async Task<IActionResult> GetSharedArmyBuilder(Guid shareId, int? variationId = null)
         {
             try
             {
                 var viewerId = UserHelper.GetCurrentUserId(HttpContext);
-                return Ok(await _armyBuilderService.GetSharedArmyBuilder(shareId, viewerId));
+                return Ok(await _armyBuilderService.GetSharedArmyBuilder(shareId, viewerId, variationId));
             }
             catch (ArmyBuilderException ex)
             {

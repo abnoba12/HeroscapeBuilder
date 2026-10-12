@@ -24,10 +24,11 @@ import {
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ColDef, GetQuickFilterTextParams, GetRowIdParams, ICellRendererParams, ModuleRegistry, ValueGetterParams } from 'ag-grid-community';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Ability } from '../../../models/ability';
 import { ArmyBuilder } from '../../../models/armybuilder';
 import { PointSystem, getUnitPoints } from '../../../models/point-system';
+import { speciesKey } from '../../../models/species';
 import { Unit } from '../../../models/unit';
 import {
     createArmyBuilder,
@@ -40,10 +41,10 @@ import { getMyUnits } from '../../../services/my_army-service';
 import { getUnits } from '../../../services/unit-service';
 import { useUrlFlag, useUrlParam } from '../../../services/url-state';
 import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit, parseCreators } from './armybuilder-parts';
-import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
-import PointSystemSelect from '../../../components/PointSystem/PointSystemSelect';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
+import PointSystemSelect from '../../../components/PointSystem/PointSystemSelect';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -57,6 +58,35 @@ interface GridContext {
     onAdd: (unitId: number) => void;
     onShowAbilities: (unitId: number) => void;
 }
+
+const ZEBRA_TINT = 'rgba(25, 118, 210, 0.045)';
+const HOVER_TINT = 'rgba(25, 118, 210, 0.10)';
+const HEADER_TINT = '#e8f1fb';
+
+/** A section card with a colored top edge and a faintly tinted background. */
+const sectionSx = (accent: string) => ({
+    p: 2,
+    borderTop: 4,
+    borderTopColor: accent,
+    bgcolor: '#fbfcfe',
+});
+
+/** Subtle zebra striping, a tinted header and a hover highlight for the MUI tables. */
+const tableSx = {
+    '& .MuiTableCell-head': { bgcolor: HEADER_TINT, fontWeight: 700 },
+    '& tbody tr:nth-of-type(even)': { bgcolor: ZEBRA_TINT },
+    '& tbody tr:hover': { bgcolor: HOVER_TINT },
+};
+
+/** Alpine theme variables: the same zebra, header and hover colors as the MUI tables. */
+const gridStyle = {
+    height: '55vh',
+    width: '100%',
+    '--ag-odd-row-background-color': ZEBRA_TINT,
+    '--ag-row-hover-color': HOVER_TINT,
+    '--ag-header-background-color': HEADER_TINT,
+    '--ag-header-foreground-color': '#1a3b5c',
+} as React.CSSProperties;
 
 const abilityNames = (unit?: Unit): string =>
     (unit?.abilities ?? []).map(ability => ability.abilityName).filter(Boolean).join(', ');
@@ -102,7 +132,9 @@ const AddCell: React.FC<ICellRendererParams<AvailableRow, unknown, GridContext>>
 
 const ArmyBuilderEditor: React.FC = () => {
     const { id } = useParams();
-    const isEdit = id !== undefined;
+    // /variation/new: a new variation of the army that `id` belongs to, starting as a copy of that variation.
+    const isVariation = useLocation().pathname.endsWith('/variation/new');
+    const isEdit = id !== undefined && !isVariation;
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
@@ -110,6 +142,10 @@ const ArmyBuilderEditor: React.FC = () => {
     const [ownedUnits, setOwnedUnits] = useState<Unit[]>([]);
     const [savedUnits, setSavedUnits] = useState<Unit[]>([]);
     const [name, setName] = useState('');
+    const [variationLabel, setVariationLabel] = useState('');
+    // The army this editor works on: its id and how many variations it has (the name is shared by all of them).
+    const [armyId, setArmyId] = useState<number | null>(null);
+    const [variationCount, setVariationCount] = useState(1);
     const [pointLimitText, setPointLimitText] = useState('');
     // New Army builders start on the account default; saved ones keep their own.
     const { defaultPointSystem } = usePointSystem();
@@ -135,9 +171,12 @@ const ArmyBuilderEditor: React.FC = () => {
                 const owned = ((await getMyUnits())?.data ?? []) as Unit[];
                 setOwnedUnits(owned);
 
-                if (isEdit) {
+                if (id !== undefined) {
                     const bg: ArmyBuilder = await getArmyBuilder(Number(id));
+                    setArmyId(bg.armyId);
+                    setVariationCount(bg.variations.length);
                     setName(bg.name);
+                    setVariationLabel(isVariation ? '' : bg.variationLabel ?? '');
                     setPointLimitText(String(bg.pointLimit));
                     setPointSystem(bg.pointSystem);
                     setCreators(parseCreators(bg.creator));
@@ -158,7 +197,7 @@ const ArmyBuilderEditor: React.FC = () => {
         };
         load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, isEdit]);
+    }, [id, isEdit, isVariation]);
 
     // The full catalog is only fetched once someone wants to plan with units they don't own.
     useEffect(() => {
@@ -321,7 +360,9 @@ const ArmyBuilderEditor: React.FC = () => {
 
     const handleSave = async () => {
         const request = {
+            armyId: isVariation && armyId !== null ? armyId : undefined,
             name: name.trim(),
+            variationLabel: variationLabel.trim() || null,
             pointLimit,
             pointSystem,
             creator: creators.length > 0 ? creators.join(',') : null,
@@ -347,7 +388,7 @@ const ArmyBuilderEditor: React.FC = () => {
         if (selectedList.length === 0) return;
         const next = !reviewingSelected;
         setReviewSelected(next);
-        // When the table is stacked above the selection, bring it into view.
+        // The table sits below the army list, so bring it into view.
         if (next) gridSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
@@ -357,24 +398,34 @@ const ArmyBuilderEditor: React.FC = () => {
         toggleReview();
     };
 
+    // Same column order as the Unit Data page, with the Add button and what you own up front.
     const columnDefs = useMemo<ColDef<AvailableRow>[]>(() => [
-        { headerName: '', cellRenderer: AddCell, width: 90, flex: 0, pinned: 'left', sortable: false, filter: false, floatingFilter: false, resizable: false },
-        { field: 'name', headerName: 'Unit', width: 165, flex: 0, pinned: 'left', cellRenderer: NameCell },
-        { field: 'rarity', headerName: 'Rarity', width: 95, flex: 0 },
+        // The Alpine theme pads cells and clips overflow with an ellipsis, so trim the padding for the button.
+        { headerName: '', cellRenderer: AddCell, width: 100, flex: 0, pinned: 'left', sortable: false, filter: false, floatingFilter: false, resizable: false, cellStyle: { paddingLeft: 8, paddingRight: 8, overflow: 'visible' } },
+        { field: 'name', headerName: 'Unit Name', width: 175, flex: 0, pinned: 'left', cellRenderer: NameCell },
+        { field: 'owned', headerName: 'Owned', filter: 'agNumberColumnFilter', width: 90, flex: 0 },
+        { field: 'creator', headerName: 'Creator', width: 110, flex: 0 },
+        { field: 'general', headerName: 'General', width: 120, flex: 0 },
+        { field: 'rarity', headerName: 'Rarity', width: 105, flex: 0 },
+        { field: 'type', headerName: 'Unit Type', width: 120, flex: 0 },
+        // Filtering compares the singular key, so "Goblin" also finds units printed "Goblins".
+        { field: 'race', headerName: 'Species', width: 130, flex: 0, filterValueGetter: (params: ValueGetterParams<AvailableRow>) => speciesKey(params.data?.race) },
+        { field: 'role', headerName: 'Role', width: 150, flex: 0 },
+        { field: 'sizeCategory', headerName: 'Size Category', width: 140, flex: 0 },
+        { field: 'personality', headerName: 'Personality', width: 140, flex: 0 },
+        { field: 'life', headerName: 'Life', filter: 'agNumberColumnFilter', width: 80, flex: 0 },
+        { field: 'advAttack', headerName: 'Adv Attack', filter: 'agNumberColumnFilter', width: 110, flex: 0 },
+        { field: 'advDefense', headerName: 'Adv Defense', filter: 'agNumberColumnFilter', width: 120, flex: 0 },
+        { field: 'advMove', headerName: 'Adv Move', filter: 'agNumberColumnFilter', width: 105, flex: 0 },
+        { field: 'advRange', headerName: 'Adv Range', filter: 'agNumberColumnFilter', width: 110, flex: 0 },
         {
             colId: 'points',
             headerName: 'Points',
             valueGetter: (params: ValueGetterParams<AvailableRow, number, GridContext>) => getUnitPoints(params.data, params.context.pointSystem),
             filter: 'agNumberColumnFilter',
-            width: 85,
+            width: 90,
             flex: 0,
         },
-        { field: 'life', headerName: 'Life', filter: 'agNumberColumnFilter', width: 80, flex: 0 },
-        { field: 'advMove', headerName: 'Adv Move', filter: 'agNumberColumnFilter', width: 100, flex: 0 },
-        { field: 'advRange', headerName: 'Adv Range', filter: 'agNumberColumnFilter', width: 100, flex: 0 },
-        { field: 'advAttack', headerName: 'Adv Attack', filter: 'agNumberColumnFilter', width: 105, flex: 0 },
-        { field: 'advDefense', headerName: 'Adv Defense', filter: 'agNumberColumnFilter', width: 110, flex: 0 },
-        { field: 'sizeCategory', headerName: 'Size Category', width: 140, flex: 0 },
         {
             headerName: 'Abilities',
             minWidth: 260,
@@ -384,9 +435,6 @@ const ArmyBuilderEditor: React.FC = () => {
             getQuickFilterText: (params: GetQuickFilterTextParams<AvailableRow>) =>
                 (params.data?.abilities ?? []).map((ability: Ability) => `${ability.abilityName ?? ''} ${ability.ability ?? ''}`).join(' '),
         },
-        { field: 'owned', headerName: 'Owned', filter: 'agNumberColumnFilter', width: 90, flex: 0 },
-        { field: 'general', headerName: 'General', width: 105, flex: 0 },
-        { field: 'creator', headerName: 'Creator', width: 110, flex: 0 },
     ], []);
 
     const defaultColDef = useMemo<ColDef>(() => ({
@@ -410,12 +458,18 @@ const ArmyBuilderEditor: React.FC = () => {
     }
     if (ownedUnits.length === 0) return <Navigate to="/my-heroscape/my-army" replace />;
 
-    const cancelTarget = isEdit ? `/my-heroscape/armybuilder/${id}` : '/my-heroscape/armybuilder';
+    const cancelTarget = id !== undefined ? `/my-heroscape/armybuilder/${id}` : '/my-heroscape/armybuilder';
 
     return (
         <div className="container-fluid">
             <Stack spacing={2}>
-                <Typography variant="h4">{isEdit ? 'Edit Army' : 'New Army'}</Typography>
+                <Typography variant="h4">{isVariation ? `Add variation to ${name}` : isEdit ? 'Edit Army' : 'New Army'}</Typography>
+                {isVariation && (
+                    <Alert severity="info">
+                        This starts as a copy of the version you were viewing. Change anything you like - the point limit,
+                        creator restriction, point system, notes or units - and it is saved as its own version of {name}.
+                    </Alert>
+                )}
 
                 {serverErrors.length > 0 && (
                     <Alert severity="error" onClose={() => setServerErrors([])}>
@@ -429,7 +483,7 @@ const ArmyBuilderEditor: React.FC = () => {
                     </Alert>
                 )}
 
-                <Paper variant="outlined" sx={{ p: 2 }}>
+                <Paper variant="outlined" sx={sectionSx('warning.main')}>
                     <Stack spacing={2}>
                         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                             <TextField
@@ -440,6 +494,17 @@ const ArmyBuilderEditor: React.FC = () => {
                                 size="small"
                                 fullWidth
                                 required
+                                disabled={isVariation}
+                                helperText={isVariation || (isEdit && variationCount > 1) ? 'The army name is shared by all of its variations.' : undefined}
+                            />
+                            <TextField
+                                label="Variation name"
+                                placeholder="Optional, e.g. Tournament"
+                                value={variationLabel}
+                                onChange={event => setVariationLabel(event.target.value)}
+                                slotProps={{ htmlInput: { maxLength: 100 } }}
+                                size="small"
+                                fullWidth
                             />
                             <TextField
                                 label="Point limit"
@@ -483,11 +548,105 @@ const ArmyBuilderEditor: React.FC = () => {
                     </Stack>
                 </Paper>
 
-                <div className="row gy-3">
-                    <div className="col-xxl-8" ref={gridSectionRef}>
+                <Paper variant="outlined" sx={sectionSx('success.main')}>
+                    <Stack spacing={1}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                            <Typography variant="h6" sx={{ color: 'success.dark', fontWeight: 700 }}>{`Army (${selectedList.reduce((sum, item) => sum + item.quantity, 0)} units)`}</Typography>
+                            <Button
+                                size="small"
+                                variant={reviewingSelected ? 'contained' : 'outlined'}
+                                disabled={selectedList.length === 0}
+                                onClick={toggleReview}
+                            >
+                                {reviewingSelected ? 'Show all units' : 'Review in table'}
+                            </Button>
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                            {selectedList.length === 0
+                                ? 'Add units, then click this box to review their stats in the table.'
+                                : reviewingSelected
+                                    ? 'Reviewing these units in the table. Click this box again to show all units.'
+                                    : 'Click this box to review these units in the table.'}
+                        </Typography>
+                        <TableContainer
+                            component={Paper}
+                            variant="outlined"
+                            onClick={handleSelectedBoxClick}
+                            sx={{
+                                maxHeight: '40vh',
+                                cursor: selectedList.length > 0 ? 'pointer' : 'default',
+                                borderColor: reviewingSelected ? 'primary.main' : undefined,
+                                borderWidth: reviewingSelected ? 2 : 1,
+                                boxShadow: reviewingSelected ? 3 : 0,
+                                '&:hover': selectedList.length > 0 ? { borderColor: 'primary.main' } : undefined,
+                            }}
+                        >
+                            <Table size="small" stickyHeader sx={tableSx}>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Unit</TableCell>
+                                        <TableCell align="center">Qty</TableCell>
+                                        <TableCell align="right">Pts</TableCell>
+                                        <TableCell>Rarity</TableCell>
+                                        <TableCell align="right">Life</TableCell>
+                                        <TableCell align="right">Move</TableCell>
+                                        <TableCell align="right">Range</TableCell>
+                                        <TableCell align="right">Attack</TableCell>
+                                        <TableCell align="right">Defense</TableCell>
+                                        <TableCell />
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {selectedList.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={10} align="center">
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Click Add on a unit below to put it in this army.
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                    {selectedList.map(item => {
+                                        const owned = ownedById.get(item.unit.id) ?? 0;
+                                        const flagged = item.quantity > owned;
+                                        return (
+                                            <TableRow key={item.unit.id} sx={flagged ? { bgcolor: includeUnowned ? 'rgba(255, 193, 7, 0.15)' : 'rgba(255, 23, 68, 0.12)' } : undefined}>
+                                                <TableCell>
+                                                    <UnitHover unit={item.unit} pointSystem={pointSystem}><span>{item.unit.name}</span></UnitHover>
+                                                    {flagged && (
+                                                        <Typography variant="caption" display="block" sx={{ color: includeUnowned ? 'warning.dark' : '#d50000', fontWeight: 700 }}>
+                                                            {includeUnowned ? `own ${owned}, need ${item.quantity - owned} more` : `⚠ own ${owned}`}
+                                                        </Typography>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                                                    <IconButton size="small" aria-label={`Remove one ${item.unit.name}`} onClick={() => decrementUnit(item.unit.id)}>−</IconButton>
+                                                    {item.quantity}
+                                                    <IconButton size="small" aria-label={`Add one ${item.unit.name}`} onClick={() => addUnit(item.unit.id)}>+</IconButton>
+                                                </TableCell>
+                                                <TableCell align="right">{pointsOf(item.unit) * item.quantity}</TableCell>
+                                                <TableCell>{item.unit.rarity}</TableCell>
+                                                <TableCell align="right">{item.unit.life}</TableCell>
+                                                <TableCell align="right">{item.unit.advMove}</TableCell>
+                                                <TableCell align="right">{item.unit.advRange}</TableCell>
+                                                <TableCell align="right">{item.unit.advAttack}</TableCell>
+                                                <TableCell align="right">{item.unit.advDefense}</TableCell>
+                                                <TableCell align="right">
+                                                    <Button size="small" color="error" onClick={() => removeUnit(item.unit.id)}>Remove</Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Stack>
+                </Paper>
+
+                <Paper variant="outlined" sx={sectionSx('primary.main')} ref={gridSectionRef}>
                         <Stack spacing={1}>
                             <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>{reviewingSelected ? 'Selected units' : 'My Collection'}</Typography>
+                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap', color: 'primary.dark', fontWeight: 700 }}>{reviewingSelected ? 'Selected units' : 'My Collection'}</Typography>
                                 <TextField
                                     size="small"
                                     fullWidth
@@ -529,8 +688,9 @@ const ArmyBuilderEditor: React.FC = () => {
                             <Typography variant="caption" color="text.secondary">
                                 Tip: hover a unit's name (dotted underline) to see its points, stats and abilities.
                             </Typography>
-                            <div className="ag-theme-alpine" style={{ height: '55vh', width: '100%' }}>
+                            <div className="ag-theme-alpine" style={gridStyle}>
                                 <AgGridReact<AvailableRow>
+                                    theme="legacy"
                                     rowData={availableRows}
                                     columnDefs={columnDefs}
                                     defaultColDef={defaultColDef}
@@ -544,93 +704,9 @@ const ArmyBuilderEditor: React.FC = () => {
                                 />
                             </div>
                         </Stack>
-                    </div>
+                </Paper>
 
-                    <div className="col-xxl-4">
-                        <Stack spacing={1}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-                                <Typography variant="h6">{`Army (${selectedList.reduce((sum, item) => sum + item.quantity, 0)} units)`}</Typography>
-                                <Button
-                                    size="small"
-                                    variant={reviewingSelected ? 'contained' : 'outlined'}
-                                    disabled={selectedList.length === 0}
-                                    onClick={toggleReview}
-                                >
-                                    {reviewingSelected ? 'Show all units' : 'Review in table'}
-                                </Button>
-                            </Stack>
-                            <Typography variant="caption" color="text.secondary">
-                                {selectedList.length === 0
-                                    ? 'Add units, then click this box to review their stats in the table.'
-                                    : reviewingSelected
-                                        ? 'Reviewing these units in the table. Click this box again to show all units.'
-                                        : 'Click this box to review these units in the table.'}
-                            </Typography>
-                            <TableContainer
-                                component={Paper}
-                                variant="outlined"
-                                onClick={handleSelectedBoxClick}
-                                sx={{
-                                    maxHeight: '55vh',
-                                    cursor: selectedList.length > 0 ? 'pointer' : 'default',
-                                    borderColor: reviewingSelected ? 'primary.main' : undefined,
-                                    borderWidth: reviewingSelected ? 2 : 1,
-                                    boxShadow: reviewingSelected ? 3 : 0,
-                                    '&:hover': selectedList.length > 0 ? { borderColor: 'primary.main' } : undefined,
-                                }}
-                            >
-                                <Table size="small" stickyHeader>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Unit</TableCell>
-                                            <TableCell align="center">Qty</TableCell>
-                                            <TableCell align="right">Pts</TableCell>
-                                            <TableCell />
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {selectedList.length === 0 && (
-                                            <TableRow>
-                                                <TableCell colSpan={4} align="center">
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        Click Add on a unit to put it in this army.
-                                                    </Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                        {selectedList.map(item => {
-                                            const owned = ownedById.get(item.unit.id) ?? 0;
-                                            const flagged = item.quantity > owned;
-                                            return (
-                                                <TableRow key={item.unit.id} sx={flagged ? { bgcolor: includeUnowned ? 'rgba(255, 193, 7, 0.15)' : 'rgba(255, 23, 68, 0.12)' } : undefined}>
-                                                    <TableCell>
-                                                        <UnitHover unit={item.unit} pointSystem={pointSystem}><span>{item.unit.name}</span></UnitHover>
-                                                        {flagged && (
-                                                            <Typography variant="caption" display="block" sx={{ color: includeUnowned ? 'warning.dark' : '#d50000', fontWeight: 700 }}>
-                                                                {includeUnowned ? `own ${owned}, need ${item.quantity - owned} more` : `⚠ own ${owned}`}
-                                                            </Typography>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
-                                                        <IconButton size="small" aria-label={`Remove one ${item.unit.name}`} onClick={() => decrementUnit(item.unit.id)}>−</IconButton>
-                                                        {item.quantity}
-                                                        <IconButton size="small" aria-label={`Add one ${item.unit.name}`} onClick={() => addUnit(item.unit.id)}>+</IconButton>
-                                                    </TableCell>
-                                                    <TableCell align="right">{pointsOf(item.unit) * item.quantity}</TableCell>
-                                                    <TableCell align="right">
-                                                        <Button size="small" color="error" onClick={() => removeUnit(item.unit.id)}>Remove</Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Stack>
-                    </div>
-                </div>
-
-                <Paper variant="outlined" sx={{ p: 2 }}>
+                <Paper variant="outlined" sx={sectionSx('secondary.main')}>
                     <TextField
                         label="How to play this army"
                         placeholder="Strategy, opening moves, how the units work together, things to watch out for..."
@@ -647,7 +723,7 @@ const ArmyBuilderEditor: React.FC = () => {
 
                 <Stack direction="row" spacing={1}>
                     <Button variant="contained" onClick={handleSave} disabled={!canSave}>
-                        {isEdit ? 'Save changes' : 'Create Army'}
+                        {isEdit ? 'Save changes' : isVariation ? 'Add variation' : 'Create Army'}
                     </Button>
                     <Button component={Link} to={cancelTarget}>Cancel</Button>
                 </Stack>

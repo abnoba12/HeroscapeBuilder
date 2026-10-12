@@ -94,6 +94,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
             {
                 Id = source.Id,
                 Name = source.Name,
+                VariationLabel = source.VariationLabel,
                 PointLimit = source.PointLimit,
                 PointSystem = source.PointSystem,
                 Creator = source.Creator,

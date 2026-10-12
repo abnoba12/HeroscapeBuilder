@@ -268,6 +268,13 @@ const App: React.FC = () => {
                                     </PageMeta>
                                 </PrivateRoute>
                             } />
+                            <Route path="/my-heroscape/armybuilder/:id/variation/new" element={
+                                <PrivateRoute>
+                                    <PageMeta title="Add Variation" description="Add a variation to a Heroscape army." noindex>
+                                        <ArmyBuilderEditor />
+                                    </PageMeta>
+                                </PrivateRoute>
+                            } />
                             <Route path="/my-heroscape/armybuilder/:id/edit" element={
                                 <PrivateRoute>
                                     <PageMeta title="Edit Army" description="Edit a Heroscape army." noindex>

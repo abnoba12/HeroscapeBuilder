@@ -50,19 +50,50 @@ namespace HeroscapeBuilder.Server.Data.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
+        /// <summary>The primary version's id for any of the user's armies or variations; null when it isn't theirs.</summary>
+        public async Task<int?> GetArmyId(string userId, int id)
+        {
+            return await _context.ArmyBuilders
+                .NotCacheable()
+                .Where(x => x.UserId == userId && x.Id == id)
+                .Select(x => (int?)(x.ParentArmyBuilderId ?? x.Id))
+                .FirstOrDefaultAsync();
+        }
+
+        /// <summary>An army's primary version plus every point variation of it.</summary>
+        public async Task<List<ArmyBuilder>> GetArmy(string userId, int armyId, bool track = false)
+        {
+            var query = WithUnits().Where(x => x.UserId == userId && (x.Id == armyId || x.ParentArmyBuilderId == armyId));
+            if (!track)
+            {
+                query = query.AsNoTracking();
+            }
+            return await query.ToListAsync();
+        }
+
+        /// <summary>Only an army's primary version carries the share link.</summary>
         public async Task<ArmyBuilder?> GetShared(Guid shareId)
         {
             return await WithUnits()
-                .Where(x => x.ShareId == shareId && x.IsShared)
+                .Where(x => x.ShareId == shareId && x.IsShared && x.ParentArmyBuilderId == null)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<bool> NameInUse(string userId, string name, int? excludeId)
+        public async Task<List<ArmyBuilder>> GetSharedVariations(int armyId)
+        {
+            return await WithUnits()
+                .Where(x => x.ParentArmyBuilderId == armyId)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        /// <summary>Names are unique per user across armies; an army's own variations share its name.</summary>
+        public async Task<bool> NameInUse(string userId, string name, int? excludeArmyId)
         {
             return await _context.ArmyBuilders
                 .NotCacheable()
-                .AnyAsync(x => x.UserId == userId && x.Name == name && x.Id != excludeId);
+                .AnyAsync(x => x.UserId == userId && x.ParentArmyBuilderId == null && x.Name == name && x.Id != excludeArmyId);
         }
 
         /// <summary>
@@ -160,6 +191,20 @@ namespace HeroscapeBuilder.Server.Data.Repositories
         public async Task<int> SaveChanges()
         {
             return await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Runs the work as one transaction. The context retries transient failures, so the transaction has to
+        /// run inside its execution strategy.
+        /// </summary>
+        public async Task InTransaction(Func<Task> work)
+        {
+            await _context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                await work();
+                await transaction.CommitAsync();
+            });
         }
     }
 }

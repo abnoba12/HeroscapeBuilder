@@ -1,20 +1,22 @@
 import { Alert, Button, Stack, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArmyBuilder } from '../../../models/armybuilder';
 import { getErrorMessages, getSharedArmyBuilder, isNotFound } from '../../../services/armybuilder-service';
-import { ArmyBuilderView } from './armybuilder-parts';
+import { ArmyBuilderView, VariationSwitcher, variationName } from './armybuilder-parts';
 
 /** Public, read-only page for a shared Army builder. Only the signed-in owner sees edit controls. */
 const ArmyBuilderShared: React.FC = () => {
     const { shareId } = useParams();
+    const [searchParams] = useSearchParams();
+    const variationParam = Number(searchParams.get('variation')) || undefined;
     const [armyBuilder, setArmyBuilder] = useState<ArmyBuilder | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const load = async () => {
             try {
-                setArmyBuilder(await getSharedArmyBuilder(shareId ?? ''));
+                setArmyBuilder(await getSharedArmyBuilder(shareId ?? '', variationParam));
             } catch (err) {
                 setError(isNotFound(err)
                     ? 'This army is not available. The link may be wrong, or the owner may have stopped sharing it.'
@@ -22,7 +24,7 @@ const ArmyBuilderShared: React.FC = () => {
             }
         };
         load();
-    }, [shareId]);
+    }, [shareId, variationParam]);
 
     if (error) {
         return (
@@ -39,7 +41,9 @@ const ArmyBuilderShared: React.FC = () => {
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
                     <div>
                         <Typography variant="overline" color="text.secondary">Shared Army</Typography>
-                        <Typography variant="h4">{armyBuilder.name}</Typography>
+                        <Typography variant="h4">
+                            {armyBuilder.variations.length > 1 ? `${armyBuilder.name} - ${variationName(armyBuilder)}` : armyBuilder.name}
+                        </Typography>
                     </div>
                     {armyBuilder.isOwner && (
                         <Stack direction="row" spacing={1}>
@@ -48,6 +52,13 @@ const ArmyBuilderShared: React.FC = () => {
                         </Stack>
                     )}
                 </Stack>
+                {armyBuilder.variations.length > 1 && (
+                    <VariationSwitcher
+                        variations={armyBuilder.variations}
+                        currentId={armyBuilder.id}
+                        linkFor={variationId => `/armybuilder/${shareId}?variation=${variationId}`}
+                    />
+                )}
                 <ArmyBuilderView armyBuilder={armyBuilder} />
             </Stack>
         </div>

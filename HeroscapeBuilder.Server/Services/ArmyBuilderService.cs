@@ -8,6 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HeroscapeBuilder.Server.Services
 {
+    /// <summary>
+    /// An army is one primary version plus any number of point variations (the same army built for another point
+    /// limit). Each variation is its own armybuilder row with its own units, results and journal; the primary
+    /// carries the share link and retired state, and the name is shared. Everything else about a variation (point
+    /// limit, point system, creator restriction, notes, units) is its own, so a variation can differ in any way.
+    /// </summary>
     public class ArmyBuilderService
     {
         private const int MaxNameLength = 100;
@@ -26,61 +32,131 @@ namespace HeroscapeBuilder.Server.Services
         public async Task<List<ArmyBuilderEntity>> GetMyArmyBuilders(Guid userId)
         {
             var id = userId.ToString();
-            var armyBuilders = await _armyBuilderRepository.GetAllForUser(id);
+            var rows = await _armyBuilderRepository.GetAllForUser(id);
             var owned = await _armyBuilderRepository.GetOwnedQuantities(id);
             var tallies = await _gameRepository.GetTallies(id);
 
-            return armyBuilders
-                .Select(x => WithTally(x.ToArmyBuilderEntity(owned), tallies))
+            // Each primary version stands for its army; its variations hang off it.
+            return rows
+                .Where(x => x.ParentArmyBuilderId == null)
+                .Select(root => Compose(root, root, rows.Where(x => x.Id == root.Id || x.ParentArmyBuilderId == root.Id).ToList(), owned, tallies))
                 .OrderBy(x => x.Name)
                 .ToList();
         }
 
+        /// <summary>
+        /// One point variation of an army (any variation id works, the primary included), with the army's
+        /// variations summarised alongside.
+        /// </summary>
         public async Task<ArmyBuilderEntity> GetMyArmyBuilder(Guid userId, int armyBuilderId)
         {
             var id = userId.ToString();
-            var armyBuilder = await _armyBuilderRepository.GetForUser(id, armyBuilderId)
+            var armyId = await _armyBuilderRepository.GetArmyId(id, armyBuilderId)
                 ?? throw NotFound();
 
-            var entity = armyBuilder.ToArmyBuilderEntity(await _armyBuilderRepository.GetOwnedQuantities(id));
-            return WithTally(entity, await _gameRepository.GetTallies(id));
+            var army = await _armyBuilderRepository.GetArmy(id, armyId);
+            var root = army.FirstOrDefault(x => x.Id == armyId) ?? throw NotFound();
+            var row = army.FirstOrDefault(x => x.Id == armyBuilderId) ?? throw NotFound();
+
+            return Compose(row, root, army, await _armyBuilderRepository.GetOwnedQuantities(id), await _gameRepository.GetTallies(id));
         }
 
-        private static ArmyBuilderEntity WithTally(ArmyBuilderEntity entity, Dictionary<int, (int Wins, int Losses)> tallies)
+        /// <summary>
+        /// The row's own units and limit, with sharing and retiring taken from the army's primary version and the
+        /// army's variations summarised. Owner-only data (share key, results) needs owned/tallies.
+        /// </summary>
+        private static ArmyBuilderEntity Compose(
+            ArmyBuilder row,
+            ArmyBuilder root,
+            List<ArmyBuilder> army,
+            Dictionary<int, int>? owned,
+            Dictionary<int, (int Wins, int Losses)>? tallies)
         {
-            if (tallies.TryGetValue(entity.Id, out var tally))
-            {
-                entity.Wins = tally.Wins;
-                entity.Losses = tally.Losses;
-            }
+            var isOwner = owned != null;
+            (int Wins, int Losses) TallyOf(int id) => tallies != null && tallies.TryGetValue(id, out var tally) ? tally : (0, 0);
+
+            var entity = row.ToArmyBuilderEntity(owned);
+            var (wins, losses) = TallyOf(row.Id);
+            entity.Wins = wins;
+            entity.Losses = losses;
+            entity.ArmyId = root.Id;
+            entity.IsShared = root.IsShared;
+            entity.ShareId = isOwner ? root.ShareId : null;
+            entity.IsRetired = isOwner && root.IsRetired;
+            entity.RetiredAt = isOwner ? root.RetiredAt : null;
+            entity.Variations = army
+                .OrderBy(x => x.PointLimit)
+                .Select(variation =>
+                {
+                    var summary = variation.ToArmyBuilderEntity(owned);
+                    var (variationWins, variationLosses) = TallyOf(variation.Id);
+                    return new ArmyBuilderVariationEntity
+                    {
+                        Id = variation.Id,
+                        Label = variation.VariationLabel,
+                        PointLimit = variation.PointLimit,
+                        PointSystem = variation.PointSystem,
+                        Creator = variation.Creator,
+                        TotalPoints = summary.TotalPoints,
+                        UnitCount = summary.Units.Sum(unit => unit.Quantity),
+                        Wins = variationWins,
+                        Losses = variationLosses,
+                        NeedsReview = summary.NeedsReview,
+                    };
+                })
+                .ToList();
+
             return entity;
         }
 
         /// <summary>
-        /// Public lookup. Only army builders that are currently shared resolve. The owner (when signed in)
-        /// gets the owner view of their own army builder; everyone else gets a read-only view.
+        /// Public lookup. Only armies that are currently shared resolve. The owner (when signed in)
+        /// gets the owner view of their own army; everyone else gets a read-only view. A shared link covers every
+        /// point variation of the army; variationId picks which one to show (the primary when omitted).
         /// </summary>
-        public async Task<ArmyBuilderEntity> GetSharedArmyBuilder(Guid shareId, Guid? viewerId)
+        public async Task<ArmyBuilderEntity> GetSharedArmyBuilder(Guid shareId, Guid? viewerId, int? variationId = null)
         {
-            var armyBuilder = await _armyBuilderRepository.GetShared(shareId)
+            var root = await _armyBuilderRepository.GetShared(shareId)
                 ?? throw NotFound();
 
-            var isOwner = viewerId != null && armyBuilder.UserId == viewerId.Value.ToString();
-            var owned = isOwner ? await _armyBuilderRepository.GetOwnedQuantities(armyBuilder.UserId) : null;
+            var army = (await _armyBuilderRepository.GetSharedVariations(root.Id)).Prepend(root).ToList();
+            var row = army.FirstOrDefault(x => x.Id == variationId) ?? root;
 
-            return armyBuilder.ToArmyBuilderEntity(owned);
+            var isOwner = viewerId != null && root.UserId == viewerId.Value.ToString();
+            var owned = isOwner ? await _armyBuilderRepository.GetOwnedQuantities(root.UserId) : null;
+
+            return Compose(row, root, army, owned, tallies: null);
         }
 
+        /// <summary>
+        /// Creates a new army, or - with request.ArmyId - adds a point variation to an existing one.
+        /// </summary>
         public async Task<ArmyBuilderEntity> CreateArmyBuilder(Guid userId, ArmyBuilderSaveRequest request)
         {
             var id = userId.ToString();
-            var validated = await Validate(id, request, excludeId: null);
+
+            ArmyBuilder? root = null;
+            if (request.ArmyId is int armyId)
+            {
+                root = await _armyBuilderRepository.GetForUser(id, armyId);
+                if (root == null || root.ParentArmyBuilderId != null)
+                {
+                    throw NotFound();
+                }
+
+                // A variation is a full army of its own; only the name is the army's.
+                request.Name = root.Name;
+            }
+
+            var validated = await Validate(id, request, armyId: root?.Id);
 
             var now = DateTime.UtcNow;
             var armyBuilder = new ArmyBuilder
             {
                 UserId = id,
+                ParentArmyBuilderId = root?.Id,
                 Name = validated.Name,
+                VariationLabel = validated.Label,
                 PointLimit = validated.PointLimit,
                 PointSystem = validated.PointSystem,
                 Creator = validated.Creator,
@@ -95,7 +171,7 @@ namespace HeroscapeBuilder.Server.Services
             };
 
             _armyBuilderRepository.Add(armyBuilder);
-            await Save(id, validated.Name, excludeId: null);
+            await Save(id, validated.Name, root?.Id);
 
             return await GetMyArmyBuilder(userId, armyBuilder.Id);
         }
@@ -105,15 +181,28 @@ namespace HeroscapeBuilder.Server.Services
             var id = userId.ToString();
             var armyBuilder = await _armyBuilderRepository.GetForUser(id, armyBuilderId, track: true)
                 ?? throw NotFound();
+            var armyId = armyBuilder.ParentArmyBuilderId ?? armyBuilder.Id;
 
-            var validated = await Validate(id, request, excludeId: armyBuilderId);
+            var validated = await Validate(id, request, armyId);
+
+            // Only the army's name is shared; each variation keeps its own limit, point system, creator and notes.
+            var siblings = (await _armyBuilderRepository.GetArmy(id, armyId, track: true))
+                .Where(x => x.Id != armyBuilderId)
+                .ToList();
+            var now = DateTime.UtcNow;
+            foreach (var sibling in siblings.Where(x => x.Name != validated.Name))
+            {
+                sibling.Name = validated.Name;
+                sibling.UpdatedAt = now;
+            }
 
             armyBuilder.Name = validated.Name;
+            armyBuilder.VariationLabel = validated.Label;
             armyBuilder.PointLimit = validated.PointLimit;
             armyBuilder.PointSystem = validated.PointSystem;
             armyBuilder.Creator = validated.Creator;
             armyBuilder.Notes = validated.Notes;
-            armyBuilder.UpdatedAt = DateTime.UtcNow;
+            armyBuilder.UpdatedAt = now;
 
             var existing = armyBuilder.ArmyBuilderUnits.ToDictionary(x => x.ArmyCardId);
             foreach (var current in existing.Values.Where(x => !validated.Units.ContainsKey(x.ArmyCardId)).ToList())
@@ -137,31 +226,106 @@ namespace HeroscapeBuilder.Server.Services
                 }
             }
 
-            await Save(id, validated.Name, excludeId: armyBuilderId);
+            await Save(id, validated.Name, armyId);
 
             return await GetMyArmyBuilder(userId, armyBuilderId);
         }
 
+        /// <summary>
+        /// Deletes the whole army: every point variation, with their units and journals. Logged results stay
+        /// (they feed the power ranking); they just stop pointing at the deleted army.
+        /// </summary>
         public async Task DeleteArmyBuilder(Guid userId, int armyBuilderId)
         {
-            var armyBuilder = await _armyBuilderRepository.GetForUser(userId.ToString(), armyBuilderId, track: true)
+            var id = userId.ToString();
+            var armyId = await _armyBuilderRepository.GetArmyId(id, armyBuilderId)
                 ?? throw NotFound();
+            var army = await _armyBuilderRepository.GetArmy(id, armyId, track: true);
 
-            // The results stay (they feed the power ranking); they just stop pointing at the deleted army.
-            await _gameRepository.DetachFromArmyBuilder(userId.ToString(), armyBuilderId);
-            _armyBuilderRepository.Remove(armyBuilder);
+            foreach (var row in army)
+            {
+                await _gameRepository.DetachFromArmyBuilder(id, row.Id);
+            }
+
+            foreach (var variation in army.Where(x => x.Id != armyId))
+            {
+                _armyBuilderRepository.Remove(variation);
+            }
+            _armyBuilderRepository.Remove(army.First(x => x.Id == armyId));
             await _armyBuilderRepository.SaveChanges();
         }
 
         /// <summary>
-        /// Shares or hides an army builder. The share key never changes, so re-sharing restores the same link.
+        /// Deletes one point variation and leaves the rest of the army. Deleting the primary version promotes the
+        /// lowest-point variation to take its place (share link, retired state). Returns the variation to show next.
+        /// </summary>
+        public async Task<ArmyBuilderEntity> DeleteVariation(Guid userId, int armyBuilderId)
+        {
+            var id = userId.ToString();
+            var armyId = await _armyBuilderRepository.GetArmyId(id, armyBuilderId)
+                ?? throw NotFound();
+            var army = await _armyBuilderRepository.GetArmy(id, armyId, track: true);
+            var row = army.First(x => x.Id == armyBuilderId);
+
+            if (army.Count < 2)
+            {
+                throw new ArmyBuilderException(ArmyBuilderErrorKind.Validation, "This is the army's only version. Delete the army instead.");
+            }
+
+            await _gameRepository.DetachFromArmyBuilder(id, row.Id);
+
+            var remaining = army.Where(x => x.Id != row.Id).OrderBy(x => x.PointLimit).ToList();
+            var survivor = remaining[0];
+
+            if (row.ParentArmyBuilderId != null)
+            {
+                _armyBuilderRepository.Remove(row);
+                await _armyBuilderRepository.SaveChanges();
+            }
+            else
+            {
+                var isShared = row.IsShared;
+                var shareId = row.ShareId;
+                var isRetired = row.IsRetired;
+                var retiredAt = row.RetiredAt;
+                var createdAt = row.CreatedAt;
+
+                await _armyBuilderRepository.InTransaction(async () =>
+                {
+                    // The survivor takes over the primary's name slot and share link, which are unique, so the
+                    // old primary lets go of both before it is replaced.
+                    row.Name = $"~{Guid.NewGuid():N}";
+                    row.ShareId = Guid.NewGuid();
+                    await _armyBuilderRepository.SaveChanges();
+
+                    survivor.ParentArmyBuilderId = null;
+                    survivor.IsShared = isShared;
+                    survivor.ShareId = shareId;
+                    survivor.IsRetired = isRetired;
+                    survivor.RetiredAt = retiredAt;
+                    survivor.CreatedAt = createdAt;
+                    foreach (var other in remaining.Skip(1))
+                    {
+                        other.ParentArmyBuilderId = survivor.Id;
+                    }
+
+                    _armyBuilderRepository.Remove(row);
+                    await _armyBuilderRepository.SaveChanges();
+                });
+            }
+
+            return await GetMyArmyBuilder(userId, survivor.Id);
+        }
+
+        /// <summary>
+        /// Shares or hides an army (all of its point variations). The share key never changes, so re-sharing
+        /// restores the same link.
         /// </summary>
         public async Task<ArmyBuilderEntity> SetShared(Guid userId, int armyBuilderId, bool isShared)
         {
-            var armyBuilder = await _armyBuilderRepository.GetForUser(userId.ToString(), armyBuilderId, track: true)
-                ?? throw NotFound();
+            var primary = await GetPrimary(userId, armyBuilderId);
 
-            armyBuilder.IsShared = isShared;
+            primary.IsShared = isShared;
             await _armyBuilderRepository.SaveChanges();
 
             return await GetMyArmyBuilder(userId, armyBuilderId);
@@ -172,21 +336,31 @@ namespace HeroscapeBuilder.Server.Services
         /// </summary>
         public async Task<ArmyBuilderEntity> SetRetired(Guid userId, int armyBuilderId, bool isRetired)
         {
-            var armyBuilder = await _armyBuilderRepository.GetForUser(userId.ToString(), armyBuilderId, track: true)
-                ?? throw NotFound();
+            var primary = await GetPrimary(userId, armyBuilderId);
 
-            if (armyBuilder.IsRetired != isRetired)
+            if (primary.IsRetired != isRetired)
             {
-                armyBuilder.IsRetired = isRetired;
-                armyBuilder.RetiredAt = isRetired ? DateTime.UtcNow : null;
+                primary.IsRetired = isRetired;
+                primary.RetiredAt = isRetired ? DateTime.UtcNow : null;
                 await _armyBuilderRepository.SaveChanges();
             }
 
             return await GetMyArmyBuilder(userId, armyBuilderId);
         }
 
+        /// <summary>The army's primary version (tracked), given the id of any of its variations.</summary>
+        private async Task<ArmyBuilder> GetPrimary(Guid userId, int armyBuilderId)
+        {
+            var id = userId.ToString();
+            var armyId = await _armyBuilderRepository.GetArmyId(id, armyBuilderId)
+                ?? throw NotFound();
+
+            return await _armyBuilderRepository.GetForUser(id, armyId, track: true)
+                ?? throw NotFound();
+        }
+
         // A tuple, not a nested type: everything in this namespace is auto-registered with DI (see RegisterService).
-        private async Task<(string Name, int PointLimit, PointSystem PointSystem, string? Creator, string? Notes, Dictionary<int, int> Units)> Validate(string userId, ArmyBuilderSaveRequest request, int? excludeId)
+        private async Task<(string Name, string? Label, int PointLimit, PointSystem PointSystem, string? Creator, string? Notes, Dictionary<int, int> Units)> Validate(string userId, ArmyBuilderSaveRequest request, int? armyId)
         {
             var errors = new List<string>();
 
@@ -199,9 +373,15 @@ namespace HeroscapeBuilder.Server.Services
             {
                 errors.Add($"Army names can be at most {MaxNameLength} characters.");
             }
-            else if (await _armyBuilderRepository.NameInUse(userId, name, excludeId))
+            else if (await _armyBuilderRepository.NameInUse(userId, name, armyId))
             {
                 throw new ArmyBuilderException(ArmyBuilderErrorKind.Conflict, $"You already have an army named \"{name}\". Army names must be unique.");
+            }
+
+            var label = string.IsNullOrWhiteSpace(request.VariationLabel) ? null : request.VariationLabel.Trim();
+            if (label?.Length > MaxNameLength)
+            {
+                errors.Add($"Variation names can be at most {MaxNameLength} characters.");
             }
 
             if (request.PointLimit <= 0)
@@ -306,7 +486,7 @@ namespace HeroscapeBuilder.Server.Services
                 throw new ArmyBuilderException(ArmyBuilderErrorKind.Validation, errors.ToArray());
             }
 
-            return (name, request.PointLimit, request.PointSystem, creator, notes, units);
+            return (name, label, request.PointLimit, request.PointSystem, creator, notes, units);
         }
 
         private static int PointsFor(ArmyCard card, PointSystem system)
@@ -318,7 +498,7 @@ namespace HeroscapeBuilder.Server.Services
         /// <summary>
         /// Saves, turning a unique-name race (two requests using the same name) into a proper conflict.
         /// </summary>
-        private async Task Save(string userId, string name, int? excludeId)
+        private async Task Save(string userId, string name, int? armyId)
         {
             try
             {
@@ -326,7 +506,7 @@ namespace HeroscapeBuilder.Server.Services
             }
             catch (DbUpdateException)
             {
-                if (!await _armyBuilderRepository.NameInUse(userId, name, excludeId))
+                if (!await _armyBuilderRepository.NameInUse(userId, name, armyId))
                 {
                     throw;
                 }

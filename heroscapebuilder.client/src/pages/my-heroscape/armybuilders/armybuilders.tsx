@@ -10,7 +10,7 @@ import {
     retireArmyBuilder,
 } from '../../../services/armybuilder-service';
 import { getMyUnitCount } from '../../../services/my_army-service';
-import { ConfirmDeleteDialog, NeedsReviewChip, PointsMeter, creatorLabel } from './armybuilder-parts';
+import { ConfirmDeleteDialog, NeedsReviewChip, PointsMeter, VariationSwitcher, creatorLabel } from './armybuilder-parts';
 
 const ArmyBuilders: React.FC = () => {
     const navigate = useNavigate();
@@ -72,13 +72,20 @@ const ArmyBuilders: React.FC = () => {
     const active = armyBuilders.filter(x => !x.isRetired);
     const retired = armyBuilders.filter(x => x.isRetired);
     // Retired armies are out of play, so they don't count toward the review warning.
-    const needsReviewCount = active.filter(x => x.needsReview).length;
+    // An army needs review when any of its variations does.
+    const reviewNeeded = (bg: ArmyBuilder) => bg.variations.some(x => x.needsReview);
+    const needsReviewCount = active.filter(reviewNeeded).length;
 
-    const renderCard = (bg: ArmyBuilder) => (
+    const renderCard = (bg: ArmyBuilder) => {
+        const hasVariations = bg.variations.length > 1;
+        const wins = bg.variations.reduce((sum, x) => sum + x.wins, 0);
+        const losses = bg.variations.reduce((sum, x) => sum + x.losses, 0);
+        const needsReview = reviewNeeded(bg);
+        return (
         <div key={bg.id} className="col-md-6 col-xl-4">
             <Card
                 variant="outlined"
-                sx={bg.needsReview && !bg.isRetired ? { borderColor: '#ff1744', borderWidth: 2 } : undefined}
+                sx={needsReview && !bg.isRetired ? { borderColor: '#ff1744', borderWidth: 2 } : undefined}
             >
                 <CardContent>
                     <Stack spacing={1.5}>
@@ -86,22 +93,34 @@ const ArmyBuilders: React.FC = () => {
                             {bg.name}
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                            {bg.needsReview && !bg.isRetired && <NeedsReviewChip />}
+                            {needsReview && !bg.isRetired && <NeedsReviewChip />}
                             {bg.isShared && <Chip label="Shared" size="small" color="success" />}
-                            <Chip label={creatorLabel(bg.creator)} size="small" variant="outlined" />
-                            <Chip label={`${bg.pointSystem} points`} size="small" variant="outlined" />
-                            {bg.wins + bg.losses > 0 && (
-                                <Chip label={`${bg.wins}-${bg.losses} record`} size="small" variant="outlined" />
+                            {hasVariations && <Chip label={`${bg.variations.length} variations`} size="small" variant="outlined" />}
+                            {!hasVariations && <Chip label={creatorLabel(bg.creator)} size="small" variant="outlined" />}
+                            {!hasVariations && <Chip label={`${bg.pointSystem} points`} size="small" variant="outlined" />}
+                            {wins + losses > 0 && (
+                                <Chip label={`${wins}-${losses} record`} size="small" variant="outlined" />
                             )}
-                            <Chip
-                                label={`${bg.units.reduce((sum, item) => sum + item.quantity, 0)} units`}
-                                size="small"
-                                variant="outlined"
-                            />
+                            {!hasVariations && (
+                                <Chip
+                                    label={`${bg.units.reduce((sum, item) => sum + item.quantity, 0)} units`}
+                                    size="small"
+                                    variant="outlined"
+                                />
+                            )}
                         </Stack>
-                        <Box>
-                            <PointsMeter total={bg.totalPoints} limit={bg.pointLimit} />
-                        </Box>
+                        {hasVariations ? (
+                            <VariationSwitcher
+                                variations={bg.variations}
+                                currentId={-1}
+                                linkFor={variationId => `/my-heroscape/armybuilder/${variationId}`}
+                                showReview={!bg.isRetired}
+                            />
+                        ) : (
+                            <Box>
+                                <PointsMeter total={bg.totalPoints} limit={bg.pointLimit} />
+                            </Box>
+                        )}
                     </Stack>
                 </CardContent>
                 <CardActions>
@@ -116,7 +135,8 @@ const ArmyBuilders: React.FC = () => {
                 </CardActions>
             </Card>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="container-fluid">
@@ -168,6 +188,7 @@ const ArmyBuilders: React.FC = () => {
             <ConfirmDeleteDialog
                 open={pendingDelete !== null}
                 name={pendingDelete?.name ?? ''}
+                variationCount={pendingDelete?.variations.length}
                 busy={deleting}
                 onCancel={() => setPendingDelete(null)}
                 onConfirm={handleDelete}

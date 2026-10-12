@@ -10,9 +10,30 @@ export interface ArmyBuilderUnit {
     overAllocated: boolean;
 }
 
-export interface ArmyBuilder {
+/** A short summary of one variation of an army (another version of it that can differ in any way). */
+export interface ArmyBuilderVariation {
     id: number;
+    label?: string | null;
+    pointLimit: number;
+    pointSystem: PointSystem;
+    creator?: string | null;
+    totalPoints: number;
+    unitCount: number;
+    wins: number;
+    losses: number;
+    needsReview: boolean;
+}
+
+export interface ArmyBuilder {
+    /** The id of this variation. Results and the journal belong to it. */
+    id: number;
+    /** The id of the army's primary variation. Sharing, retiring and deleting the army act on it. */
+    armyId: number;
+    /** Every variation of this army (this one included), lowest point limit first. */
+    variations: ArmyBuilderVariation[];
     name: string;
+    /** This variation's own name, if the owner gave it one. */
+    variationLabel?: string | null;
     pointLimit: number;
     /** The point values this Army builder is built with; totalPoints is measured in it. */
     pointSystem: PointSystem;
@@ -75,7 +96,10 @@ export interface JournalEntryRequest {
 }
 
 export interface ArmyBuilderSaveRequest {
+    /** When creating: the army to add this variation to (its name is used). */
+    armyId?: number;
     name: string;
+    variationLabel?: string | null;
     pointLimit: number;
     pointSystem: PointSystem;
     /** One creator, or several joined by commas. */

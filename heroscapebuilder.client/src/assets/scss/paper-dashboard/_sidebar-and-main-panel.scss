@@ -282,6 +282,10 @@
     &[data-color="orange"]:after {
         @include icon-gradient($orange-bg);
     }
+
+    &[data-color="gold"]:after {
+        @include icon-gradient($gold-bg);
+    }
     // Active color changing
 
     &[data-active-color="primary"] {

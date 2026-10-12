@@ -4,7 +4,16 @@ namespace HeroscapeBuilder.Server.Domain.Requests
 {
     public class ArmyBuilderSaveRequest
     {
+        /// <summary>
+        /// When creating: the army to add this variation to. The name then comes from that army; everything else
+        /// is the variation's own.
+        /// </summary>
+        public int? ArmyId { get; set; }
+
         public string? Name { get; set; }
+
+        /// <summary>Optional name for this variation ("Tournament"); blank = just show its point limit.</summary>
+        public string? VariationLabel { get; set; }
 
         public int PointLimit { get; set; }
 

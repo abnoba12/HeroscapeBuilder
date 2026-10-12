@@ -24,9 +24,14 @@ export const createArmyBuilder = async (request: ArmyBuilderSaveRequest): Promis
 export const updateArmyBuilder = async (id: number, request: ArmyBuilderSaveRequest): Promise<ArmyBuilder> =>
     (await api.put<ArmyBuilder>(`/ArmyBuilder/UpdateArmyBuilder`, request, { params: { id } })).data;
 
+/** Deletes the whole army, every variation of it included. */
 export const deleteArmyBuilder = async (id: number): Promise<void> => {
     await api.delete(`/ArmyBuilder/DeleteArmyBuilder`, { params: { id } });
 };
+
+/** Deletes one variation and returns the variation to show next. */
+export const deleteVariation = async (id: number): Promise<ArmyBuilder> =>
+    (await api.delete<ArmyBuilder>(`/ArmyBuilder/DeleteVariation`, { params: { id } })).data;
 
 export const shareArmyBuilder = async (id: number): Promise<ArmyBuilder> =>
     (await api.post<ArmyBuilder>(`/ArmyBuilder/ShareArmyBuilder`, null, { params: { id } })).data;
@@ -66,8 +71,8 @@ export const deleteArmyGame = async (gameId: number): Promise<ArmyTally> =>
     (await api.delete<ArmyTally>(`/ArmyBuilder/DeleteGame`, { params: { gameId } })).data;
 
 /** Public endpoint - works without signing in. */
-export const getSharedArmyBuilder = async (shareId: string): Promise<ArmyBuilder> =>
-    (await api.get<ArmyBuilder>(`/ArmyBuilder/GetSharedArmyBuilder`, { params: { shareId } })).data;
+export const getSharedArmyBuilder = async (shareId: string, variationId?: number): Promise<ArmyBuilder> =>
+    (await api.get<ArmyBuilder>(`/ArmyBuilder/GetSharedArmyBuilder`, { params: { shareId, variationId } })).data;
 
 export const buildShareUrl = (shareId: string): string => `${window.location.origin}/armybuilder/${shareId}`;
 

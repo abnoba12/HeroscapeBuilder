@@ -2,9 +2,19 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 {
     public class ArmyBuilderEntity
     {
+        /// <summary>The id of this point variation. Results and the journal belong to it.</summary>
         public int Id { get; set; }
 
+        /// <summary>The id of the army's primary version; equal to Id on the primary. Sharing and retiring act on it.</summary>
+        public int ArmyId { get; set; }
+
+        /// <summary>Every point variation of this army (this one included), lowest point limit first.</summary>
+        public List<ArmyBuilderVariationEntity> Variations { get; set; } = new List<ArmyBuilderVariationEntity>();
+
         public string Name { get; set; } = null!;
+
+        /// <summary>This variation's own name, if the owner gave it one.</summary>
+        public string? VariationLabel { get; set; }
 
         public int PointLimit { get; set; }
 
@@ -55,6 +65,30 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public int Losses { get; set; }
 
         public List<ArmyBuilderUnitEntity> Units { get; set; } = new List<ArmyBuilderUnitEntity>();
+    }
+
+    /// <summary>A short summary of one point variation, for switching between an army's versions.</summary>
+    public class ArmyBuilderVariationEntity
+    {
+        public int Id { get; set; }
+
+        public string? Label { get; set; }
+
+        public int PointLimit { get; set; }
+
+        public PointSystem PointSystem { get; set; }
+
+        public string? Creator { get; set; }
+
+        public int TotalPoints { get; set; }
+
+        public int UnitCount { get; set; }
+
+        public int Wins { get; set; }
+
+        public int Losses { get; set; }
+
+        public bool NeedsReview { get; set; }
     }
 
     public class ArmyBuilderUnitEntity

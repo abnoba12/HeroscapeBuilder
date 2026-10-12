@@ -395,8 +395,17 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
-            entity.HasIndex(e => new { e.UserId, e.Name }, "UX_armybuilder_UserId_Name").IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.Name }, "UX_armybuilder_UserId_Name")
+                .IsUnique()
+                .HasFilter("[ParentArmyBuilderId] IS NULL");
+            entity.Property(e => e.VariationLabel).HasMaxLength(100);
             entity.HasIndex(e => e.ShareId, "UX_armybuilder_ShareId").IsUnique();
+
+            entity.HasOne(d => d.Parent)
+                .WithMany(p => p.Variations)
+                .HasForeignKey(d => d.ParentArmyBuilderId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_armybuilder_Parent");
 
             entity.HasOne(d => d.User)
                 .WithMany()

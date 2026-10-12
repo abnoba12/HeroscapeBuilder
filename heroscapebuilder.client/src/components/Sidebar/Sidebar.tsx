@@ -47,7 +47,7 @@ const Sidebar: React.FC = () => {
             return "purple";
         }
         if (location.pathname.startsWith("/my-heroscape")) {
-            return "orange";
+            return "gold";
         }
         return "black";
     };
