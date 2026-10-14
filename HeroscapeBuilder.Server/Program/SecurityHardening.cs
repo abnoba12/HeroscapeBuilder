@@ -84,11 +84,11 @@ namespace HeroscapeBuilder.Server.Program
 
         private const string DefaultContentSecurityPolicy =
             "default-src 'self'; " +
-            "script-src 'self' https://www.googletagmanager.com https://cdnjs.buymeacoffee.com; " +
+            "script-src 'self' https://www.googletagmanager.com https://cdnjs.buymeacoffee.com https://static.cloudflareinsights.com; " +
             "style-src 'self' 'unsafe-inline' https://cdnjs.buymeacoffee.com https://fonts.googleapis.com; " +
             "img-src 'self' data: blob: https://files.heroscapebuilder.com https://www.googletagmanager.com https://*.google-analytics.com https://*.buymeacoffee.com; " +
             "font-src 'self' data: https://fonts.gstatic.com; " +
-            "connect-src 'self' https://files.heroscapebuilder.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; " +
+            "connect-src 'self' https://files.heroscapebuilder.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://cloudflareinsights.com; " +
             "frame-src 'self' https://files.heroscapebuilder.com https://www.buymeacoffee.com; " +
             "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
 
