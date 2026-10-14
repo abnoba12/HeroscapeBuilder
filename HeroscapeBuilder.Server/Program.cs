@@ -40,6 +40,8 @@ try
             });
     });
 
+    builder.AddSecurityHardening();
+
     builder.Services.AddDistributedMemoryCache();
     builder.Services.AddMemoryCache();
 
@@ -79,6 +81,11 @@ try
 
     var app = builder.Build();
 
+    // Must run first so every later middleware (rate limiting, logging) sees the real client IP, not the proxy's.
+    app.UseForwardedHeaders();
+
+    app.UseSecurityHeaders();
+
     app.UseResponseCompression();
 
     app.UseCors("AllowSpecificOrigins");
@@ -94,6 +101,8 @@ try
     }
 
     //app.UseHttpsRedirection();
+    app.UseRateLimiter();
+
     app.UseAuthentication();
 
     app.UseAuthorization();

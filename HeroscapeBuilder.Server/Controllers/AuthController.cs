@@ -1,6 +1,8 @@
 ﻿using HeroscapeBuilder.Server.Data.Entities;
+using HeroscapeBuilder.Server.Program;
 using HeroscapeBuilder.Server.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +20,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting(SecurityHardening.RegisterLimiter)]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
         var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
@@ -33,6 +36,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting(SecurityHardening.LoginLimiter)]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var user = await _userManager.FindByEmailAsync(model.Email);
@@ -45,6 +49,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting(SecurityHardening.RefreshLimiter)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenModel model)
     {
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == model.RefreshToken);
