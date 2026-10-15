@@ -131,7 +131,7 @@ public class AuthController : ControllerBase
 
         // Sign out anywhere the old password was used.
         user.RefreshToken = string.Empty;
-        user.RefreshTokenExpiryTime = DateTime.MinValue;
+        user.RefreshTokenExpiryTime = null;
         await _userManager.UpdateAsync(user);
         return Ok("Password updated.");
     }
@@ -159,7 +159,7 @@ public class AuthController : ControllerBase
     {
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == model.RefreshToken);
 
-        if (user == null || user.RefreshTokenExpiryTime <= DateTime.Now)
+        if (user == null || user.RefreshTokenExpiryTime == null || user.RefreshTokenExpiryTime <= DateTime.Now)
         {
             return Unauthorized("Invalid or expired refresh token.");
         }

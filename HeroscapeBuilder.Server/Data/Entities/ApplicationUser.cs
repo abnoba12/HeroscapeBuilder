@@ -6,7 +6,7 @@ namespace HeroscapeBuilder.Server.Data.Entities
     public class ApplicationUser : IdentityUser
     {
         public string RefreshToken { get; set; }
-        public DateTime RefreshTokenExpiryTime { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
         /// <summary>
         /// The point system pages default to for this user.
         /// </summary>
