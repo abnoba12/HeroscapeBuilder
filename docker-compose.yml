@@ -13,6 +13,9 @@ services:
       - DOTNET_TieredPGO=1
       - HeroscapeBuilder=${HeroscapeBuilder}
       - Security__CspMode=${Security__CspMode:-report-only}
+      - Email__Host=${Email__Host}
+      - Email__User=${Email__User}
+      - Email__Password=${Email__Password}
     networks:
       - internal_network
       - shared_network
