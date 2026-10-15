@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import UnitSearch from "../UnitSearch/UnitSearch";
 import { getUser, hasRole, isAuthenticated } from "../../services/authService";
 import { MY_ARMY_CHANGED_EVENT, getMyUnitCount } from "../../services/my_army-service";
 
@@ -91,6 +92,7 @@ const Sidebar: React.FC = () => {
                         <a href="/" className="simple-text logo-normal">Heroscape Builder</a>
                     </div>
                     <div className="sidebar-wrapper ps">
+                        <UnitSearch onNavigate={() => setIsOpen(false)} />
                         <ul className="nav sidebar-links">
                             <li className={`nav-item ${activeMenu === 'user' ? 'active' : ''}`}>
                                 <a href="#!" onClick={() => toggleSubmenu('user')}>

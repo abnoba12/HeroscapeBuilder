@@ -11,7 +11,7 @@ const Printing: React.FC = () => {
 
                     <p><strong>Service:</strong> <a href="https://www.bestvaluecopy.com/color-copies.html">Best Value Copy</a></p>
 
-                    <p><strong>Recomended Print settings for cards:</strong></p>
+                    <p><strong>Recommended Print settings for cards:</strong></p>
                     <ul>
                         <li><strong>Coloration:</strong> Color</li>
                         <li><strong>Sides:</strong> Double Sided</li>

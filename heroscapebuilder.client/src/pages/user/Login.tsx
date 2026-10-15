@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { login } from "../../services/authService";
+import { Link } from "react-router-dom";
+import { login, resendConfirmation } from "../../services/authService";
 import "./user.scss"; // Import the SCSS file
 
 const Login: React.FC = () => {
@@ -7,6 +8,8 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false); // Track loading state
+    const [unconfirmed, setUnconfirmed] = useState<boolean>(false);
+    const [resent, setResent] = useState<boolean>(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -15,8 +18,14 @@ const Login: React.FC = () => {
         try {
             await login(email, password);
             window.location.href = "/"; // Redirect after login
-        } catch (err) {
-            setError("Invalid email or password.");
+        } catch (err: any) {
+            if (err?.response?.status === 403) {
+                setUnconfirmed(true);
+                setError("Please confirm your email address before logging in. Check your inbox for the confirmation link.");
+            } else {
+                setUnconfirmed(false);
+                setError("Invalid email or password.");
+            }
         } finally {
             setLoading(false); // Stop loading
         }
@@ -49,6 +58,16 @@ const Login: React.FC = () => {
                 {/* Display error message */}
                 {error && <div className="error-container">{error}</div>}
             </form>
+            {unconfirmed && (
+                <p>
+                    {resent ? "A new confirmation email is on its way." : (
+                        <button type="button" className="btn btn-link" onClick={async () => { await resendConfirmation(email); setResent(true); }}>
+                            Resend confirmation email
+                        </button>
+                    )}
+                </p>
+            )}
+            <p><Link to="/user/forgot-password">Forgot your password?</Link></p>
         </div>
     );
 };

@@ -20,12 +20,14 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
     const [gallerySize, setGallerySize] = useState<string>("thumbnail col-xl-2 col-lg-3 col-md-4");
     const [isDownloading, setIsDownloading] = useState<boolean>(false); // Track download state
     const [selectedCreator, setSelectedCreator] = useUrlParam("creator");
+    const [nameFilter, setNameFilter] = useUrlParam("q");
+    const [notice, setNotice] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchFiles = async () => {
             try {
                 if (cardSize == "3x5") {
-                    setGallerySize("thumbnail col-xxl-2 col-lg-3 col-lg-4");
+                    setGallerySize("thumbnail col-xxl-2 col-lg-3 col-md-4");
                 }
 
                 const data = (await getFilesByPurpose(`${cardSize}_Army_Card`)).sort((a: UnitFile, b: UnitFile) => {
@@ -51,14 +53,17 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
     }, [files]);
 
     const filteredFiles = useMemo(() => {
-        if (!selectedCreator) return files;
-        return files.filter(f => f.creator === selectedCreator);
-    }, [files, selectedCreator]);
+        const needle = nameFilter.trim().toLowerCase();
+        return files.filter(f =>
+            (!selectedCreator || f.creator === selectedCreator) &&
+            (!needle || (f.unitName ?? f.fileName ?? f.filePath).toLowerCase().includes(needle)));
+    }, [files, selectedCreator, nameFilter]);
 
     if (loading) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
     if (error) return <p>{error}</p>;
 
     const handleCheckboxChange = (filePath: string) => {
+        setNotice(null);
         setSelectedFiles(prevSelectedFiles => {
             if (prevSelectedFiles.includes(filePath)) {
                 return prevSelectedFiles.filter(f => f !== filePath);
@@ -70,13 +75,16 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
 
     const handleDownloadClick = async () => {
         if (selectedFiles.length === 0) {
-            alert("Please select at least one card to download.");
+            setNotice("Please select at least one card to download.");
             return;
         }
 
         try {
             setIsDownloading(true); // Start showing spinner
+            setNotice(null);
             await mergePDFs(selectedFiles, cardSize);
+        } catch {
+            setNotice("Something went wrong building your PDF. Please try again.");
         } finally {
             setIsDownloading(false); // Stop showing spinner
         }
@@ -334,11 +342,13 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                 if (debug) console.log(`Processing pair: ${urls[i]} and ${urls[i + 1] ? urls[i + 1] : 'N/A'}`);
                 const blob1 = await blobCache(urls[i], `pdf-cache_${urls[i]}`);
                 const pdfArrayBuffer1 = await blobToArrayBuffer(blob1);
-                const blob2 = await blobCache(urls[i + 1], `pdf-cache_${urls[i+1]}`);
-                const pdfArrayBuffer2 = await blobToArrayBuffer(blob2);
 
                 const pdf1 = await PDFDocument.load(pdfArrayBuffer1);
-                const pdf2 = i + 1 < urls.length ? await PDFDocument.load(pdfArrayBuffer2) : null;
+                let pdf2: PDFDocument | null = null;
+                if (i + 1 < urls.length) {
+                    const blob2 = await blobCache(urls[i + 1], `pdf-cache_${urls[i + 1]}`);
+                    pdf2 = await PDFDocument.load(await blobToArrayBuffer(blob2));
+                }
 
                 const pages1 = await pdf1.getPages();
                 const pages2 = pdf2 ? await pdf2.getPages() : [];
@@ -436,12 +446,27 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                                 &nbsp;Generating PDF...
                             </>
                         ) : (
-                            'Download PDF for Print'
+                            `Download PDF for Print${selectedFiles.length ? ` (${selectedFiles.length} selected)` : ''}`
                         )}
                     </button>
+                    {selectedFiles.length > 0 && (
+                        <button type="button" className="btn btn-link" onClick={() => setSelectedFiles([])}>Clear selection</button>
+                    )}
+                    {notice && <div className="alert alert-warning mt-2" role="alert">{notice}</div>}
                 </div>
             </div>
             <div className="row creator-filter-row">
+                <div className="col-12 col-sm-6 col-md-4 col-lg-3 mx-auto">
+                    <label htmlFor="nameFilter" className="form-label">Search by Name</label>
+                    <input
+                        id="nameFilter"
+                        type="search"
+                        className="form-control"
+                        placeholder="Unit name"
+                        value={nameFilter}
+                        onChange={(e) => setNameFilter(e.target.value)}
+                    />
+                </div>
                 <div className="col-12 col-sm-6 col-md-4 col-lg-3 mx-auto">
                     <label htmlFor="creatorFilter" className="form-label">Filter by Creator</label>
                     <select
@@ -459,6 +484,7 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                     </select>
                 </div>
             </div>
+            {filteredFiles.length === 0 && <p className="text-center">No cards match your search.</p>}
             <div className="row pdf-gallery">
                 {filteredFiles.map((card, index) => {
                     const displayName = getDisplayName(card);
@@ -468,10 +494,12 @@ const CardGallery: React.FC<CardGalleryProps> = ({ cardSize }) => {
                             <div className="checkbox-wrapper">
                                 <input
                                     type="checkbox"
+                                    id={`make-pdf-${card.id ?? index}`}
                                     className="make-pdf"
+                                    checked={selectedFiles.includes(card.filePath)}
                                     onChange={() => handleCheckboxChange(card.filePath)}
                                 />
-                                <label className="label-make-pdf">Add to PDF</label>
+                                <label className="label-make-pdf" htmlFor={`make-pdf-${card.id ?? index}`}>Add to PDF</label>
                                 {creatorInfo && (
                                     <img
                                         className="creator-badge"

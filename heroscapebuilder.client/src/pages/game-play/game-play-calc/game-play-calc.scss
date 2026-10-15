@@ -82,3 +82,18 @@ $purple-light-bg: lighten($purple-bg, 38%); // Light enough for dark text
         }
     }
 }
+
+// Side by side when there is room, stacked on phones.
+.game-play-calc-layout {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2rem;
+    margin: 2rem 0;
+
+    .game-play-calc-container {
+        flex: 1 1 340px;
+        margin: 0;
+    }
+}

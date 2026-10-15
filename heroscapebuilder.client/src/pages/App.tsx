@@ -27,6 +27,9 @@ import AdminRoute from "../components/Auth/AdminRoute";
 import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
 import Register from "../pages/user/Register";
+import ForgotPassword from "./user/ForgotPassword";
+import ResetPassword from "./user/ResetPassword";
+import ConfirmEmail from "./user/ConfirmEmail";
 import MyArmy from "./my-heroscape/my-army";
 import MyTerrain from "./my-heroscape/my-terrain";
 import ArmyStats from "./my-heroscape/army-stats";
@@ -185,6 +188,21 @@ const App: React.FC = () => {
                             <Route path="/user/register" element={
                                 <PageMeta title="Register" description="Create a Heroscape Builder account." noindex>
                                     <Register />
+                                </PageMeta>
+                            } />
+                            <Route path="/user/forgot-password" element={
+                                <PageMeta title="Forgot Password" description="Reset your Heroscape Builder password." noindex>
+                                    <ForgotPassword />
+                                </PageMeta>
+                            } />
+                            <Route path="/user/reset-password" element={
+                                <PageMeta title="Reset Password" description="Choose a new Heroscape Builder password." noindex>
+                                    <ResetPassword />
+                                </PageMeta>
+                            } />
+                            <Route path="/user/confirm-email" element={
+                                <PageMeta title="Confirm Email" description="Confirm your Heroscape Builder email address." noindex>
+                                    <ConfirmEmail />
                                 </PageMeta>
                             } />
                             <Route path="/privacy" element={

@@ -184,3 +184,18 @@ if (typeof window !== "undefined") {
         }
     }, RENEWAL_CHECK_INTERVAL_MS);
 }
+export const confirmEmail = async (userId: string, token: string): Promise<void> => {
+    await api.post(`/auth/confirmemail`, { userId, token });
+};
+
+export const resendConfirmation = async (email: string): Promise<void> => {
+    await api.post(`/auth/resendconfirmation`, { email });
+};
+
+export const forgotPassword = async (email: string): Promise<void> => {
+    await api.post(`/auth/forgotpassword`, { email });
+};
+
+export const resetPassword = async (email: string, token: string, password: string): Promise<void> => {
+    await api.post(`/auth/resetpassword`, { email, token, password });
+};

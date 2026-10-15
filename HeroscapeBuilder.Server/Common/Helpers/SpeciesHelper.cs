@@ -13,6 +13,9 @@ namespace HeroscapeBuilder.Server.Common.Helpers
         // Names that end in "s" but are already singular.
         private static readonly HashSet<string> SingularEndingInS = new() { "cyclops" };
 
+        // Different printed names for the same species, mapped to the key they share.
+        private static readonly Dictionary<string, string> Aliases = new() { ["varied"] = "various" };
+
         private static readonly Regex EndsInSsUsIs = new("(ss|us|is)$", RegexOptions.Compiled);
 
         private static string Singularize(string word)
@@ -31,7 +34,8 @@ namespace HeroscapeBuilder.Server.Common.Helpers
                 .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
             if (words.Length == 0) return string.Empty;
             words[^1] = Singularize(words[^1]);
-            return string.Join(' ', words);
+            var key = string.Join(' ', words);
+            return Aliases.TryGetValue(key, out var alias) ? alias : key;
         }
     }
 }
