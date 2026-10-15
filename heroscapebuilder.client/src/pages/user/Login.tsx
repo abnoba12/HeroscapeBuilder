@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { login, resendConfirmation } from "../../services/authService";
+import { portLocalDataToAccount } from "../../services/local-db/port-local-data";
 import "./user.scss"; // Import the SCSS file
 
 const Login: React.FC = () => {
@@ -17,6 +18,7 @@ const Login: React.FC = () => {
         setError(""); // Clear any previous error
         try {
             await login(email, password);
+            await portLocalDataToAccount(); // Moves anything saved in this browser into the account
             window.location.href = "/"; // Redirect after login
         } catch (err: any) {
             if (err?.response?.status === 403) {

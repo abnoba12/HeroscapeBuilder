@@ -1,12 +1,10 @@
 import React from 'react';
 import "./Home.scss";
-import { isAuthenticated } from "../../services/authService";
 import { HubPage } from "../../components/HubCards/HubCards";
 import type { HubTile } from "../../components/HubCards/HubCards";
 import PowerDuelWidget from "../../components/PowerDuel/PowerDuelWidget";
 
 const Home: React.FC = () => {
-    const showMyHeroscape = isAuthenticated();
 
     const tiles: HubTile[] = [
         {
@@ -34,7 +32,7 @@ const Home: React.FC = () => {
             accent: "purple"
         }
     ];
-    if (showMyHeroscape) {
+    {
         tiles.push({
             to: "/my-heroscape",
             title: "My Heroscape",

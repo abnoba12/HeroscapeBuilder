@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { register } from "../../services/authService";
+import { markHasAccount } from "../../services/local-db/local-account";
 import "./user.scss"; // Import the SCSS file
 
 interface ApiError {
@@ -26,6 +27,7 @@ const Register: React.FC = () => {
         setErrors([]); // Clear any previous errors
         try {
             await register(email, password);
+            await markHasAccount(); // This browser now belongs to someone with an account
             setRegistered(true);
         } catch (err: any) {
             if (err.response && err.response.data) {

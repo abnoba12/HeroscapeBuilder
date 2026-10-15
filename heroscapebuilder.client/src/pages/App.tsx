@@ -23,6 +23,7 @@ import UploadMap from "./maps/upload-map";
 import MapList from "./maps/map-list";
 import MapPage from "./maps/map-page";
 import PrivateRoute from "../components/Auth/PrivateRoute";
+import MyHeroscapeRoute from "../components/Auth/MyHeroscapeRoute";
 import AdminRoute from "../components/Auth/AdminRoute";
 import Login from "../pages/user/Login";
 import Logout from "../pages/user/Logout";
@@ -238,67 +239,67 @@ const App: React.FC = () => {
                                 </PrivateRoute>
                             } />
                             <Route path="/my-heroscape" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="My Heroscape" description="Manage your personal Heroscape unit collection." noindex>
                                         <MyArmy />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/my-army" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="My Collection" description="Manage your personal Heroscape unit collection." noindex>
                                         <MyArmy />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/my-terrain" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="My Terrain" description="Record the Heroscape terrain you own." noindex>
                                         <MyTerrain />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/army-stats" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="My Collection Stats" description="See how much of each Heroscape creator and set your collection covers." noindex>
                                         <ArmyStats />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/armybuilder" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="My Armies" description="Build armies from your Heroscape collection within a point limit." noindex>
                                         <ArmyBuilders />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/armybuilder/new" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="New Army" description="Create a Heroscape army." noindex>
                                         <ArmyBuilderEditor />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/armybuilder/:id" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="Army" description="View a Heroscape army." noindex>
                                         <ArmyBuilderDetail />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/armybuilder/:id/variation/new" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="Add Variation" description="Add a variation to a Heroscape army." noindex>
                                         <ArmyBuilderEditor />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                             <Route path="/my-heroscape/armybuilder/:id/edit" element={
-                                <PrivateRoute>
+                                <MyHeroscapeRoute>
                                     <PageMeta title="Edit Army" description="Edit a Heroscape army." noindex>
                                         <ArmyBuilderEditor />
                                     </PageMeta>
-                                </PrivateRoute>
+                                </MyHeroscapeRoute>
                             } />
                         </Routes>
                     </div>

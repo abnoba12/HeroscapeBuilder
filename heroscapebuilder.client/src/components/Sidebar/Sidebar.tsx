@@ -23,10 +23,6 @@ const Sidebar: React.FC = () => {
     // Re-checked on navigation (covers login/logout) and after My Army changes.
     useEffect(() => {
         let cancelled = false;
-        if (!isAuthenticated()) {
-            setHasArmyUnits(false);
-            return;
-        }
         getMyUnitCount()
             .then(count => { if (!cancelled) setHasArmyUnits(count > 0); })
             .catch(() => { if (!cancelled) setHasArmyUnits(false); });
@@ -151,7 +147,7 @@ const Sidebar: React.FC = () => {
                                     </ul>
                                 )}
                             </li>
-                            {isAuthenticated() && (
+                            {(
                                 <li className={`nav-item ${activeMenu === 'my-heroscape' ? 'active' : ''}`}>
                                     <a href="#!" onClick={() => toggleSubmenu('my-heroscape')}><p>My Heroscape</p></a>
                                     {activeMenu === 'my-heroscape' && (

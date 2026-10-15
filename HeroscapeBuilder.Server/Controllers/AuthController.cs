@@ -17,10 +17,12 @@ public class AuthController : ControllerBase
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public AuthController(UserManager<ApplicationUser> userManager, TokenService tokenService, IEmailService emailService,
-        IConfiguration configuration, ILogger<AuthController> logger)
+        IConfiguration configuration, ILogger<AuthController> logger, IWebHostEnvironment environment)
     {
+        _environment = environment;
         _userManager = userManager;
         _tokenService = tokenService;
         _emailService = emailService;
@@ -31,7 +33,12 @@ public class AuthController : ControllerBase
     private static string Encode(string token) => WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
     private static string Decode(string token) => Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
 
-    private string SiteUrl(string path) => $"{(_configuration["App:BaseUrl"] ?? "https://heroscapebuilder.com").TrimEnd('/')}{path}";
+    // Links in emails go to App:BaseUrl; with none set, development links to the local site rather than production.
+    private string SiteUrl(string path)
+    {
+        var fallback = _environment.IsDevelopment() ? "http://localhost:5173" : "https://heroscapebuilder.com";
+        return $"{(_configuration["App:BaseUrl"] ?? fallback).TrimEnd('/')}{path}";
+    }
 
     // Mail trouble must never reveal whether an account exists, so failures are logged and the caller still gets the generic reply.
     private async Task TrySendAsync(string to, string subject, string body)
