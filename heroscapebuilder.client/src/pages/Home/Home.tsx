@@ -3,8 +3,13 @@ import "./Home.scss";
 import { HubPage } from "../../components/HubCards/HubCards";
 import type { HubTile } from "../../components/HubCards/HubCards";
 import PowerDuelWidget from "../../components/PowerDuel/PowerDuelWidget";
+import { isAuthenticated } from "../../services/authService";
+import { useHasAccountFlag } from "../../services/local-db/use-has-account-flag";
 
 const Home: React.FC = () => {
+    // Logged-in users and visitors without an account use My Heroscape; a logged-out browser that belongs to an account must log in first.
+    const hasAccountFlag = useHasAccountFlag();
+    const showMyHeroscape = isAuthenticated() || hasAccountFlag === false;
 
     const tiles: HubTile[] = [
         {
@@ -32,7 +37,7 @@ const Home: React.FC = () => {
             accent: "purple"
         }
     ];
-    {
+    if (showMyHeroscape) {
         tiles.push({
             to: "/my-heroscape",
             title: "My Heroscape",

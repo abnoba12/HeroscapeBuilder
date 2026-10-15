@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import UnitSearch from "../UnitSearch/UnitSearch";
 import { getUser, hasRole, isAuthenticated } from "../../services/authService";
 import { MY_ARMY_CHANGED_EVENT, getMyUnitCount } from "../../services/my_army-service";
+import { useHasAccountFlag } from "../../services/local-db/use-has-account-flag";
 
 const isDataPath = (path: string) => ["/data", "/units", "/species", "/generals", "/sets", "/power-ranking"].some(prefix => path.startsWith(prefix));
 
@@ -11,6 +12,8 @@ const Sidebar: React.FC = () => {
     const [activeMenu, setActiveMenu] = useState<string | null>(null); // Tracks which menu is expanded
     const [mapsOpen, setMapsOpen] = useState<boolean>(false); // Maps sub-menu inside Game Play
     const location = useLocation(); // Get the current location
+    // Re-checked on navigation so registering or logging in updates the menu.
+    const hasAccountFlag = useHasAccountFlag(location.pathname);
     const [hasArmyUnits, setHasArmyUnits] = useState<boolean>(false); // ArmyBuilders need at least one unit in My Army
     const [armyVersion, setArmyVersion] = useState<number>(0); // Bumped when My Army is saved
 
@@ -147,7 +150,7 @@ const Sidebar: React.FC = () => {
                                     </ul>
                                 )}
                             </li>
-                            {(
+                            {(isAuthenticated() || hasAccountFlag === false) && (
                                 <li className={`nav-item ${activeMenu === 'my-heroscape' ? 'active' : ''}`}>
                                     <a href="#!" onClick={() => toggleSubmenu('my-heroscape')}><p>My Heroscape</p></a>
                                     {activeMenu === 'my-heroscape' && (
