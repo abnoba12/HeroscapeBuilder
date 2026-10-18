@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { compareCreators } from '../models/creator';
 import { Unit } from '../models/unit';
 import { useUrlParam } from './url-state';
 
@@ -22,7 +23,7 @@ export const useCreatorFilter = (units: Unit[] | undefined): CreatorFilter => {
 
     const creators = useMemo(
         () => [...new Set((units ?? []).map(unit => unit.creator).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })),
+            .sort(compareCreators),
         [units],
     );
 

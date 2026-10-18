@@ -16,6 +16,16 @@ export const CREATORS: Record<string, CreatorInfo> = {
     // No usable logo asset exists for Custom yet (Custom.png is a blank 1x1 placeholder).
 };
 
+/** Sorts creators in the site's standard order (the order of CREATORS); unknown creators go last, alphabetically. */
+export function compareCreators(a: string, b: string): number {
+    const keys = Object.keys(CREATORS);
+    const rank = (creator: string) => {
+        const index = keys.findIndex(k => k.toLowerCase() === creator.toLowerCase());
+        return index === -1 ? keys.length : index;
+    };
+    return rank(a) - rank(b) || a.localeCompare(b, undefined, { sensitivity: 'base' });
+}
+
 export function getCreatorInfo(creator?: string | null): CreatorInfo | undefined {
     if (!creator) return undefined;
     const key = Object.keys(CREATORS).find(k => k.toLowerCase() === creator.toLowerCase());

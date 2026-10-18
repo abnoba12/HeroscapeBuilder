@@ -41,6 +41,7 @@ import { getMyUnits } from '../../../services/my_army-service';
 import { getUnits } from '../../../services/unit-service';
 import { useUrlFlag, useUrlParam } from '../../../services/url-state';
 import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit, parseCreators } from './armybuilder-parts';
+import { compareCreators } from '../../../models/creator';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { usePointSystem } from '../../../components/PointSystem/PointSystemContext';
@@ -232,7 +233,7 @@ const ArmyBuilderEditor: React.FC = () => {
     const creatorOptions = useMemo(() => {
         const set = new Set(listableUnits.map(unit => unit.creator.toUpperCase()));
         creators.forEach(creator => set.add(creator));
-        return Array.from(set).sort();
+        return Array.from(set).sort(compareCreators);
     }, [listableUnits, creators]);
 
     const selectedList = useMemo(

@@ -10,6 +10,7 @@ import { speciesKey, speciesLabel } from '../../models/species';
 import { getMyUnits } from '../../services/my_army-service';
 import { getUnits } from '../../services/unit-service';
 import { creatorLabel } from './armybuilders/armybuilder-parts';
+import { compareCreators } from '../../models/creator';
 
 type UnitWithQuantity = Unit & { quantity?: number };
 
@@ -146,7 +147,7 @@ const GeneralDialog: React.FC<{ general: GeneralTally | null; ownedIds: Set<numb
             const creator = unit.creator || 'Unknown';
             groups.set(creator, [...(groups.get(creator) ?? []), unit]);
         }
-        return [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+        return [...groups.entries()].sort((a, b) => compareCreators(a[0], b[0]));
     }, [general]);
 
     return (
@@ -347,7 +348,7 @@ const ArmyStats: React.FC = () => {
 
         const creatorTallies = [...byCreator.values()]
             .map(({ tally, sets }) => ({ ...tally, sets: [...sets.values()].sort(compareSets) }))
-            .sort((a, b) => b.total - a.total);
+            .sort((a, b) => compareCreators(a.creator, b.creator));
 
         return {
             overall: { owned: allUnits.filter(unit => ownedIds.has(unit.id)).length, total: allUnits.length },

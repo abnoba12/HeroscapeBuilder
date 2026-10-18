@@ -7,10 +7,6 @@
 	* Solid Colors
 * Work on the 3D hex map builder
 * Add the ability for users to add their custom cards/units
-* Local-storage mode for logged-out users (from the site review)
-    * Make the standard user features that currently require a login (My Collection, My Armies, My Terrain, stats) usable by anyone
-    * Save to browser local storage instead of the database; accounts then only matter for syncing across devices
-    * Consider a prompt to create an account (or import local data into one) when the user wants to keep or share it
 * Card maker: save and reuse custom cards (from the site review)
     * Let a user save a custom card (to their account, or as a JSON/file download) and reopen it later
     * "Start from an existing unit" option that prefills the maker so a user can tweak a real unit instead of starting blank

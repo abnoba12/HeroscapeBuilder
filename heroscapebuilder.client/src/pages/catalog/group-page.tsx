@@ -6,7 +6,7 @@ import { HubAccent } from '../../components/HubCards/HubCards';
 import PointSystemPicker from '../../components/PointSystem/PointSystemPicker';
 import { usePagePointSystem } from '../../components/PointSystem/PointSystemContext';
 import PageMeta from '../../components/Seo/PageMeta';
-import { getCreatorInfo } from '../../models/creator';
+import { compareCreators, getCreatorInfo } from '../../models/creator';
 import { speciesKey } from '../../models/species';
 import { Unit } from '../../models/unit';
 import {
@@ -100,7 +100,7 @@ const GroupContent: React.FC<{ kind: GroupKind; group: UnitGroup }> = ({ kind, g
 
     const sets = group.units.map(unit => unit.set).filter((set): set is NonNullable<Unit['set']> => !!set);
     const firstSet = sets[0];
-    const creators = [...new Set(group.units.map(unit => unit.creator))];
+    const creators = [...new Set(group.units.map(unit => unit.creator))].sort(compareCreators);
 
     const speciesCounts = kind !== 'species' ? countBy(units, unit => unit.race, speciesKey) : [];
     const generalCounts = kind !== 'generals' ? countBy(units, unit => unit.general) : [];
