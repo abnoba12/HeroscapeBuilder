@@ -1,8 +1,8 @@
-import { Alert, Box, Button, Card, CardActionArea, CardContent, Chip, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardActionArea, CardContent, Chip, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, LinearProgress, Switch, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePagePointSystem } from '../../components/PointSystem/PointSystemContext';
-import { useUrlEnum } from '../../services/url-state';
+import { useUrlEnum, useUrlFlag } from '../../services/url-state';
 import PointSystemPicker from '../../components/PointSystem/PointSystemPicker';
 import { Unit } from '../../models/unit';
 import { Set as UnitSet } from '../../models/set';
@@ -31,6 +31,9 @@ interface CreatorTally extends Tally {
 
 type SetFilter = 'all' | 'complete' | 'in-progress' | 'not-started';
 const SET_FILTERS: readonly SetFilter[] = ['all', 'complete', 'in-progress', 'not-started'];
+
+const OFFICIAL_CREATORS = ['heroscape', 'renegade'];
+const isOfficial = (unit: Unit) => OFFICIAL_CREATORS.includes((unit.creator ?? '').toLowerCase());
 
 const percent = ({ owned, total }: Tally) => (total > 0 ? (owned / total) * 100 : 0);
 
@@ -282,10 +285,11 @@ const formatNames = (names: string[], max = 3) =>
     names.length <= max ? names.join(', ') : `${names.slice(0, max).join(', ')} +${names.length - max} more`;
 
 const ArmyStats: React.FC = () => {
-    const [allUnits, setAllUnits] = useState<Unit[]>([]);
-    const [myUnits, setMyUnits] = useState<UnitWithQuantity[]>([]);
+    const [catalog, setCatalog] = useState<Unit[]>([]);
+    const [owned, setOwned] = useState<UnitWithQuantity[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [officialOnly, setOfficialOnly] = useUrlFlag('official', true);
     const [setFilter, setSetFilter] = useUrlEnum<SetFilter>('show', SET_FILTERS, 'all');
     const [selectedGeneral, setSelectedGeneral] = useState<GeneralTally | null>(null);
     const { pointSystem, setPointSystem, pointsFor, defaultPointSystem } = usePagePointSystem();
@@ -294,8 +298,8 @@ const ArmyStats: React.FC = () => {
         const load = async () => {
             try {
                 const [units, mine] = await Promise.all([getUnits(), getMyUnits()]);
-                setAllUnits(units);
-                setMyUnits((mine?.data ?? []) as UnitWithQuantity[]);
+                setCatalog(units);
+                setOwned((mine?.data ?? []) as UnitWithQuantity[]);
             } catch (err) {
                 console.error('Error loading army stats:', err);
                 setError('Failed to load your collection stats.');
@@ -305,6 +309,9 @@ const ArmyStats: React.FC = () => {
         };
         load();
     }, []);
+
+    const allUnits = useMemo(() => (officialOnly ? catalog.filter(isOfficial) : catalog), [catalog, officialOnly]);
+    const myUnits = useMemo(() => (officialOnly ? owned.filter(isOfficial) : owned), [owned, officialOnly]);
 
     const ownedIds = useMemo(() => new Set(myUnits.map(unit => unit.id)), [myUnits]);
 
@@ -398,6 +405,12 @@ const ArmyStats: React.FC = () => {
                 <Typography variant="h4">My Collection Stats</Typography>
                 <PointSystemPicker value={pointSystem} onChange={setPointSystem} defaultValue={defaultPointSystem} />
             </Stack>
+
+            <FormControlLabel
+                sx={{ mb: 2 }}
+                control={<Switch checked={officialOnly} onChange={event => setOfficialOnly(event.target.checked)} />}
+                label="Official units only (Heroscape and Renegade); turn off to include C3V, SoV and other custom creators"
+            />
 
             {overall.owned === 0 && (
                 <Alert severity="info" sx={{ mb: 2 }}>
