@@ -12,7 +12,8 @@ import {
 } from 'ag-grid-community';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Unit } from '../../models/unit';
-import { getMyUnits, setMyUnits } from '../../services/my_army-service';
+import { isAuthenticated } from '../../services/authService';
+import { buildCollectionShareUrl, CollectionShare, getCollectionShare, getMyUnits, setCollectionShared, setMyUnits } from '../../services/my_army-service';
 import '../data/unit-data/unit-data.scss';
 import { getUnits } from '../../services/unit-service';
 import { useUrlParam } from '../../services/url-state';
@@ -101,6 +102,11 @@ const MyArmy: React.FC = () => {
     const [addSelection, setAddSelection] = useState<number[]>([]);
     const [isDirty, setIsDirty] = useState(false);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [shareOpen, setShareOpen] = useState(false);
+    const [share, setShare] = useState<CollectionShare | null>(null);
+    const [shareBusy, setShareBusy] = useState(false);
+    const [shareError, setShareError] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
 
     const baseColumnDefs = useMemo<ColDef<UnitWithQuantity>[]>(() => [
         { field: 'name', headerName: 'Unit Name', minWidth: 220, pinned: 'left' },
@@ -280,6 +286,41 @@ const MyArmy: React.FC = () => {
         setAddSelection([]);
     };
 
+    const openShareDialog = async () => {
+        setShareOpen(true);
+        setShareError(null);
+        setCopied(false);
+        try {
+            setShare(await getCollectionShare());
+        } catch {
+            setShareError('Could not load your sharing settings.');
+        }
+    };
+
+    const changeShared = async (isShared: boolean) => {
+        setShareBusy(true);
+        setShareError(null);
+        try {
+            setShare(await setCollectionShared(isShared));
+        } catch {
+            setShareError('Could not change sharing. Please try again.');
+        } finally {
+            setShareBusy(false);
+        }
+    };
+
+    const shareUrl = share?.isShared ? buildCollectionShareUrl(share.shareId) : null;
+
+    const copyShareLink = async () => {
+        if (!shareUrl) return;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setCopied(true);
+        } catch {
+            setShareError('Could not copy automatically - select the link and copy it manually.');
+        }
+    };
+
     if (loading) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
     if (error) return <p>{error}</p>;
 
@@ -288,6 +329,9 @@ const MyArmy: React.FC = () => {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} className="unit-data-toolbar">
                 <Button variant="contained" color="secondary" onClick={openAddUnitsDialog}>
                     Add units
+                </Button>
+                <Button variant="outlined" onClick={openShareDialog} disabled={!isAuthenticated()} title={isAuthenticated() ? undefined : 'Sign in to share your collection'}>
+                    Share
                 </Button>
                 <Button variant="contained" color={isDirty ? 'warning' : 'primary'} onClick={handleSave} disabled={!isDirty}>
                     Save collection
@@ -331,6 +375,40 @@ const MyArmy: React.FC = () => {
                     suppressCellFocus
                 />
             </div>
+            <Dialog open={shareOpen} onClose={() => setShareOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Share your collection</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={1.5} sx={{ paddingTop: 1 }}>
+                        {shareError && <Alert severity="error">{shareError}</Alert>}
+                        {isDirty && (
+                            <Alert severity="warning">You have unsaved changes. The shared link shows your last saved collection, so save first.</Alert>
+                        )}
+                        <Typography variant="body2">
+                            Anyone with the link can see which units you own and how many (read-only), without signing in, so they can plan their army ahead of game night.
+                        </Typography>
+                        {shareUrl ? (
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                <TextField
+                                    size="small"
+                                    fullWidth
+                                    value={shareUrl}
+                                    slotProps={{ input: { readOnly: true } }}
+                                    onFocus={event => event.target.select()}
+                                />
+                                <Button variant="contained" onClick={copyShareLink}>{copied ? 'Copied' : 'Copy link'}</Button>
+                            </Stack>
+                        ) : null}
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    {shareUrl ? (
+                        <Button color="warning" onClick={() => changeShared(false)} disabled={shareBusy}>Stop sharing</Button>
+                    ) : (
+                        <Button variant="contained" onClick={() => changeShared(true)} disabled={shareBusy || !share}>Create share link</Button>
+                    )}
+                    <Button onClick={() => setShareOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
             <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="lg" fullWidth>
                 <DialogTitle>Select units to add</DialogTitle>
                 <DialogContent>

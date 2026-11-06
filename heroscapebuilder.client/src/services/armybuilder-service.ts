@@ -114,7 +114,9 @@ export const deleteArmyGame = async (gameId: number): Promise<ArmyTally> => {
 export const getSharedArmyBuilder = async (shareId: string, variationId?: number): Promise<ArmyBuilder> =>
     (await api.get<ArmyBuilder>(`/ArmyBuilder/GetSharedArmyBuilder`, { params: { shareId, variationId } })).data;
 
-export const buildShareUrl = (shareId: string): string => `${window.location.origin}/armybuilder/${shareId}`;
+/** Link to the shared army; with a variationId the link opens that variation (all variations stay visible). */
+export const buildShareUrl = (shareId: string, variationId?: number): string =>
+    `${window.location.origin}/armybuilder/${shareId}${variationId ? `?variation=${variationId}` : ''}`;
 
 /** Pulls the validation messages the API returns ({ errors: string[] }), falling back to a generic message. */
 export const getErrorMessages = (error: unknown, fallback = 'Something went wrong. Please try again.'): string[] => {

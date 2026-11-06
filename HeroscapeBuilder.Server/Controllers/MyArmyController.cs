@@ -70,6 +70,41 @@ namespace HeroscapeBuilder.Server.Controllers
             return Ok(added);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetCollectionShare()
+        {
+            var userId = UserHelper.GetCurrentUserId(HttpContext);
+            if (userId == null)
+            {
+                return Unauthorized("User ID not found or invalid.");
+            }
+
+            return Ok(await _myArmyService.GetCollectionShare(userId.Value));
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> SetCollectionShared(bool isShared)
+        {
+            var userId = UserHelper.GetCurrentUserId(HttpContext);
+            if (userId == null)
+            {
+                return Unauthorized("User ID not found or invalid.");
+            }
+
+            return Ok(await _myArmyService.SetCollectionShared(userId.Value, isShared));
+        }
+
+        /// <summary>
+        /// Public, read-only view of a shared collection. Anyone with the link can call this without signing in.
+        /// </summary>
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetSharedCollection(Guid shareId)
+        {
+            var units = await _myArmyService.GetSharedCollection(shareId);
+            return units == null ? NotFound() : Ok(units);
+        }
+
         [HttpPost]
         public async Task<IActionResult> SetMyUnits(List<MyArmyUpdateRequest> units)
         {

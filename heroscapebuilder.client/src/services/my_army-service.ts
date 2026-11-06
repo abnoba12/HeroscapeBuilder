@@ -97,3 +97,20 @@ export const setMyUnits = async (units: Array<{ unitId: number, quantity: number
         throw error;
     }
 };
+export interface CollectionShare {
+    isShared: boolean;
+    shareId: string;
+}
+
+/** Sharing needs an account - the link is served from the server, not from this browser. */
+export const getCollectionShare = async (): Promise<CollectionShare> =>
+    (await api.get<CollectionShare>(`/MyArmy/GetCollectionShare`)).data;
+
+export const setCollectionShared = async (isShared: boolean): Promise<CollectionShare> =>
+    (await api.put<CollectionShare>(`/MyArmy/SetCollectionShared`, null, { params: { isShared } })).data;
+
+/** Public endpoint - works without signing in. */
+export const getSharedCollection = async (shareId: string): Promise<Unit[]> =>
+    (await api.get<Unit[]>(`/MyArmy/GetSharedCollection`, { params: { shareId } })).data;
+
+export const buildCollectionShareUrl = (shareId: string): string => `${window.location.origin}/collection/${shareId}`;

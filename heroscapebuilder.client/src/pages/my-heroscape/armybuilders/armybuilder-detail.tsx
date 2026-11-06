@@ -81,7 +81,7 @@ const ArmyBuilderDetail: React.FC = () => {
         }
     };
 
-    const shareUrl = armyBuilder?.isShared && armyBuilder.shareId ? buildShareUrl(armyBuilder.shareId) : null;
+    const shareUrl = armyBuilder?.isShared && armyBuilder.shareId ? buildShareUrl(armyBuilder.shareId, armyBuilder.variations.length > 1 ? armyBuilder.id : undefined) : null;
 
     const copyLink = async () => {
         if (!shareUrl) return;

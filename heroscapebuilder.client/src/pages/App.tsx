@@ -32,6 +32,7 @@ import ForgotPassword from "./user/ForgotPassword";
 import ResetPassword from "./user/ResetPassword";
 import ConfirmEmail from "./user/ConfirmEmail";
 import MyArmy from "./my-heroscape/my-army";
+import SharedCollection from "./my-heroscape/shared-collection";
 import MyTerrain from "./my-heroscape/my-terrain";
 import ArmyStats from "./my-heroscape/army-stats";
 import Profile from "./user/Profile";
@@ -220,6 +221,13 @@ const App: React.FC = () => {
                             <Route path="/armybuilder/:shareId" element={
                                 <PageMeta title="Shared Army" description="A Heroscape army shared from Heroscape Builder." noindex>
                                     <ArmyBuilderShared />
+                                </PageMeta>
+                            } />
+
+                            {/*Public, read-only view of a shared My Collection*/}
+                            <Route path="/collection/:shareId" element={
+                                <PageMeta title="Shared Collection" description="A Heroscape unit collection shared from Heroscape Builder." noindex>
+                                    <SharedCollection />
                                 </PageMeta>
                             } />
 

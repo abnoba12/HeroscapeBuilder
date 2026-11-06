@@ -70,6 +70,7 @@ public partial class HsbDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.PointSystem)
                 .HasConversion<string>()
                 .HasMaxLength(20);
+            entity.HasIndex(e => e.CollectionShareId, "UX_AspNetUsers_CollectionShareId").IsUnique();
         });
 
         modelBuilder.Entity<ArmyCard>(entity =>
