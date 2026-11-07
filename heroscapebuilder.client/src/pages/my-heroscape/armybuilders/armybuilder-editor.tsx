@@ -37,7 +37,9 @@ import {
     isNotFound,
     updateArmyBuilder,
 } from '../../../services/armybuilder-service';
+import { isAuthenticated } from '../../../services/authService';
 import { getMyUnits } from '../../../services/my_army-service';
+import { getProfile } from '../../../services/profile-service';
 import { getUnits } from '../../../services/unit-service';
 import { useUrlFlag, useUrlParam } from '../../../services/url-state';
 import { PointsMeter, UnitHover, creatorLabel, isUniqueUnit, parseCreators } from './armybuilder-parts';
@@ -160,7 +162,10 @@ const ArmyBuilderEditor: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [quickFilter, setQuickFilter] = useUrlParam('q');
     const [onlyAffordable, setOnlyAffordable] = useUrlFlag('affordable', true);
-    const [includeUnowned, setIncludeUnowned] = useUrlFlag('unowned', false);
+    const [includeUnownedFlag, setIncludeUnowned] = useUrlFlag('unowned', false);
+    // The profile's "ignore My Collection" setting: every unit counts as owned, in unlimited copies.
+    const [ignoreCollection, setIgnoreCollection] = useState(false);
+    const includeUnowned = includeUnownedFlag || ignoreCollection;
     const [allUnits, setAllUnits] = useState<Unit[] | null>(null);
     const [abilityUnitId, setAbilityUnitId] = useState<number | null>(null);
     const [reviewSelected, setReviewSelected] = useState(false);
@@ -171,6 +176,9 @@ const ArmyBuilderEditor: React.FC = () => {
             try {
                 const owned = ((await getMyUnits())?.data ?? []) as Unit[];
                 setOwnedUnits(owned);
+                // Signed-out (local) armies have no profile, so the setting only applies to accounts.
+                const ignoring = isAuthenticated() ? (await getProfile()).ignoreCollection : false;
+                setIgnoreCollection(ignoring);
 
                 if (id !== undefined) {
                     const bg: ArmyBuilder = await getArmyBuilder(Number(id));
@@ -186,7 +194,7 @@ const ArmyBuilderEditor: React.FC = () => {
                     setSelection(Object.fromEntries(bg.units.map(item => [item.unit.id, item.quantity])));
                     // A saved army that already uses units you don't own reopens with them enabled.
                     const ownedQuantities = new Map(owned.map(unit => [unit.id, unit.quantity ?? 0]));
-                    if (bg.units.some(item => item.quantity > (ownedQuantities.get(item.unit.id) ?? 0))) {
+                    if (!ignoring && bg.units.some(item => item.quantity > (ownedQuantities.get(item.unit.id) ?? 0))) {
                         setIncludeUnowned(true);
                     }
                 }
@@ -404,7 +412,7 @@ const ArmyBuilderEditor: React.FC = () => {
         // The Alpine theme pads cells and clips overflow with an ellipsis, so trim the padding for the button.
         { headerName: '', cellRenderer: AddCell, width: 100, flex: 0, pinned: 'left', sortable: false, filter: false, floatingFilter: false, resizable: false, cellStyle: { paddingLeft: 8, paddingRight: 8, overflow: 'visible' } },
         { field: 'name', headerName: 'Unit Name', width: 175, flex: 0, pinned: 'left', cellRenderer: NameCell },
-        { field: 'owned', headerName: 'Owned', filter: 'agNumberColumnFilter', width: 90, flex: 0 },
+        { field: 'owned', headerName: 'Owned', filter: 'agNumberColumnFilter', width: 90, flex: 0, hide: ignoreCollection },
         { field: 'creator', headerName: 'Creator', width: 110, flex: 0 },
         { field: 'general', headerName: 'General', width: 120, flex: 0 },
         { field: 'rarity', headerName: 'Rarity', width: 105, flex: 0 },
@@ -436,7 +444,7 @@ const ArmyBuilderEditor: React.FC = () => {
             getQuickFilterText: (params: GetQuickFilterTextParams<AvailableRow>) =>
                 (params.data?.abilities ?? []).map((ability: Ability) => `${ability.abilityName ?? ''} ${ability.ability ?? ''}`).join(' '),
         },
-    ], []);
+    ], [ignoreCollection]);
 
     const defaultColDef = useMemo<ColDef>(() => ({
         filter: true,
@@ -457,7 +465,7 @@ const ArmyBuilderEditor: React.FC = () => {
             </div>
         );
     }
-    if (ownedUnits.length === 0) return <Navigate to="/my-heroscape/my-army" replace />;
+    if (ownedUnits.length === 0 && !ignoreCollection) return <Navigate to="/my-heroscape/my-army" replace />;
 
     const cancelTarget = id !== undefined ? `/my-heroscape/armybuilder/${id}` : '/my-heroscape/armybuilder';
 
@@ -609,7 +617,7 @@ const ArmyBuilderEditor: React.FC = () => {
                                     )}
                                     {selectedList.map(item => {
                                         const owned = ownedById.get(item.unit.id) ?? 0;
-                                        const flagged = item.quantity > owned;
+                                        const flagged = !ignoreCollection && item.quantity > owned;
                                         return (
                                             <TableRow key={item.unit.id} sx={flagged ? { bgcolor: includeUnowned ? 'rgba(255, 193, 7, 0.15)' : 'rgba(255, 23, 68, 0.12)' } : undefined}>
                                                 <TableCell>
@@ -647,11 +655,11 @@ const ArmyBuilderEditor: React.FC = () => {
                 <Paper variant="outlined" sx={sectionSx('primary.main')} ref={gridSectionRef}>
                         <Stack spacing={1}>
                             <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap', color: 'primary.dark', fontWeight: 700 }}>{reviewingSelected ? 'Selected units' : 'My Collection'}</Typography>
+                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap', color: 'primary.dark', fontWeight: 700 }}>{reviewingSelected ? 'Selected units' : ignoreCollection ? 'All units' : 'My Collection'}</Typography>
                                 <TextField
                                     size="small"
                                     fullWidth
-                                    placeholder="Search your units"
+                                    placeholder={ignoreCollection ? 'Search units' : 'Search your units'}
                                     value={quickFilter}
                                     onChange={event => setQuickFilter(event.target.value)}
                                 />
@@ -666,10 +674,12 @@ const ArmyBuilderEditor: React.FC = () => {
                             ) : (
                             <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap">
                                 <Stack>
+                                {!ignoreCollection && (
                                 <FormControlLabel
                                     control={<Switch size="small" checked={includeUnowned} onChange={event => setIncludeUnowned(event.target.checked)} />}
                                     label="Include units I don't own (plan future purchases)"
                                 />
+                                )}
                                 <FormControlLabel
                                     control={<Switch size="small" checked={onlyAffordable} onChange={event => setOnlyAffordable(event.target.checked)} />}
                                     label={pointLimit > 0

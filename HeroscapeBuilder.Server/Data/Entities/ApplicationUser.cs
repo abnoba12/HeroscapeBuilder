@@ -16,6 +16,10 @@ namespace HeroscapeBuilder.Server.Data.Entities
         /// </summary>
         public bool AllowTileSwap { get; set; } = true;
         /// <summary>
+        /// Makes the Army builder behave as if the user owns every unit with unlimited copies, ignoring My Collection.
+        /// </summary>
+        public bool IgnoreCollection { get; set; }
+        /// <summary>
         /// Whether the link for this user's My Collection works for anyone who has it.
         /// </summary>
         public bool CollectionIsShared { get; set; }

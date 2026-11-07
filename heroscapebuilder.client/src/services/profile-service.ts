@@ -10,6 +10,8 @@ export interface Profile {
     pointSystem: PointSystem;
     /** The Maps page may count a same-size tile of a swappable type in place of a missing one. */
     allowTileSwap: boolean;
+    /** The Army builder treats every unit as owned, in unlimited copies, instead of using My Collection. */
+    ignoreCollection: boolean;
 }
 
 export const getProfile = async (): Promise<Profile> =>
@@ -20,6 +22,9 @@ export const setProfilePointSystem = async (pointSystem: PointSystem): Promise<P
 
 export const setProfileAllowTileSwap = async (allowTileSwap: boolean): Promise<Profile> =>
     (await api.put<Profile>(`/Profile/SetAllowTileSwap`, { allowTileSwap })).data;
+
+export const setProfileIgnoreCollection = async (ignoreCollection: boolean): Promise<Profile> =>
+    (await api.put<Profile>(`/Profile/SetIgnoreCollection`, { ignoreCollection })).data;
 
 /** Changes the password. The server issues fresh tokens for this session, which are saved here. */
 export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {

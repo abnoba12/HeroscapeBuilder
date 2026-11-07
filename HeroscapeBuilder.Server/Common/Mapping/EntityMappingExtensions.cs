@@ -55,8 +55,10 @@ namespace HeroscapeBuilder.Server.Common.Mapping
         /// <summary>
         /// Maps an army builder for the API. <paramref name="ownedQuantities"/> (army card id -> quantity in My Army)
         /// is only supplied for the owner; it drives the "needs review" flags, which are never exposed publicly.
+        /// With <paramref name="ignoreCollection"/> the owner is treated as having every unit in unlimited copies, so
+        /// nothing is over-allocated.
         /// </summary>
-        public static ArmyBuilderEntity ToArmyBuilderEntity(this ArmyBuilder source, Dictionary<int, int>? ownedQuantities)
+        public static ArmyBuilderEntity ToArmyBuilderEntity(this ArmyBuilder source, Dictionary<int, int>? ownedQuantities, bool ignoreCollection = false)
         {
             var isOwner = ownedQuantities != null;
 
@@ -71,7 +73,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                         Unit = bgUnit.ArmyCard.ToUnitEntity(),
                         Quantity = bgUnit.Quantity,
                         OwnedQuantity = owned,
-                        OverAllocated = isOwner && bgUnit.Quantity > owned,
+                        OverAllocated = isOwner && !ignoreCollection && bgUnit.Quantity > owned,
                     };
                 })
                 .OrderBy(unit => unit.Unit.Name)

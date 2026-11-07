@@ -37,6 +37,12 @@ namespace HeroscapeBuilder.Server.Controllers
             return Run(userId => _profileService.SetAllowTileSwap(userId, request));
         }
 
+        [HttpPut]
+        public Task<IActionResult> SetIgnoreCollection(SetIgnoreCollectionRequest request)
+        {
+            return Run(userId => _profileService.SetIgnoreCollection(userId, request));
+        }
+
         [HttpPost]
         public Task<IActionResult> ChangePassword(ChangePasswordRequest request)
         {

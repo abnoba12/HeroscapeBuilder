@@ -12,6 +12,11 @@ namespace HeroscapeBuilder.Server.Domain.Requests
         public bool AllowTileSwap { get; set; }
     }
 
+    public class SetIgnoreCollectionRequest
+    {
+        public bool IgnoreCollection { get; set; }
+    }
+
     public class ChangePasswordRequest
     {
         public string? CurrentPassword { get; set; }

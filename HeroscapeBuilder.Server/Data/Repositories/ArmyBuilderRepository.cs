@@ -111,6 +111,18 @@ namespace HeroscapeBuilder.Server.Data.Repositories
                 .ToDictionaryAsync(x => x.CardId, x => x.Quantity);
         }
 
+        /// <summary>
+        /// Whether the user has turned off the link between My Collection and the Army builder.
+        /// </summary>
+        public async Task<bool> GetIgnoreCollection(string userId)
+        {
+            return await _context.Users
+                .NotCacheable()
+                .Where(x => x.Id == userId)
+                .Select(x => x.IgnoreCollection)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<List<ArmyCard>> GetArmyCards(IEnumerable<int> ids)
         {
             var idList = ids.ToList();

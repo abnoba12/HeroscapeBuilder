@@ -21,7 +21,7 @@ import { usePointSystem } from '../../components/PointSystem/PointSystemContext'
 import { POINT_SYSTEMS, PointSystem } from '../../models/point-system';
 import { logout } from '../../services/authService';
 import { getErrorMessages } from '../../services/armybuilder-service';
-import { changePassword, deleteAccount, getProfile, setProfileAllowTileSwap } from '../../services/profile-service';
+import { changePassword, deleteAccount, getProfile, setProfileAllowTileSwap, setProfileIgnoreCollection } from '../../services/profile-service';
 
 const PointSystemSection: React.FC = () => {
     const { defaultPointSystem, saveDefaultPointSystem } = usePointSystem();
@@ -116,6 +116,52 @@ const TileSwapSection: React.FC<{ initial: boolean }> = ({ initial }) => {
                 />
             </Stack>
             <Snackbar open={saved} autoHideDuration={2500} onClose={() => setSaved(false)} message="Tile swap setting saved" />
+        </Paper>
+    );
+};
+
+const IgnoreCollectionSection: React.FC<{ initial: boolean }> = ({ initial }) => {
+    const [ignore, setIgnore] = useState(initial);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [saved, setSaved] = useState(false);
+
+    const handleChange = async (value: boolean) => {
+        try {
+            setSaving(true);
+            setError(null);
+            setIgnore((await setProfileIgnoreCollection(value)).ignoreCollection);
+            setSaved(true);
+        } catch (err) {
+            setError(getErrorMessages(err, 'Failed to save your Army builder setting.')[0]);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <Paper variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1}>
+                <Typography variant="h6">Army builder</Typography>
+                {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+                <FormControlLabel
+                    disabled={saving}
+                    control={<Checkbox checked={ignore} onChange={event => handleChange(event.target.checked)} />}
+                    label={
+                        <span>
+                            <Typography component="span" variant="body1" sx={{ fontWeight: 600 }}>Ignore My Collection when building armies</Typography>
+                            <Typography component="span" variant="body2" color="text.secondary" display="block">
+                                When on, the Army builder behaves as if you own every unit in unlimited copies. You can build freely
+                                without filling in My Collection, armies are never flagged as needing review because of missing copies,
+                                and there is no need to toggle "Include units I don't own". My Collection itself is left untouched, and
+                                turning this off brings the usual checks back.
+                            </Typography>
+                        </span>
+                    }
+                    sx={{ alignItems: 'flex-start', '& .MuiCheckbox-root': { pt: 0.5 } }}
+                />
+            </Stack>
+            <Snackbar open={saved} autoHideDuration={2500} onClose={() => setSaved(false)} message="Army builder setting saved" />
         </Paper>
     );
 };
@@ -273,12 +319,14 @@ const DeleteAccountSection: React.FC = () => {
 const Profile: React.FC = () => {
     const [email, setEmail] = useState<string | null>(null);
     const [allowTileSwap, setAllowTileSwap] = useState(false);
+    const [ignoreCollection, setIgnoreCollection] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         getProfile()
             .then(profile => {
                 setAllowTileSwap(profile.allowTileSwap);
+                setIgnoreCollection(profile.ignoreCollection);
                 setEmail(profile.email);
             })
             .catch(err => setLoadError(getErrorMessages(err, 'Failed to load your profile.')[0]));
@@ -301,6 +349,7 @@ const Profile: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">{email}</Typography>
                 </div>
                 <PointSystemSection />
+                <IgnoreCollectionSection initial={ignoreCollection} />
                 <TileSwapSection initial={allowTileSwap} />
                 <ChangePasswordSection />
                 <DeleteAccountSection />

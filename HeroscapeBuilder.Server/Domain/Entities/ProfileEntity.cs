@@ -10,5 +10,7 @@ namespace HeroscapeBuilder.Server.Domain.Entities
         public PointSystem PointSystem { get; set; }
 
         public bool AllowTileSwap { get; set; }
+
+        public bool IgnoreCollection { get; set; }
     }
 }

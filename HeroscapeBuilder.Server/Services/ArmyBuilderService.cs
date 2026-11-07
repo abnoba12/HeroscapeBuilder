@@ -34,12 +34,13 @@ namespace HeroscapeBuilder.Server.Services
             var id = userId.ToString();
             var rows = await _armyBuilderRepository.GetAllForUser(id);
             var owned = await _armyBuilderRepository.GetOwnedQuantities(id);
+            var ignoreCollection = await _armyBuilderRepository.GetIgnoreCollection(id);
             var tallies = await _gameRepository.GetTallies(id);
 
             // Each primary version stands for its army; its variations hang off it.
             return rows
                 .Where(x => x.ParentArmyBuilderId == null)
-                .Select(root => Compose(root, root, rows.Where(x => x.Id == root.Id || x.ParentArmyBuilderId == root.Id).ToList(), owned, tallies))
+                .Select(root => Compose(root, root, rows.Where(x => x.Id == root.Id || x.ParentArmyBuilderId == root.Id).ToList(), owned, tallies, ignoreCollection))
                 .OrderByDescending(x => x.IsPinned)
                 .ThenBy(x => x.Name)
                 .ToList();
@@ -59,7 +60,7 @@ namespace HeroscapeBuilder.Server.Services
             var root = army.FirstOrDefault(x => x.Id == armyId) ?? throw NotFound();
             var row = army.FirstOrDefault(x => x.Id == armyBuilderId) ?? throw NotFound();
 
-            return Compose(row, root, army, await _armyBuilderRepository.GetOwnedQuantities(id), await _gameRepository.GetTallies(id));
+            return Compose(row, root, army, await _armyBuilderRepository.GetOwnedQuantities(id), await _gameRepository.GetTallies(id), await _armyBuilderRepository.GetIgnoreCollection(id));
         }
 
         /// <summary>
@@ -71,12 +72,13 @@ namespace HeroscapeBuilder.Server.Services
             ArmyBuilder root,
             List<ArmyBuilder> army,
             Dictionary<int, int>? owned,
-            Dictionary<int, (int Wins, int Losses)>? tallies)
+            Dictionary<int, (int Wins, int Losses)>? tallies,
+            bool ignoreCollection = false)
         {
             var isOwner = owned != null;
             (int Wins, int Losses) TallyOf(int id) => tallies != null && tallies.TryGetValue(id, out var tally) ? tally : (0, 0);
 
-            var entity = row.ToArmyBuilderEntity(owned);
+            var entity = row.ToArmyBuilderEntity(owned, ignoreCollection);
             var (wins, losses) = TallyOf(row.Id);
             entity.Wins = wins;
             entity.Losses = losses;
@@ -89,7 +91,7 @@ namespace HeroscapeBuilder.Server.Services
                 .OrderBy(x => x.PointLimit)
                 .Select(variation =>
                 {
-                    var summary = variation.ToArmyBuilderEntity(owned);
+                    var summary = variation.ToArmyBuilderEntity(owned, ignoreCollection);
                     var (variationWins, variationLosses) = TallyOf(variation.Id);
                     return new ArmyBuilderVariationEntity
                     {
@@ -125,8 +127,9 @@ namespace HeroscapeBuilder.Server.Services
 
             var isOwner = viewerId != null && root.UserId == viewerId.Value.ToString();
             var owned = isOwner ? await _armyBuilderRepository.GetOwnedQuantities(root.UserId) : null;
+            var ignoreCollection = isOwner && await _armyBuilderRepository.GetIgnoreCollection(root.UserId);
 
-            return Compose(row, root, army, owned, tallies: null);
+            return Compose(row, root, army, owned, tallies: null, ignoreCollection);
         }
 
         /// <summary>
@@ -449,6 +452,7 @@ namespace HeroscapeBuilder.Server.Services
 
             var cards = (await _armyBuilderRepository.GetArmyCards(units.Keys)).ToDictionary(x => x.Id);
             var owned = await _armyBuilderRepository.GetOwnedQuantities(userId);
+            var ignoreCollection = await _armyBuilderRepository.GetIgnoreCollection(userId);
 
             foreach (var (unitId, quantity) in units)
             {
@@ -461,7 +465,7 @@ namespace HeroscapeBuilder.Server.Services
                 var unitName = card.Name ?? $"Unit {unitId}";
                 owned.TryGetValue(unitId, out var ownedQuantity);
 
-                if (!request.AllowUnowned)
+                if (!request.AllowUnowned && !ignoreCollection)
                 {
                     if (ownedQuantity == 0)
                     {
