@@ -89,6 +89,18 @@ namespace HeroscapeBuilder.Server.Controllers
             return Run(userId => _armyBuilderService.SetRetired(userId, id, false));
         }
 
+        [HttpPost]
+        public Task<IActionResult> PinArmyBuilder(int id)
+        {
+            return Run(userId => _armyBuilderService.SetPinned(userId, id, true));
+        }
+
+        [HttpPost]
+        public Task<IActionResult> UnpinArmyBuilder(int id)
+        {
+            return Run(userId => _armyBuilderService.SetPinned(userId, id, false));
+        }
+
         [HttpGet]
         public Task<IActionResult> GetJournal(int id)
         {

@@ -40,7 +40,8 @@ namespace HeroscapeBuilder.Server.Services
             return rows
                 .Where(x => x.ParentArmyBuilderId == null)
                 .Select(root => Compose(root, root, rows.Where(x => x.Id == root.Id || x.ParentArmyBuilderId == root.Id).ToList(), owned, tallies))
-                .OrderBy(x => x.Name)
+                .OrderByDescending(x => x.IsPinned)
+                .ThenBy(x => x.Name)
                 .ToList();
         }
 
@@ -342,6 +343,20 @@ namespace HeroscapeBuilder.Server.Services
             {
                 primary.IsRetired = isRetired;
                 primary.RetiredAt = isRetired ? DateTime.UtcNow : null;
+                await _armyBuilderRepository.SaveChanges();
+            }
+
+            return await GetMyArmyBuilder(userId, armyBuilderId);
+        }
+
+        /// <summary>Pins or unpins an army so it is listed first on My Armies.</summary>
+        public async Task<ArmyBuilderEntity> SetPinned(Guid userId, int armyBuilderId, bool isPinned)
+        {
+            var primary = await GetPrimary(userId, armyBuilderId);
+
+            if (primary.IsPinned != isPinned)
+            {
+                primary.IsPinned = isPinned;
                 await _armyBuilderRepository.SaveChanges();
             }
 

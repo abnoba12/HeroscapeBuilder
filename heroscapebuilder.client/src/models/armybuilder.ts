@@ -49,6 +49,8 @@ export interface ArmyBuilder {
     /** Hidden from the active list on My Armies and shown under "Retired" instead. Owner only. */
     isRetired: boolean;
     retiredAt?: string | null;
+    /** Listed first on My Armies. Owner only. */
+    isPinned: boolean;
     needsReview: boolean;
     reviewReasons: string[];
     updatedAt: string;

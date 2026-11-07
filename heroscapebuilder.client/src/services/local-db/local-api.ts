@@ -305,6 +305,7 @@ const compose = (row: ArmyBuilderRow, snapshot: Snapshot): ArmyBuilder => {
         isOwner: true,
         isRetired: root.IsRetired,
         retiredAt: root.RetiredAt,
+        isPinned: !!root.IsPinned,
         needsReview: reasons.length > 0,
         reviewReasons: reasons,
         updatedAt: row.UpdatedAt,
@@ -573,6 +574,7 @@ export const localDeleteVariation = async (id: number): Promise<ArmyBuilder> => 
                 ShareId: row.ShareId,
                 IsRetired: row.IsRetired,
                 RetiredAt: row.RetiredAt,
+                IsPinned: row.IsPinned,
                 CreatedAt: row.CreatedAt,
             },
         });
@@ -597,6 +599,19 @@ const setRetired = async (id: number, retired: boolean): Promise<ArmyBuilder> =>
     }
     return localGetArmyBuilder(id);
 };
+
+const setPinned = async (id: number, pinned: boolean): Promise<ArmyBuilder> => {
+    await assertWritable();
+    const { armyId } = await familyOf(id);
+    const primary = (await dbGet<ArmyBuilderRow>('armybuilder', armyId))!;
+    if (!!primary.IsPinned !== pinned) {
+        await dbPut('armybuilder', { ...primary, IsPinned: pinned });
+    }
+    return localGetArmyBuilder(id);
+};
+
+export const localPinArmyBuilder = (id: number) => setPinned(id, true);
+export const localUnpinArmyBuilder = (id: number) => setPinned(id, false);
 
 export const localRetireArmyBuilder = (id: number) => setRetired(id, true);
 export const localRestoreArmyBuilder = (id: number) => setRetired(id, false);

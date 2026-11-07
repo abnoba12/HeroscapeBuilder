@@ -29,6 +29,8 @@ export interface ArmyBuilderRow {
     PointSystem: string;
     IsRetired: boolean;
     RetiredAt: string | null;
+    /** Absent on rows saved before pinning existed. */
+    IsPinned?: boolean;
     ParentArmyBuilderId: number | null;
     VariationLabel: string | null;
 }

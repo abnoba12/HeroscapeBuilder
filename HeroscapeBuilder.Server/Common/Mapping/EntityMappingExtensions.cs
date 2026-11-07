@@ -105,6 +105,7 @@ namespace HeroscapeBuilder.Server.Common.Mapping
                 IsOwner = isOwner,
                 IsRetired = isOwner && source.IsRetired,
                 RetiredAt = isOwner ? source.RetiredAt : null,
+                IsPinned = isOwner && source.IsPinned,
                 NeedsReview = reasons.Count > 0,
                 ReviewReasons = reasons,
                 UpdatedAt = source.UpdatedAt,

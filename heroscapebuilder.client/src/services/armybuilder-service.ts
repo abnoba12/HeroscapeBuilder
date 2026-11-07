@@ -70,6 +70,17 @@ export const restoreArmyBuilder = async (id: number): Promise<ArmyBuilder> => {
     return (await api.post<ArmyBuilder>(`/ArmyBuilder/RestoreArmyBuilder`, null, { params: { id } })).data;
 };
 
+/** Lists the army first on My Armies. */
+export const pinArmyBuilder = async (id: number): Promise<ArmyBuilder> => {
+    if (!isAuthenticated()) return local.localPinArmyBuilder(id);
+    return (await api.post<ArmyBuilder>(`/ArmyBuilder/PinArmyBuilder`, null, { params: { id } })).data;
+};
+
+export const unpinArmyBuilder = async (id: number): Promise<ArmyBuilder> => {
+    if (!isAuthenticated()) return local.localUnpinArmyBuilder(id);
+    return (await api.post<ArmyBuilder>(`/ArmyBuilder/UnpinArmyBuilder`, null, { params: { id } })).data;
+};
+
 export const getJournal = async (id: number): Promise<JournalEntry[]> => {
     if (!isAuthenticated()) return local.localGetJournal(id);
     return (await api.get<JournalEntry[]>(`/ArmyBuilder/GetJournal`, { params: { id } })).data;

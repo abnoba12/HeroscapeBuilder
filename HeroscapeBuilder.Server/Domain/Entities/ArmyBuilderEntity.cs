@@ -49,6 +49,9 @@ namespace HeroscapeBuilder.Server.Domain.Entities
 
         public DateTime? RetiredAt { get; set; }
 
+        /// <summary>Listed first on My Armies. Owner only.</summary>
+        public bool IsPinned { get; set; }
+
         /// <summary>
         /// True when My Army no longer covers the army builder (or a point total no longer fits).
         /// Only evaluated for the owner.

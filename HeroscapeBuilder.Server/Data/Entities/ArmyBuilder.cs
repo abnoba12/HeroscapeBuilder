@@ -38,6 +38,11 @@ public partial class ArmyBuilder
 
     public DateTime? RetiredAt { get; set; }
 
+    /// <summary>
+    /// A pinned army is listed first on My Armies. Only read from the primary version.
+    /// </summary>
+    public bool IsPinned { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

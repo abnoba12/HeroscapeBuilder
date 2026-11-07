@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Chip, Collapse, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardActions, CardContent, Chip, Collapse, IconButton, Snackbar, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArmyBuilder } from '../../../models/armybuilder';
@@ -6,11 +6,22 @@ import {
     deleteArmyBuilder,
     getErrorMessages,
     getMyArmyBuilders,
+    pinArmyBuilder,
     restoreArmyBuilder,
     retireArmyBuilder,
+    unpinArmyBuilder,
 } from '../../../services/armybuilder-service';
 import { getMyUnitCount } from '../../../services/my_army-service';
 import { ConfirmDeleteDialog, NeedsReviewChip, PointsMeter, VariationSwitcher, creatorLabel } from './armybuilder-parts';
+
+// Material "star" / "star outline" paths, inlined because @mui/icons-material is not a dependency.
+const StarIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
+    <SvgIcon>
+        {filled
+            ? <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            : <path d="m22 9.24-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28z" />}
+    </SvgIcon>
+);
 
 const ArmyBuilders: React.FC = () => {
     const navigate = useNavigate();
@@ -66,10 +77,24 @@ const ArmyBuilders: React.FC = () => {
         }
     };
 
+    const changePinned = async (bg: ArmyBuilder, pin: boolean) => {
+        try {
+            setBusyId(bg.id);
+            const updated = await (pin ? pinArmyBuilder(bg.id) : unpinArmyBuilder(bg.id));
+            setArmyBuilders(prev => prev.map(x => (x.id === bg.id ? updated : x)));
+            setMessage(pin ? `${bg.name} pinned` : `${bg.name} unpinned`);
+        } catch (err) {
+            setError(getErrorMessages(err, pin ? 'Failed to pin the army.' : 'Failed to unpin the army.')[0]);
+        } finally {
+            setBusyId(null);
+        }
+    };
+
     if (hasArmy === false) return <Navigate to="/my-heroscape/my-army" replace />;
     if (hasArmy === null && !error) return <div className="loading"><img src="/Hexes.gif" alt="Loading..." className="img-fluid" /></div>;
 
-    const active = armyBuilders.filter(x => !x.isRetired);
+    // Pinned armies come first; the sort is stable, so the server's name order holds within each group.
+    const active = armyBuilders.filter(x => !x.isRetired).sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
     const retired = armyBuilders.filter(x => x.isRetired);
     // Retired armies are out of play, so they don't count toward the review warning.
     // An army needs review when any of its variations does.
@@ -85,11 +110,25 @@ const ArmyBuilders: React.FC = () => {
         <div key={bg.id} className="col-md-6 col-xl-4">
             <Card
                 variant="outlined"
-                sx={needsReview && !bg.isRetired ? { borderColor: '#ff1744', borderWidth: 2 } : undefined}
+                sx={{ position: 'relative', ...(needsReview && !bg.isRetired ? { borderColor: '#ff1744', borderWidth: 2 } : {}) }}
             >
+                {!bg.isRetired && (
+                    <Tooltip title={bg.isPinned ? 'Unpin from top' : 'Pin to top'}>
+                        <IconButton
+                            onClick={() => changePinned(bg, !bg.isPinned)}
+                            disabled={busyId === bg.id}
+                            aria-label={bg.isPinned ? `Unpin ${bg.name}` : `Pin ${bg.name}`}
+                            aria-pressed={bg.isPinned}
+                            color={bg.isPinned ? 'warning' : 'default'}
+                            sx={{ position: 'absolute', top: 4, right: 4 }}
+                        >
+                            <StarIcon filled={bg.isPinned} />
+                        </IconButton>
+                    </Tooltip>
+                )}
                 <CardContent>
                     <Stack spacing={1.5}>
-                        <Typography variant="h6" component={Link} to={`/my-heroscape/armybuilder/${bg.id}`} sx={{ textDecoration: 'none' }}>
+                        <Typography variant="h6" component={Link} to={`/my-heroscape/armybuilder/${bg.id}`} sx={{ textDecoration: 'none', pr: bg.isRetired ? 0 : 5 }}>
                             {bg.name}
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -123,15 +162,16 @@ const ArmyBuilders: React.FC = () => {
                         )}
                     </Stack>
                 </CardContent>
-                <CardActions>
-                    <Button size="small" component={Link} to={`/my-heroscape/armybuilder/${bg.id}`}>Open</Button>
-                    <Button size="small" component={Link} to={`/my-heroscape/armybuilder/${bg.id}/edit`}>Edit</Button>
+                <CardActions
+                    sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'action.hover', px: 2, py: 1.25, gap: 1, flexWrap: 'wrap', '& > :not(style) ~ :not(style)': { ml: 0 } }}
+                >
+                    <Button size="small" variant="outlined" component={Link} to={`/my-heroscape/armybuilder/${bg.id}/edit`}>Edit</Button>
                     {bg.isRetired ? (
-                        <Button size="small" onClick={() => changeRetired(bg, false)} disabled={busyId === bg.id}>Restore</Button>
+                        <Button size="small" variant="outlined" onClick={() => changeRetired(bg, false)} disabled={busyId === bg.id}>Restore</Button>
                     ) : (
-                        <Button size="small" color="inherit" onClick={() => changeRetired(bg, true)} disabled={busyId === bg.id}>Retire</Button>
+                        <Button size="small" variant="outlined" color="inherit" onClick={() => changeRetired(bg, true)} disabled={busyId === bg.id}>Retire</Button>
                     )}
-                    <Button size="small" color="error" onClick={() => setPendingDelete(bg)}>Delete</Button>
+                    <Button size="small" variant="outlined" color="error" sx={{ ml: 'auto' }} onClick={() => setPendingDelete(bg)}>Delete</Button>
                 </CardActions>
             </Card>
         </div>
